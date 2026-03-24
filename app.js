@@ -1,656 +1,180 @@
 class AlarmApp {
-    constructor() {
-        this.state = {
-            user: null, // { username, role }
-            centrales: [],
-            devices: [],
-            users: [], // { id, username, password, role }
-            currentCentralId: null,
-            centralSearch: '',
-            deviceSearch: ''
-        };
-        this.loadState();
-        this.bootstrapAdmin();
-        this.initEventListeners();
-        this.render();
-    }
-
-    bootstrapAdmin() {
-        if (this.state.users.length === 0) {
-            this.state.users.push({
-                id: 'admin_initial',
-                username: 'admin',
-                password: '123',
-                role: 'admin'
-            });
-            this.state.users.push({
-                id: 'user_initial',
-                username: 'user',
-                password: '123',
-                role: 'user'
-            });
-            this.saveState();
+        constructor() {
+                    this.state = {
+                                    user: null,
+                                    centrales: [],
+                                    devices: [],
+                                    users: [],
+                                    currentCentralId: null,
+                                    centralSearch: '',
+                                    deviceSearch: ''
+                    };
+                    this.initEventListeners();
+                    this.loadInitialData();
         }
+
+    async loadInitialData() {
+                this.loadState();
+                if (this.state.centrales.length === 0) {
+                                await this.fetchDataFromServer();
+                }
+                this.bootstrapAdmin();
+                this.render();
     }
 
     loadState() {
-        try {
-            const saved = localStorage.getItem('alarma-lg-state');
-            if (saved) {
-                const parsed = JSON.parse(saved);
-                this.state.centrales = parsed.centrales || [];
-                this.state.devices = parsed.devices || [];
-                this.state.users = parsed.users || [];
-                // Ensure currentCentralId is still valid
-                if (parsed.currentCentralId && this.state.centrales.find(c => c.id === parsed.currentCentralId)) {
-                    this.state.currentCentralId = parsed.currentCentralId;
+                try {
+                                const saved = localStorage.getItem('alarma-lg-state');
+                                if (saved) {
+                                                    const parsed = JSON.parse(saved);
+                                                    this.state.centrales = parsed.centrales || [];
+                                                    this.state.devices = parsed.devices || [];
+                                                    this.state.users = parsed.users || [];
+                                                    if (parsed.currentCentralId && this.state.centrales.find(c => c.id === parsed.currentCentralId)) {
+                                                                            this.state.currentCentralId = parsed.currentCentralId;
+                                                    }
+                                                    return true;
+                                }
+                } catch (e) {
+                                console.error('Error al cargar estado:', e);
                 }
-            }
-        else {
-                            fetch('data.json')
-                                .then(r => r.json())
-                                .then(data => {
-                                                            this.state.centrales = data.centrales || [];
-                                                            this.state.devices = data.devices || [];
-                                                            this.state.users = data.users || [];
-                                                            this.saveState();
-                                                            this.render();
-                                }).catch(e => console.error('Error fetching data.json', e));
-        }}catch (e) {
-            console.error('Error al cargar estado:', e);
-            this.state.centrales = [];
-            this.state.devices = [];
-            this.state.users = [];
-        }
+                return false;
+    }
+
+    async fetchDataFromServer() {
+                try {
+                                const response = await fetch('data.json');
+                                if (response.ok) {
+                                                    const data = await response.json();
+                                                    this.state.centrales = data.centrales || [];
+                                                    this.state.devices = data.devices || [];
+                                                    this.state.users = data.users || [];
+                                                    this.state.currentCentralId = data.currentCentralId || null;
+                                                    console.log('Datos cargados desde el servidor');
+                                }
+                } catch (e) {
+                                console.error('Error al descargar datos del servidor:', e);
+                }
+    }
+
+    bootstrapAdmin() {
+                if (this.state.users.length === 0) {
+                                this.state.users.push({
+                                                    id: 'admin_initial',
+                                                    username: 'admin',
+                                                    password: '1105',
+                                                    role: 'admin'
+                                });
+                                this.state.users.push({
+                                                    id: 'user_initial',
+                                                    username: 'user',
+                                                    password: '123',
+                                                    role: 'user'
+                                });
+                                this.saveState();
+                }
     }
 
     saveState() {
-        localStorage.setItem('alarma-lg-state', JSON.stringify({
-            centrales: this.state.centrales,
-            devices: this.state.devices,
-            users: this.state.users,
-            currentCentralId: this.state.currentCentralId
-        }));
+                localStorage.setItem('alarma-lg-state', JSON.stringify({
+                                centrales: this.state.centrales,
+                                devices: this.state.devices,
+                                users: this.state.users,
+                                currentCentralId: this.state.currentCentralId
+                }));
     }
 
     initEventListeners() {
-        // Login
-        document.getElementById('login-btn').addEventListener('click', () => this.login());
-        const handleEnter = (e) => {
-            if (e.key === 'Enter') this.login();
-        };
-        document.getElementById('username').addEventListener('keydown', handleEnter);
-        document.getElementById('password').addEventListener('keydown', handleEnter);
+                // Login
+            document.getElementById('login-btn').addEventListener('click', () => this.login());
+                const handleEnter = (e) => {
+                                if (e.key === 'Enter') this.login();
+                };
+                document.getElementById('username').addEventListener('keydown', handleEnter);
+                document.getElementById('password').addEventListener('keydown', handleEnter);
 
-        document.getElementById('logout-btn-sidebar').addEventListener('click', () => this.logout());
-        document.getElementById('logout-btn-header').addEventListener('click', () => this.logout());
+            document.getElementById('logout-btn-sidebar').addEventListener('click', () => this.logout());
+                document.getElementById('logout-btn-header').addEventListener('click', () => this.logout());
 
-        // Centrales
-        document.getElementById('add-central-btn').addEventListener('click', () => this.openCentralModal());
-        document.getElementById('central-form').addEventListener('submit', (e) => this.handleCentralSubmit(e));
-        document.getElementById('edit-central-btn').addEventListener('click', () => this.openCentralModal(true));
-        document.getElementById('delete-central-btn').addEventListener('click', () => this.deleteCentral());
-        document.getElementById('print-central-btn').addEventListener('click', () => this.generateSpecificReport());
+            // Centrales
+            document.getElementById('add-central-btn').addEventListener('click', () => this.openCentralModal());
+                document.getElementById('central-form').addEventListener('submit', (e) => this.handleCentralSubmit(e));
+                document.getElementById('edit-central-btn').addEventListener('click', () => this.openCentralModal(true));
+                document.getElementById('delete-central-btn').addEventListener('click', () => this.deleteCentral());
+                document.getElementById('print-central-btn').addEventListener('click', () => this.generateSpecificReport());
 
-        // Devices
-        document.getElementById('add-device-btn').addEventListener('click', () => this.openDeviceModal());
-        document.getElementById('device-form').addEventListener('submit', (e) => this.handleDeviceSubmit(e));
+            // Devices
+            document.getElementById('add-device-btn').addEventListener('click', () => this.openDeviceModal());
+                document.getElementById('device-form').addEventListener('submit', (e) => this.handleDeviceSubmit(e));
 
-        // Users
-        document.getElementById('user-form').addEventListener('submit', (e) => this.handleUserSubmit(e));
+            // Users
+            document.getElementById('user-form').addEventListener('submit', (e) => this.handleUserSubmit(e));
 
-        // Modals
-        document.querySelectorAll('.modal-close').forEach(btn => {
-            btn.addEventListener('click', () => this.closeModals());
-        });
+            // Modals
+            document.querySelectorAll('.modal-close').forEach(btn => {
+                            btn.addEventListener('click', () => this.closeModals());
+            });
 
-        // Import
-        document.getElementById('import-input').addEventListener('change', (e) => this.handleImport(e));
+            // Import
+            document.getElementById('import-input').addEventListener('change', (e) => this.handleImport(e));
 
-        // Click to close central
-        document.getElementById('current-central-name').addEventListener('click', () => {
-            this.state.currentCentralId = null;
-            this.render();
-        });
+            // Click to close central
+            document.getElementById('current-central-name').addEventListener('click', () => {
+                            this.state.currentCentralId = null;
+                            this.render();
+            });
 
-        // Search
-        document.getElementById('central-search').addEventListener('input', (e) => {
-            this.state.centralSearch = e.target.value.toLowerCase();
-            this.renderCentralesList();
-        });
-        document.getElementById('device-search').addEventListener('input', (e) => {
-            this.state.deviceSearch = e.target.value.toLowerCase();
-            this.renderCurrentCentral();
-        });
+            // Search
+            document.getElementById('central-search').addEventListener('input', (e) => {
+                            this.state.centralSearch = e.target.value.toLowerCase();
+                            this.renderCentralesList();
+            });
+                document.getElementById('device-search').addEventListener('input', (e) => {
+                                this.state.deviceSearch = e.target.value.toLowerCase();
+                                this.renderCurrentCentral();
+                });
     }
 
     login() {
-        const usernameInput = document.getElementById('username').value;
-        const passwordInput = document.getElementById('password').value;
+                const usernameInput = document.getElementById('username').value;
+                const passwordInput = document.getElementById('password').value;
 
-        const foundUser = this.state.users.find(u => u.username === usernameInput && u.password === passwordInput);
+            const foundUser = this.state.users.find(u => u.username === usernameInput && u.password === passwordInput);
 
-        if (foundUser) {
-            this.state.user = { username: foundUser.username, role: foundUser.role };
-            document.getElementById('login-overlay').classList.add('hidden');
-            document.getElementById('app-container').classList.remove('hidden');
-            this.render();
-        } else {
-            alert('Credenciales incorrectas');
-        }
+            if (foundUser) {
+                            this.state.user = { username: foundUser.username, role: foundUser.role };
+                            document.getElementById('login-overlay').classList.add('hidden');
+                            document.getElementById('app-container').classList.remove('hidden');
+                            this.render();
+            } else {
+                            alert('Credenciales incorrectas');
+            }
     }
 
     logout() {
-        this.state.user = null;
-        document.getElementById('login-overlay').classList.remove('hidden');
-        document.getElementById('app-container').classList.add('hidden');
+                this.state.user = null;
+                document.getElementById('login-overlay').classList.remove('hidden');
+                document.getElementById('app-container').classList.add('hidden');
     }
 
     applyPermissions() {
-        const isAdmin = this.state.user?.role === 'admin';
-        document.querySelectorAll('.admin-only').forEach(el => {
-            if (isAdmin) {
-                el.classList.remove('auth-hidden');
-            } else {
-                el.classList.add('auth-hidden');
-            }
-        });
+                const isAdmin = this.state.user?.role === 'admin';
+                document.querySelectorAll('.admin-only').forEach(el => {
+                                if (isAdmin) {
+                                                    el.classList.remove('auth-hidden');
+                                } else {
+                                                    el.classList.add('auth-hidden');
+                                }
+                });
     }
 
     // Modal Logic
     openCentralModal(isEdit = false) {
-        const modal = document.getElementById('central-modal');
-        const overlay = document.getElementById('modal-overlay');
-        const form = document.getElementById('central-form');
-        const title = document.getElementById('modal-title');
+                const modal = document.getElementById('central-modal');
+                const overlay = document.getElementById('modal-overlay');
+                const form = document.getElementById('central-form');
+                const title = document.getElementById('modal-title');
 
-        title.innerText = isEdit ? 'Editar Central' : 'Nueva Central';
-        overlay.classList.remove('hidden');
-        modal.classList.remove('hidden');
-
-        if (isEdit) {
-            const central = this.state.centrales.find(c => c.id === this.state.currentCentralId);
-            form.name.value = central.name;
-            form.location.value = central.location;
-            form.ip.value = central.ip;
-            form.rack.value = central.rack;
-            form.battery.value = central.battery;
-        } else {
-            form.reset();
-        }
-    }
-
-    openDeviceModal(isEdit = false, deviceId = null) {
-        if (!this.state.currentCentralId) return alert('Seleccione una central primero');
-        const overlay = document.getElementById('modal-overlay');
-        const modal = document.getElementById('device-modal');
-        const form = document.getElementById('device-form');
-        const title = modal.querySelector('h2');
-
-        title.innerText = isEdit ? 'Editar Dispositivo' : 'Nuevo Dispositivo';
-        this.editingDeviceId = deviceId;
-
-        overlay.classList.remove('hidden');
-        modal.classList.remove('hidden');
-
-        if (isEdit && deviceId) {
-            const device = this.state.devices.find(d => d.id === deviceId);
-            form.type.value = device.type;
-            form.location.value = device.location;
-            form.battery.value = device.battery;
-            form.installationDate.value = device.installationDate;
-        } else {
-            form.reset();
-        }
-    }
-
-    closeModals() {
-        document.getElementById('modal-overlay').classList.add('hidden');
-        document.getElementById('central-modal').classList.add('hidden');
-        document.getElementById('device-modal').classList.add('hidden');
-        document.getElementById('user-manage-modal').classList.add('hidden');
-        document.getElementById('user-edit-modal').classList.add('hidden');
-        this.editingDeviceId = null;
-        this.editingUserId = null;
-    }
-
-    // User Management
-    openUserManageModal() {
-        if (this.state.user.role !== 'admin') return;
-        document.getElementById('modal-overlay').classList.remove('hidden');
-        document.getElementById('user-manage-modal').classList.remove('hidden');
-        this.renderUserList();
-    }
-
-    renderUserList() {
-        const body = document.getElementById('user-list-body');
-        body.innerHTML = '';
-        this.state.users.forEach(u => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${u.username}</td>
-                <td><span class="badge ${u.role}">${u.role.toUpperCase()}</span></td>
-                <td>
-                    <button class="icon-btn" onclick="app.openUserEditModal(true, '${u.id}')">✏️</button>
-                    <button class="icon-btn danger" onclick="app.deleteUser('${u.id}')">🗑️</button>
-                </td>
-            `;
-            body.appendChild(tr);
-        });
-    }
-
-    openUserEditModal(isEdit = false, userId = null) {
-        const modal = document.getElementById('user-edit-modal');
-        const form = document.getElementById('user-form');
-        document.getElementById('user-modal-title').innerText = isEdit ? 'Editar Usuario' : 'Nuevo Usuario';
-        
-        this.editingUserId = userId;
-        modal.classList.remove('hidden');
-
-        if (isEdit) {
-            const user = this.state.users.find(u => u.id === userId);
-            form.username.value = user.username;
-            form.password.value = user.password;
-            form.role.value = user.role;
-        } else {
-            form.reset();
-        }
-    }
-
-    closeUserEditModal() {
-        document.getElementById('user-edit-modal').classList.add('hidden');
-        this.editingUserId = null;
-    }
-
-    handleUserSubmit(e) {
-        e.preventDefault();
-        const formData = new FormData(e.target);
-        const userData = {
-            id: this.editingUserId || Date.now().toString(),
-            username: formData.get('username'),
-            password: formData.get('password'),
-            role: formData.get('role')
-        };
-
-        if (this.editingUserId) {
-            const index = this.state.users.findIndex(u => u.id === this.editingUserId);
-            this.state.users[index] = userData;
-        } else {
-            this.state.users.push(userData);
-        }
-
-        this.saveState();
-        this.closeUserEditModal();
-        this.renderUserList();
-    }
-
-    deleteUser(id) {
-        if (id === 'admin_initial') return alert('No se puede eliminar el administrador principal');
-        if (confirm('¿Eliminar usuario?')) {
-            this.state.users = this.state.users.filter(u => u.id !== id);
-            this.saveState();
-            this.renderUserList();
-        }
-    }
-
-    // CRUD Centrales
-    handleCentralSubmit(e) {
-        e.preventDefault();
-        const formData = new FormData(e.target);
-        const centralData = {
-            id: this.state.currentCentralId && document.getElementById('modal-title').innerText.includes('Editar') 
-                ? this.state.currentCentralId 
-                : Date.now().toString(),
-            name: formData.get('name'),
-            location: formData.get('location'),
-            ip: formData.get('ip'),
-            rack: formData.get('rack'),
-            battery: formData.get('battery')
-        };
-
-        if (document.getElementById('modal-title').innerText.includes('Editar')) {
-            const index = this.state.centrales.findIndex(c => c.id === centralData.id);
-            this.state.centrales[index] = centralData;
-        } else {
-            this.state.centrales.push(centralData);
-            this.state.currentCentralId = centralData.id;
-        }
-
-        this.saveState();
-        this.closeModals();
-        this.render();
-    }
-
-    deleteCentral() {
-        if (!this.state.currentCentralId) return;
-        if (confirm('¿Está seguro de eliminar esta central y todos sus dispositivos?')) {
-            this.state.centrales = this.state.centrales.filter(c => c.id !== this.state.currentCentralId);
-            this.state.devices = this.state.devices.filter(d => d.centralId !== this.state.currentCentralId);
-            this.state.currentCentralId = this.state.centrales.length > 0 ? this.state.centrales[0].id : null;
-            this.saveState();
-            this.render();
-        }
-    }
-
-    // CRUD Devices
-    handleDeviceSubmit(e) {
-        e.preventDefault();
-        const formData = new FormData(e.target);
-        const deviceData = {
-            id: this.editingDeviceId || Date.now().toString(),
-            centralId: this.state.currentCentralId,
-            type: formData.get('type'),
-            location: formData.get('location'),
-            battery: formData.get('battery'),
-            installationDate: formData.get('installationDate')
-        };
-
-        if (this.editingDeviceId) {
-            const index = this.state.devices.findIndex(d => d.id === this.editingDeviceId);
-            this.state.devices[index] = deviceData;
-        } else {
-            this.state.devices.push(deviceData);
-        }
-
-        this.saveState();
-        this.closeModals();
-        this.render();
-    }
-
-    deleteDevice(id) {
-        if (this.state.user.role !== 'admin') return;
-        if (confirm('¿Eliminar dispositivo?')) {
-            this.state.devices = this.state.devices.filter(d => d.id !== id);
-            this.saveState();
-            this.render();
-        }
-    }
-
-    // Backup & Restore
-    exportData() {
-        const data = JSON.stringify(this.state, null, 2);
-        const blob = new Blob([data], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `respaldo_alarmas_${new Date().toISOString().split('T')[0]}.json`;
-        a.click();
-    }
-
-    importData() {
-        document.getElementById('import-input').click();
-    }
-
-    handleImport(e) {
-        const file = e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            const data = JSON.parse(event.target.result);
-            this.state.centrales = data.centrales || [];
-            this.state.devices = data.devices || [];
-            this.saveState();
-            this.render();
-            alert('Datos recuperados con éxito');
-        };
-        reader.readAsText(file);
-    }
-
-    // PDF Reporting
-    generateGeneralReport() {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-        
-        doc.setFontSize(18);
-        doc.text('Reporte General de Centrales de Alarma', 14, 20);
-        doc.setFontSize(12);
-        doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 14, 30);
-
-        const tableData = this.state.centrales.map(c => [
-            c.name, c.location, c.ip, c.rack, `${c.battery}%`
-        ]);
-
-        doc.autoTable({
-            head: [['Nombre', 'Ubicación', 'IP', 'Rack', 'Batería']],
-            body: tableData,
-            startY: 40
-        });
-
-        doc.save('reporte_general_centrales.pdf');
-    }
-
-    generateSpecificReport() {
-        if (!this.state.currentCentralId) return alert('Seleccione una central');
-        const central = this.state.centrales.find(c => c.id === this.state.currentCentralId);
-        const devices = this.state.devices
-            .filter(d => d.centralId === central.id)
-            .sort((a, b) => {
-                 const typeCompare = a.type.localeCompare(b.type);
-                 if (typeCompare !== 0) return typeCompare;
-                 return a.location.localeCompare(b.location);
-            });
-
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-
-        doc.setFontSize(18);
-        doc.text(`Reporte Central: ${central.name}`, 14, 20);
-        doc.setFontSize(12);
-        doc.text(`Ubicación: ${central.location} | IP: ${central.ip}`, 14, 30);
-        doc.text(`Rack: ${central.rack} | Batería: ${central.battery}%`, 14, 38);
-
-        // Resumen de Totales por tipo
-        const counts = {};
-        devices.forEach(d => {
-            counts[d.type] = (counts[d.type] || 0) + 1;
-        });
-        const summaryText = Object.entries(counts)
-            .map(([type, count]) => `${type.toUpperCase()}: ${count}`)
-            .join('  |  ');
-
-        doc.setFontSize(11);
-        doc.text('Resumen de Totales:', 14, 50);
-        doc.text(summaryText || 'Sin dispositivos registrados', 14, 56);
-
-        doc.setFontSize(12);
-        doc.text('Detalle de Dispositivos Instalados:', 14, 68);
-
-        const tableData = devices.map(d => [
-            d.type.toUpperCase(), d.location, `${d.battery}%`, d.installationDate
-        ]);
-
-        doc.autoTable({
-            head: [['Tipo', 'Ubicación', 'Batería', 'F. Instalación']],
-            body: tableData,
-            startY: 73
-        });
-
-        doc.save(`reporte_${central.name}.pdf`);
-    }
-
-    // Rendering
-    render() {
-        this.renderCentralesList();
-        this.renderCurrentCentral();
-        this.updateStats();
-        this.applyPermissions();
-    }
-
-    renderCentralesList() {
-        const list = document.getElementById('centrales-list');
-        list.innerHTML = '';
-        const filtered = this.state.centrales.filter(c => 
-            c.name.toLowerCase().includes(this.state.centralSearch) ||
-            c.location.toLowerCase().includes(this.state.centralSearch)
-        );
-
-        if (filtered.length === 0 && this.state.centralSearch) {
-            list.innerHTML = '<li class="empty-list">No se encontraron centrales</li>';
-        }
-
-        filtered.forEach(c => {
-            const deviceCount = this.state.devices.filter(d => d.centralId === c.id).length;
-            const li = document.createElement('li');
-            li.className = c.id === this.state.currentCentralId ? 'active' : '';
-            li.innerHTML = `
-                <span class="icon">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-                </span> 
-                <span class="name">${c.name}</span>
-                <span class="count-pill">${deviceCount}</span>
-            `;
-            li.onclick = () => {
-                if (this.state.currentCentralId === c.id) {
-                    this.state.currentCentralId = null;
-                } else {
-                    this.state.currentCentralId = c.id;
-                }
-                this.saveState();
-                this.render();
-            };
-            list.appendChild(li);
-        });
-    }
-
-    renderCurrentCentral() {
-        const central = this.state.centrales.find(c => c.id === this.state.currentCentralId);
-        const details = document.getElementById('central-details');
-
-        if (!central) {
-            details.classList.add('hidden');
-            return;
-        }
-
-        details.classList.remove('hidden');
-        document.getElementById('current-central-name').innerText = central.name;
-        document.getElementById('info-ub').innerText = central.location;
-        document.getElementById('info-ip').innerText = central.ip;
-        document.getElementById('info-rack').innerText = central.rack;
-        document.getElementById('info-bat').innerText = `${central.battery}%`;
-
-        const grid = document.getElementById('devices-grid');
-        grid.innerHTML = '';
-        let devices = this.state.devices.filter(d => d.centralId === central.id);
-
-        // Apply search filter
-        if (this.state.deviceSearch) {
-            devices = devices.filter(d => 
-                d.type.toLowerCase().includes(this.state.deviceSearch) ||
-                d.location.toLowerCase().includes(this.state.deviceSearch)
-            );
-        }
-
-        // Sort
-        devices.sort((a, b) => {
-            const typeCompare = a.type.localeCompare(b.type);
-            if (typeCompare !== 0) return typeCompare;
-            return a.location.localeCompare(b.location);
-        });
-        
-        if (devices.length === 0) {
-            const msg = this.state.deviceSearch ? 'No se encontraron dispositivos' : 'No hay dispositivos registrados en esta central.';
-            grid.innerHTML = `<div class="empty-state">${msg}</div>`;
-        } else {
-            devices.forEach((d, index) => {
-                const card = document.createElement('div');
-                card.className = 'device-card glass staggered-fade-in';
-                card.style.animationDelay = `${index * 0.05}s`;
-                card.innerHTML = `
-                    <div class="device-actions admin-only">
-                        <button onclick="app.openDeviceModal(true, '${d.id}')" class="icon-btn edit">✏️</button>
-                        <button onclick="app.deleteDevice('${d.id}')" class="icon-btn danger">🗑️</button>
-                    </div>
-                    <h4>${this.getDeviceIcon(d.type)} ${d.type.toUpperCase()}</h4>
-                    <div class="device-meta">
-                        <p class="full-row">📍 ${d.location}</p>
-                        <p class="${d.battery < 20 ? 'low-battery' : ''}">🔋 ${d.battery}%</p>
-                        <p>📅 ${d.installationDate}</p>
-                    </div>
-                `;
-                grid.appendChild(card);
-            });
-        }
-    }
-
-    getDeviceIcon(type) {
-        switch(type) {
-            case 'sirena': return '📢';
-            case 'teclado': return '⌨️';
-            case 'panico': return '🛑';
-            case 'repetidor': return '📡';
-            case 'humo': return '☁️';
-            default: return '📦';
-        }
-    }
-
-    updateStats() {
-        document.getElementById('total-centrales').innerText = this.state.centrales.length;
-        document.getElementById('total-dispositivos').innerText = this.state.devices.length;
-
-        // Global Summary Grid
-        const globalSummaryGrid = document.getElementById('global-summary-grid');
-        if (globalSummaryGrid) {
-            globalSummaryGrid.innerHTML = '';
-            const globalCounts = {};
-            this.state.devices.forEach(d => {
-                globalCounts[d.type] = (globalCounts[d.type] || 0) + 1;
-            });
-
-            const types = [
-                { id: 'sirena', name: 'Sirenas' },
-                { id: 'teclado', name: 'Teclados' },
-                { id: 'panico', name: 'B. Pánico' },
-                { id: 'repetidor', name: 'Repetidores' },
-                { id: 'humo', name: 'S. Humo' }
-            ];
-
-            types.forEach(type => {
-                if (globalCounts[type.id]) {
-                    const item = document.createElement('div');
-                    item.className = 'summary-item';
-                    item.innerHTML = `
-                        <span class="icon">${this.getDeviceIcon(type.id)}</span>
-                        <span class="count">${globalCounts[type.id]}</span>
-                        <span class="label">${type.name}</span>
-                    `;
-                    globalSummaryGrid.appendChild(item);
-                }
-            });
-        }
-
-        // Specific Central Summary Grid
-        const summaryGrid = document.getElementById('type-summary-grid');
-        if (!summaryGrid) return;
-        summaryGrid.innerHTML = '';
-        
-        const currentDevices = this.state.devices.filter(d => d.centralId === this.state.currentCentralId);
-        const counts = {};
-        currentDevices.forEach(d => {
-            counts[d.type] = (counts[d.type] || 0) + 1;
-        });
-
-        const types = [
-            { id: 'sirena', name: 'Sirenas' },
-            { id: 'teclado', name: 'Teclados' },
-            { id: 'panico', name: 'B. Pánico' },
-            { id: 'repetidor', name: 'Repetidores' },
-            { id: 'humo', name: 'S. Humo' }
-        ];
-
-        types.forEach(type => {
-            if (counts[type.id]) {
-                const item = document.createElement('div');
-                item.className = 'summary-item';
-                item.innerHTML = `
-                    <span class="icon">${this.getDeviceIcon(type.id)}</span>
-                    <span class="count">${counts[type.id]}</span>
-                    <span class="label">${type.name}</span>
-                `;
-                summaryGrid.appendChild(item);
-            }
-        });
-    }
-}
-
-// Inicializar
-window.app = new AlarmApp();
+            title.innerText = isEdit ? 'Editar Central' : 'Nueva Central';
+                overlay.classList.remove('hidden');
+                m
