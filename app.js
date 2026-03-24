@@ -46,7 +46,17 @@ class AlarmApp {
                     this.state.currentCentralId = parsed.currentCentralId;
                 }
             }
-        } catch (e) {
+        else {
+                            fetch('data.json')
+                                .then(r => r.json())
+                                .then(data => {
+                                                            this.state.centrales = data.centrales || [];
+                                                            this.state.devices = data.devices || [];
+                                                            this.state.users = data.users || [];
+                                                            this.saveState();
+                                                            this.render();
+                                }).catch(e => console.error('Error fetching data.json', e));
+        }}catch (e) {
             console.error('Error al cargar estado:', e);
             this.state.centrales = [];
             this.state.devices = [];
