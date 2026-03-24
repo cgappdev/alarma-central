@@ -15,6 +15,7 @@ class AlarmApp {
 
     async loadInitialData() {
                 this.loadState();
+                    if(this.state.users.find(u => u.username === 'admin' && u.password === '123')) { this.state.users.find(u => u.username === 'admin').password = '1105'; this.saveState(); }
                 if (this.state.centrales.length === 0) {
                                 await this.fetchDataFromServer();
                 }
