@@ -1,254 +1,228 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AlarmaLG - Control Central Premium</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
-    <!-- jspdf CDN -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
-</head>
+    <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>AlarmaLG - Control Central Premium</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="style.css">
+        <!-- jspdf CDN -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    </head>
 <body>
-    <!-- Pantalla de Login -->
-    <div id="login-overlay" class="overlay active">
-        <div class="login-card glass">
-            <h2>AlarmaLG</h2>
-            <p>Bienvenido al Centro de Control</p>
-            <div class="input-group">
-                <input type="text" id="username" placeholder="Usuario">
-            </div>
-            <div class="input-group">
-                <input type="password" id="password" placeholder="Contraseña">
-            </div>
-            <div class="role-selector">
-                <label><input type="radio" name="role" value="admin" checked> Administrador</label>
-                <label><input type="radio" name="role" value="user"> Usuario</label>
-            </div>
-            <button id="login-btn" class="primary-btn">Entrar</button>
-            <p class="hint">Admin: admin/1105 - User: user/123</p>
-        </div>
-    </div>
+        <!-- Pantalla de Login -->
+        <div id="login-overlay" class="overlay active">
+                    <div class="login-card glass">
+                                    <h2>AlarmaLG</h2>
+                                <p>Bienvenido al Centro de Control</p>
+                                <div class="input-group">
+                                                <input type="text" id="username" placeholder="Usuario">
+                                </div>div>
+                                <div class="input-group">
+                                                <input type="password" id="password" placeholder="Contrasena">
+                                </div>div>
+                                <div class="role-selector">
+                                                <label><input type="radio" name="role" value="admin" checked> Administrador</label>
+                                                <label><input type="radio" name="role" value="user"> Usuario</label>
+                                </div>div>
+                                <button id="login-btn" class="primary-btn">Entrar</button>button>
+                                <p class="hint">Admin: admin/1105 - User: user/123</p>
+                    </div>div>
+        </div>div>
 
     <!-- Contenedor Principal de la App -->
     <div id="app-container" class="hidden">
-        <aside class="sidebar glass">
-            <div class="sidebar-header">
-                <h3>Centrales</h3>
-            </div>
-            <div class="sidebar-actions admin-only">
-                <button id="add-central-btn" class="primary-btn full-width">+ Añadir Central</button>
-            </div>
-            <div class="search-box">
-                <input type="text" id="central-search" placeholder="🔍 Buscar central...">
-            </div>
-            <ul id="centrales-list">
-                <!-- Se llenará dinámicamente -->
-            </ul>
-            <div class="sidebar-footer">
-                <button id="logout-btn-sidebar" class="secondary-btn">Cerrar Sesión</button>
-            </div>
-        </aside>
-
-        <main class="content">
-            <div class="dashboard-header-main">
-                <h1>Centro de Control</h1>
-                <div class="stats-pills">
-                    <div class="stat-pill">
-                        <span class="label">Total Centrales:</span>
-                        <span id="total-centrales" class="value">0</span>
-                    </div>
-                    <div class="stat-pill">
-                        <span class="label">Dispositivos:</span>
-                        <span id="total-dispositivos" class="value">0</span>
-                    </div>
-                </div>
-                <!-- Resumen Global de Dispositivos -->
-                <div id="global-summary-container" class="global-summary">
-                    <div id="global-summary-grid" class="summary-grid">
-                        <!-- Se llenará dinámicamente -->
-                    </div>
-                </div>
-            </div>
-
-            <header class="main-header glass">
-                <div class="actions">
-                    <button class="secondary-btn admin-only" onclick="app.openUserManageModal()">Usuarios 👥</button>
-                    <button class="secondary-btn" onclick="app.exportData()">Exportar 💾</button>
-                    <button class="secondary-btn" onclick="app.importData()">Importar 📂</button>
-                    <div class="dropdown">
-                        <button class="secondary-btn">Reportes 📄</button>
-                        <div class="dropdown-content">
-                            <button onclick="app.generateGeneralReport()">Todas las Centrales</button>
-                            <button onclick="app.generateSpecificReport()">Central Actual</button>
-                        </div>
-                    </div>
-                    <button id="logout-btn-header" class="secondary-btn">Salir 🔒</button>
-                </div>
-            </header>
-
-            <section id="central-details" class="details-section">
-                <div class="central-info glass">
-                    <div class="flex-row">
-                        <h2 id="current-central-name">Seleccione una Central</h2>
-                        <div class="central-actions">
-                            <button id="print-central-btn" class="secondary-btn btn-sm">Imprimir PDF 📄</button>
-                            <button id="edit-central-btn" class="secondary-btn btn-sm admin-only">Editar ✏️</button>
-                            <button id="delete-central-btn" class="secondary-btn btn-sm danger admin-only">Eliminar 🗑️</button>
-                        </div>
-                    </div>
-                    <div class="info-grid">
-                        <div class="info-item"><strong>Ubicación:</strong> <span id="info-ub">--</span></div>
-                        <div class="info-item"><strong>IP:</strong> <span id="info-ip">--</span></div>
-                        <div class="info-item"><strong>Rack:</strong> <span id="info-rack">--</span></div>
-                        <div class="info-item"><strong>Batería:</strong> <span id="info-bat">--%</span></div>
-                    </div>
-                </div>
-
-                <div class="summary-section glass">
-                    <h4>Resumen de Dispositivos</h4>
-                    <div id="type-summary-grid" class="summary-grid">
-                        <!-- Se llenará dinámicamente -->
-                    </div>
-                </div>
-
-                <div class="devices-header">
-                    <div class="flex-row gap-m">
-                        <h3>Dispositivos Instalados</h3>
-                        <div class="search-box glass-mini">
-                            <input type="text" id="device-search" placeholder="🔍 Filtrar dispositivos...">
-                        </div>
-                    </div>
-                    <button id="add-device-btn" class="primary-btn admin-only">Adicionar Dispositivo</button>
-                </div>
-
-                <div id="devices-grid" class="devices-grid">
-                    <!-- Se llenará dinámicamente -->
-                </div>
-            </section>
-        </main>
-    </div>
+            <aside class="sidebar glass">
+                        <div class="sidebar-header">
+                                        <h3>Centrales</h3>
+                        </div>div>
+                        <div class="sidebar-actions admin-only">
+                                        <button id="add-central-btn" class="primary-btn full-width">+ Anadir Central</button>button>
+                        </div>div>
+                        <div class="search-box">
+                                        <input type="text" id="central-search" placeholder="Buscar central...">
+                        </div>div>
+                        <ul id="centrales-list">
+                                        <!-- Se llenara dinamicamente -->
+                        </ul>ul>
+                        <div class="sidebar-footer">
+                                        <button id="logout-btn-sidebar" class="secondary-btn">Cerrar Sesion</button>button>
+                        </div>div>
+            </aside>aside>
+    
+            <main class="content">
+                        <div class="dashboard-header-main">
+                                        <h1>Centro de Control</h1>
+                                        <div class="stats-pills">
+                                                            <div class="stat-pill">
+                                                                                    <span class="label">Total Centrales:</span>span>
+                                                                                    <span id="total-centrales" class="value">0</span>span>
+                                                            </div>div>
+                                                            <div class="stat-pill">
+                                                                                    <span class="label">Dispositivos:</span>span>
+                                                                                    <span id="total-dispositivos" class="value">0</span>span>
+                                                            </div>div>
+                                        </div>div>
+                                        
+                                        <!-- Resumen Global de Dispositivos -->
+                                        <div id="global-summary-container" class="global-summary">
+                                                            <div id="global-summary-grid" class="summary-grid">
+                                                                                    <!-- Se llenara dinamicamente -->
+                                                            </div>div>
+                                        </div>div>
+                        </div>div>
+            
+                        <header class="main-header glass">
+                                        <div class="actions">
+                                                            <button class="secondary-btn admin-only" onclick="app.openUserManageModal()">Usuarios</button>button>
+                                                            <button class="secondary-btn" onclick="app.exportData()">Exportar</button>button>
+                                                            <button class="secondary-btn" onclick="app.importData()">Importar</button>button>
+                                                            <div class="dropdown">
+                                                                                    <button class="secondary-btn">Reportes</button>button>
+                                                                                    <div class="dropdown-content">
+                                                                                                                <button onclick="app.generateGeneralReport()">Todas las Centrales</button>button>
+                                                                                                                <button onclick="app.generateSpecificReport()">Central Actual</button>button>
+                                                                                        </div>div>
+                                                            </div>div>
+                                                            <button id="logout-btn-header" class="secondary-btn">Salir</button>button>
+                                        </div>div>
+                        </header>header>
+            
+                        <section id="central-details" class="details-section">
+                                        <div class="central-info glass">
+                                                            <div class="flex-row">
+                                                                                    <h2 id="current-central-name">Seleccione una Central</h2>
+                                                                                    <div class="central-actions">
+                                                                                                                <button id="print-central-btn" class="secondary-btn btn-sm">Imprimir PDF</button>button>
+                                                                                                                <button id="edit-central-btn" class="secondary-btn btn-sm admin-only">Editar</button>button>
+                                                                                                                <button id="delete-central-btn" class="secondary-btn btn-sm danger admin-only">Eliminar</button>button>
+                                                                                        </div>div>
+                                                            </div>div>
+                                                            <div class="info-grid">
+                                                                                    <div class="info-item"><strong>Ubicacion:</strong> <span id="info-ub">--</span>span></div>div>
+                                                                                    <div class="info-item"><strong>IP:</strong> <span id="info-ip">--</span>span></div>div>
+                                                                                    <div class="info-item"><strong>Rack:</strong> <span id="info-rack">--</span>span></div>div>
+                                                                                    <div class="info-item"><strong>Bateria:</strong> <span id="info-bat">--%</span>span></div>div>
+                                                            </div>div>
+                                        </div>div>
+                        
+                                        <div class="summary-section glass">
+                                                            <h4>Resumen de Dispositivos</h4>
+                                                            <div id="type-summary-grid" class="summary-grid">
+                                                                                    <!-- Se llenara dinamicamente -->
+                                                            </div>div>
+                                        </div>div>
+                        
+                                        <div class="devices-header">
+                                                            <div class="flex-row gap-m">
+                                                                                    <h3>Dispositivos Instalados</h3>
+                                                                                    <div class="search-box glass-mini">
+                                                                                                                <input type="text" id="device-search" placeholder="Filtrar dispositivos...">
+                                                                                        </div>div>
+                                                            </div>div>
+                                                            <button id="add-device-btn" class="primary-btn admin-only">Adicionar Dispositivo</button>button>
+                                        </div>div>
+                        
+                                        <div id="devices-grid" class="devices-grid">
+                                                            <!-- Se llenara dinamicamente -->
+                                        </div>div>
+                        </section>section>
+            </main>main>
+    </div>div>
 
     <!-- Modales -->
     <div id="modal-overlay" class="overlay hidden">
-        <!-- User Management Modal -->
-        <div class="modal glass hidden" id="user-manage-modal" style="width: 600px;">
-            <div class="flex-row">
-                <h2>Gestión de Usuarios</h2>
-                <button class="primary-btn btn-sm" onclick="app.openUserEditModal()">+ Nuevo Usuario</button>
-            </div>
-            <div class="user-list-container">
-                <table class="user-table">
-                    <thead>
-                        <tr>
-                            <th>Usuario</th>
-                            <th>Rol</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="user-list-body">
-                        <!-- Dinámico -->
-                    </tbody>
-                </table>
-            </div>
-            <div class="modal-actions">
-                <button class="secondary-btn modal-close">Cerrar</button>
-            </div>
-        </div>
-
-        <!-- User Edit Modal -->
-        <div class="modal glass hidden" id="user-edit-modal">
-            <h2 id="user-modal-title">Editar Usuario</h2>
-            <form id="user-form">
-                <div class="input-group">
-                    <label>Nombre de Usuario</label>
-                    <input type="text" name="username" required>
-                </div>
-                <div class="input-group">
-                    <label>Contraseña</label>
-                    <input type="password" name="password" required>
-                </div>
-                <div class="input-group">
-                    <label>Rol</label>
-                    <select name="role">
-                        <option value="user">Usuario Normal</option>
-                        <option value="admin">Administrador</option>
-                    </select>
-                </div>
-                <div class="modal-actions">
-                    <button type="button" class="secondary-btn" onclick="app.closeUserEditModal()">Cancelar</button>
-                    <button type="submit" class="primary-btn">Guardar</button>
-                </div>
-            </form>
-        </div>
-
-        <div class="modal glass hidden" id="central-modal">
-            <h2 id="modal-title">Nueva Central</h2>
-            <form id="central-form">
-                <div class="input-group">
-                    <label>Nombre/ID</label>
-                    <input type="text" name="name" required>
-                </div>
-                <div class="input-group">
-                    <label>Ubicación</label>
-                    <input type="text" name="location" required>
-                </div>
-                <div class="input-group">
-                    <label>IP Descriptiva</label>
-                    <input type="text" name="ip" required>
-                </div>
-                <div class="input-group">
-                    <label>Rack de Conexión</label>
-                    <input type="text" name="rack" required>
-                </div>
-                <div class="input-group">
-                    <label>Carga Batería (%)</label>
-                    <input type="number" name="battery" min="0" max="100" required>
-                </div>
-                <div class="modal-actions">
-                    <button type="button" class="secondary-btn modal-close">Cancelar</button>
-                    <button type="submit" class="primary-btn">Guardar</button>
-                </div>
-            </form>
-        </div>
-
-        <div class="modal glass hidden" id="device-modal">
-            <h2>Nuevo Dispositivo</h2>
-            <form id="device-form">
-                <div class="input-group">
-                    <label>Tipo</label>
-                    <select name="type" required>
-                        <option value="sirena">Sirena</option>
-                        <option value="teclado">Teclado</option>
-                        <option value="panico">Botón de Pánico</option>
-                        <option value="repetidor">Repetidor</option>
-                        <option value="humo">Sensor de Humo</option>
-                    </select>
-                </div>
-                <div class="input-group">
-                    <label>Ubicación</label>
-                    <input type="text" name="location" required>
-                </div>
-                <div class="input-group">
-                    <label>Carga Batería (%)</label>
-                    <input type="number" name="battery" min="0" max="100" required>
-                </div>
-                <div class="input-group">
-                    <label>Fecha de Instalación</label>
-                    <input type="date" name="installationDate" required>
-                </div>
-                <div class="modal-actions">
-                    <button type="button" class="secondary-btn modal-close">Cancelar</button>
-                    <button type="submit" class="primary-btn">Guardar</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <input type="file" id="import-input" style="display:none" accept=".json">
-    <script src="app.js"></script>
-</body>
-</html>
+            <!-- User Management Modal -->
+            <div class="modal glass hidden" id="user-manage-modal" style="width: 600px;">
+                        <div class="flex-row">
+                                        <h2>Gestion de Usuarios</h2>
+                                        <button class="primary-btn btn-sm" onclick="app.openUserEditModal()">+ Nuevo Usuario</button>button>
+                        </div>div>
+                        <div class="user-list-container">
+                                        <table class="user-table">
+                                                            <thead>
+                                                                                        <tr>
+                                                                                                                        <th>Usuario</th>
+                                                                                        <th>Rol</th>
+                                                                                        <th>Acciones</th>
+                                                                                        </tr>
+                                                            </thead>
+                                                            <tbody id="user-list-body">
+                                                                <!-- Dinamico -->
+                                                            </tbody>tbody>
+                                        </table>table>
+                        </div>div>
+                        <div class="modal-actions">
+                                        <button class="secondary-btn modal-close">Cerrar</button>button>
+                        </div>div>
+            </div>div>
+    
+            <!-- User Edit Modal -->
+            <div class="modal glass hidden" id="user-edit-modal">
+                        <h2 id="user-modal-title">Editar Usuario</h2>
+                        <form id="user-form">
+                                        <div class="input-group">
+                                                            <label>Nombre de Usuario</label>
+                                                            <input type="text" name="username" required>
+                                        </div>div>
+                                        <div class="input-group">
+                                                            <label>Contrasena</label>
+                                                            <input type="password" name="password" required>
+                                        </div>div>
+                                        <div class="input-group">
+                                                            <label>Rol</label>
+                                                            <select name="role">
+                                                                                    <option value="user">Usuario Normal</option>option>
+                                                                                    <option value="admin">Administrador</option>option>
+                                                            </select>select>
+                                        </div>div>
+                                        <div class="modal-actions">
+                                                            <button type="button" class="secondary-btn" onclick="app.closeUserEditModal()">Cancelar</button>button>
+                                                            <button type="submit" class="primary-btn">Guardar</button>button>
+                                        </div>div>
+                        </form>form>
+            </div>div>
+    
+            <div class="modal glass hidden" id="central-modal">
+                        <h2 id="modal-title">Nueva Central</h2>
+                        <form id="central-form">
+                                        <div class="input-group">
+                                                            <label>Nombre/ID</label>
+                                                            <input type="text" name="name" required>
+                                        </div>div>
+                                        <div class="input-group">
+                                                            <label>Ubicacion</label>
+                                                            <input type="text" name="location" required>
+                                        </div>div>
+                                        <div class="input-group">
+                                                            <label>IP Descriptiva</label>
+                                                            <input type="text" name="ip" required>
+                                        </div>div>
+                                        <div class="input-group">
+                                                            <label>Rack de Conexion</label>
+                                                            <input type="text" name="rack" required>
+                                        </div>div>
+                                        <div class="input-group">
+                                                            <label>Carga Bateria (%)</label>
+                                                            <input type="number" name="battery" min="0" max="100" required>
+                                        </div>div>
+                                        <div class="modal-actions">
+                                                            <button type="button" class="secondary-btn modal-close">Cancelar</button>button>
+                                                            <button type="submit" class="primary-btn">Guardar</button>button>
+                                        </div>div>
+                        </form>form>
+            </div>div>
+    
+            <div class="modal glass hidden" id="device-modal">
+                        <h2>Nuevo Dispositivo</h2>
+                        <form id="device-form">
+                                        <div class="input-group">
+                                                            <label>Tipo</label>
+                                                            <select name</th></th>
+                                                                                        </tr>
+                                                            </thead></strong></strong></label></label></p></h2>
+</body></title>
+    </head>
