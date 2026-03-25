@@ -349,6 +349,21 @@ h1, h2, h3 {
     border-color: var(--danger);
 }
 
+.text-btn {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    font-family: inherit;
+    text-decoration: underline;
+    transition: 0.3s;
+}
+
+.text-btn:hover {
+    opacity: 0.8;
+    color: var(--primary) !important;
+}
+
 #current-central-name {
     cursor: pointer;
     transition: color 0.3s ease;
