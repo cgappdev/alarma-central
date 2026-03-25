@@ -76,6 +76,14 @@
             </div>
 
             <header class="main-header glass">
+                <div class="mobile-top-bar">
+                    <div class="mobile-logo">AlarmaLG</div>
+                    <div class="mobile-actions">
+                        <span class="mobile-action-icon" onclick="app.openCentralSelector()">📂</span>
+                        <span class="mobile-action-icon admin-only" onclick="app.openCentralModal()">➕</span>
+                        <span class="mobile-action-icon" onclick="app.toggleSearch()">🔍</span>
+                    </div>
+                </div>
                 <div class="actions">
                     <button class="secondary-btn admin-only" onclick="app.openUserManageModal()">Usuarios 👥</button>
                     <button class="secondary-btn" onclick="app.exportData()">Exportar 💾</button>
@@ -131,6 +139,26 @@
                 </div>
             </section>
         </main>
+
+        <!-- Navegación Inferior (Móvil) -->
+        <nav class="bottom-nav">
+            <div class="nav-item active" onclick="app.switchTab('home')">
+                <span class="nav-icon">🏠</span>
+                <span>Inicio</span>
+            </div>
+            <div class="nav-item" onclick="app.switchTab('messages')">
+                <span class="nav-icon">💬</span>
+                <span>Mensajes</span>
+            </div>
+            <div class="nav-item" onclick="app.switchTab('service')">
+                <span class="nav-icon">🛠️</span>
+                <span>Servicio</span>
+            </div>
+            <div class="nav-item" onclick="app.switchTab('me')" id="logout-btn-mobile">
+                <span class="nav-icon">👤</span>
+                <span>Yo</span>
+            </div>
+        </nav>
     </div>
 
     <!-- Modales -->
@@ -246,6 +274,20 @@
                     <button type="submit" class="primary-btn">Guardar</button>
                 </div>
             </form>
+        </div>
+
+        <!-- Mobile Central Selector Modal -->
+        <div class="modal glass hidden" id="central-selector-modal">
+            <h2>Seleccionar Central</h2>
+            <div class="search-box">
+                <input type="text" id="central-search-mobile" placeholder="🔍 Buscar central...">
+            </div>
+            <ul id="centrales-list-mobile" class="mobile-list">
+                <!-- Dinámico -->
+            </ul>
+            <div class="modal-actions">
+                <button class="secondary-btn modal-close">Cerrar</button>
+            </div>
         </div>
     </div>
 

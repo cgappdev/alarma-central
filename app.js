@@ -130,10 +130,17 @@ class AlarmApp {
             this.state.centralSearch = e.target.value.toLowerCase();
             this.renderCentralesList();
         });
+        document.getElementById('central-search-mobile')?.addEventListener('input', (e) => {
+            this.state.centralSearch = e.target.value.toLowerCase();
+            this.renderCentralesList();
+        });
         document.getElementById('device-search').addEventListener('input', (e) => {
             this.state.deviceSearch = e.target.value.toLowerCase();
             this.renderCurrentCentral();
         });
+
+        // Mobile specific
+        document.getElementById('logout-btn-mobile')?.addEventListener('click', () => this.logout());
     }
 
     login() {
@@ -222,8 +229,45 @@ class AlarmApp {
         document.getElementById('device-modal').classList.add('hidden');
         document.getElementById('user-manage-modal').classList.add('hidden');
         document.getElementById('user-edit-modal').classList.add('hidden');
+        document.getElementById('central-selector-modal')?.classList.add('hidden');
         this.editingDeviceId = null;
         this.editingUserId = null;
+    }
+
+    // Mobile specific methods
+    openCentralSelector() {
+        const modal = document.getElementById('central-selector-modal');
+        const overlay = document.getElementById('modal-overlay');
+        overlay.classList.remove('hidden');
+        modal.classList.remove('hidden');
+        this.renderCentralesList();
+    }
+
+    toggleSearch() {
+        const searchBox = document.querySelector('.devices-header .search-box');
+        if (searchBox) {
+            searchBox.style.display = searchBox.style.display === 'block' ? 'none' : 'block';
+        }
+    }
+
+    switchTab(tab) {
+        document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+        const activeItem = document.querySelector(`.nav-item[onclick*="${tab}"]`);
+        if (activeItem) activeItem.classList.add('active');
+
+        if (tab === 'home') {
+            document.getElementById('central-details').classList.remove('hidden');
+            this.renderCurrentCentral();
+        } else {
+            // Mock other tabs
+            document.getElementById('central-details').innerHTML = `
+                <div style="padding: 2rem; text-align: center; color: var(--hik-text-muted);">
+                    <h2>${tab.toUpperCase()}</h2>
+                    <p>Funcionalidad próximamente disponible en la estética Hikvision.</p>
+                </div>
+            `;
+            document.getElementById('central-details').classList.remove('hidden');
+        }
     }
 
     // User Management
@@ -508,38 +552,47 @@ class AlarmApp {
 
     renderCentralesList() {
         const list = document.getElementById('centrales-list');
-        list.innerHTML = '';
-        const filtered = this.state.centrales.filter(c => 
-            c.name.toLowerCase().includes(this.state.centralSearch) ||
-            c.location.toLowerCase().includes(this.state.centralSearch)
-        );
+        const mobileList = document.getElementById('centrales-list-mobile');
+        
+        const renderTo = (container) => {
+            if (!container) return;
+            container.innerHTML = '';
+            const filtered = this.state.centrales.filter(c => 
+                c.name.toLowerCase().includes(this.state.centralSearch) ||
+                c.location.toLowerCase().includes(this.state.centralSearch)
+            );
 
-        if (filtered.length === 0 && this.state.centralSearch) {
-            list.innerHTML = '<li class="empty-list">No se encontraron centrales</li>';
-        }
+            if (filtered.length === 0 && this.state.centralSearch) {
+                container.innerHTML = '<li class="empty-list">No se encontraron centrales</li>';
+            }
 
-        filtered.forEach(c => {
-            const deviceCount = this.state.devices.filter(d => d.centralId === c.id).length;
-            const li = document.createElement('li');
-            li.className = c.id === this.state.currentCentralId ? 'active' : '';
-            li.innerHTML = `
-                <span class="icon">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-                </span> 
-                <span class="name">${c.name}</span>
-                <span class="count-pill">${deviceCount}</span>
-            `;
-            li.onclick = () => {
-                if (this.state.currentCentralId === c.id) {
-                    this.state.currentCentralId = null;
-                } else {
-                    this.state.currentCentralId = c.id;
-                }
-                this.saveState();
-                this.render();
-            };
-            list.appendChild(li);
-        });
+            filtered.forEach(c => {
+                const deviceCount = this.state.devices.filter(d => d.centralId === c.id).length;
+                const li = document.createElement('li');
+                li.className = c.id === this.state.currentCentralId ? 'active' : '';
+                li.innerHTML = `
+                    <span class="icon">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                    </span> 
+                    <span class="name">${c.name}</span>
+                    <span class="count-pill">${deviceCount}</span>
+                `;
+                li.onclick = () => {
+                    if (this.state.currentCentralId === c.id) {
+                        this.state.currentCentralId = null;
+                    } else {
+                        this.state.currentCentralId = c.id;
+                    }
+                    this.saveState();
+                    this.closeModals();
+                    this.render();
+                };
+                container.appendChild(li);
+            });
+        };
+
+        renderTo(list);
+        renderTo(mobileList);
     }
 
     renderCurrentCentral() {
@@ -595,6 +648,7 @@ class AlarmApp {
                         <p class="full-row">📍 ${d.location}</p>
                         <p class="${d.battery < 20 ? 'low-battery' : ''}">🔋 ${d.battery}%</p>
                         <p>📅 ${d.installationDate}</p>
+                        <p class="full-row status-online" style="color: #10b981; font-weight: 600; font-size: 0.7rem; margin-top: 4px;">● En línea</p>
                     </div>
                 `;
                 grid.appendChild(card);
