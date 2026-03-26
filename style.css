@@ -966,6 +966,44 @@ input[type="number"]::-webkit-outer-spin-button {
         margin: 0.5rem 0;
         padding: 1rem;
     }
+
+    /* Modal Fixes for Mobile */
+    .modal.glass {
+        background: white !important;
+        color: var(--hik-text) !important;
+        border: none;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+    }
+
+    .modal h2 {
+        color: var(--hik-red) !important;
+    }
+
+    .modal .input-group label {
+        color: var(--hik-text-muted);
+    }
+
+    .modal .input-group input, 
+    .modal .input-group select {
+        background: #f0f0f0 !important;
+        border-color: #ddd !important;
+        color: var(--hik-text) !important;
+    }
+
+    .modal .secondary-btn {
+        background: #eee;
+        color: #333;
+    }
+
+    .mobile-list li {
+        color: var(--hik-text);
+    }
+
+    .mobile-list li.active {
+        background: #f0f0f0;
+        color: var(--hik-red);
+    }
 }
 
 @media (max-width: 480px) {
@@ -982,6 +1020,17 @@ input[type="number"]::-webkit-outer-spin-button {
     
     .login-card h2, .login-card p {
         color: var(--hik-text);
+    }
+
+    .login-card input {
+        background: #f0f0f0 !important;
+        color: var(--hik-text) !important;
+        border: 1px solid #ddd !important;
+    }
+
+    /* Ensure placeholders are visible but muted */
+    .login-card input::placeholder {
+        color: #aaa;
     }
     
     .login-card .primary-btn {
