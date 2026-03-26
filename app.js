@@ -639,16 +639,19 @@ class AlarmApp {
                 card.className = 'device-card glass staggered-fade-in';
                 card.style.animationDelay = `${index * 0.05}s`;
                 card.innerHTML = `
+                    <div class="device-icon-wrapper">${this.getDeviceIcon(d.type)}</div>
+                    <div class="device-main-info">
+                        <h4>${d.type.toUpperCase()}</h4>
+                        <div class="device-meta">
+                            <p class="full-row">📍 ${d.location}</p>
+                            <p class="${d.battery < 20 ? 'low-battery' : ''}">🔋 ${d.battery}%</p>
+                            <p>📅 ${d.installationDate}</p>
+                            <p class="full-row status-online" style="color: #10b981; font-weight: 600; font-size: 0.7rem; margin-top: 4px;">● En línea</p>
+                        </div>
+                    </div>
                     <div class="device-actions admin-only">
                         <button onclick="app.openDeviceModal(true, '${d.id}')" class="icon-btn edit">✏️</button>
                         <button onclick="app.deleteDevice('${d.id}')" class="icon-btn danger">🗑️</button>
-                    </div>
-                    <h4>${this.getDeviceIcon(d.type)} ${d.type.toUpperCase()}</h4>
-                    <div class="device-meta">
-                        <p class="full-row">📍 ${d.location}</p>
-                        <p class="${d.battery < 20 ? 'low-battery' : ''}">🔋 ${d.battery}%</p>
-                        <p>📅 ${d.installationDate}</p>
-                        <p class="full-row status-online" style="color: #10b981; font-weight: 600; font-size: 0.7rem; margin-top: 4px;">● En línea</p>
                     </div>
                 `;
                 grid.appendChild(card);
