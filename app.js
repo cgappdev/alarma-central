@@ -255,19 +255,127 @@ class AlarmApp {
         const activeItem = document.querySelector(`.nav-item[onclick*="${tab}"]`);
         if (activeItem) activeItem.classList.add('active');
 
+        const details = document.getElementById('central-details');
+        
         if (tab === 'home') {
-            document.getElementById('central-details').classList.remove('hidden');
-            this.renderCurrentCentral();
-        } else {
-            // Mock other tabs
-            document.getElementById('central-details').innerHTML = `
-                <div style="padding: 2rem; text-align: center; color: var(--hik-text-muted);">
-                    <h2>${tab.toUpperCase()}</h2>
-                    <p>Funcionalidad próximamente disponible en la estética Hikvision.</p>
+            if (this.state.currentCentralId) {
+                details.classList.remove('hidden');
+                this.renderCurrentCentral();
+            } else {
+                // If no central selected on mobile, show the selector or a welcome message
+                details.innerHTML = `
+                    <div class="welcome-mobile">
+                        <div class="welcome-icon">🏢</div>
+                        <h2>Bienvenido, ${this.state.user.username}</h2>
+                        <p>Seleccione una central para ver sus dispositivos.</p>
+                        <button class="primary-btn" onclick="app.openCentralSelector()">Seleccionar Central</button>
+                    </div>
+                `;
+                details.classList.remove('hidden');
+            }
+        } else if (tab === 'me') {
+            this.renderMeTab();
+        } else if (tab === 'service') {
+            this.renderServiceTab();
+        } else if (tab === 'messages') {
+            details.innerHTML = `
+                <div class="empty-tab">
+                    <div class="empty-icon">💬</div>
+                    <h2>Mensajes</h2>
+                    <p>No tienes mensajes nuevos en este momento.</p>
                 </div>
             `;
-            document.getElementById('central-details').classList.remove('hidden');
         }
+    }
+
+    renderMeTab() {
+        const details = document.getElementById('central-details');
+        const roleName = this.state.user.role === 'admin' ? 'Administrador' : 'Operador';
+        
+        details.innerHTML = `
+            <div class="me-tab">
+                <div class="profile-header">
+                    <div class="profile-avatar">${this.state.user.username.charAt(0).toUpperCase()}</div>
+                    <div class="profile-info">
+                        <h2>${this.state.user.username}</h2>
+                        <span class="profile-role">${roleName}</span>
+                    </div>
+                </div>
+                
+                <div class="me-menu">
+                    <div class="me-menu-item" onclick="app.openUserManageModal()">
+                        <span class="icon">👥</span>
+                        <span class="label">Gestionar Usuarios</span>
+                        <span class="arrow">›</span>
+                    </div>
+                    <div class="me-menu-item">
+                        <span class="icon">⚙️</span>
+                        <span class="label">Configuración</span>
+                        <span class="arrow">›</span>
+                    </div>
+                    <div class="me-menu-item">
+                        <span class="icon">ℹ️</span>
+                        <span class="label">Acerca de AlarmaLG</span>
+                        <span class="arrow">›</span>
+                    </div>
+                </div>
+
+                <div class="logout-section">
+                    <button class="logout-btn-full" onclick="app.logout()">Cerrar Sesión</button>
+                    <p class="app-version">Versión 1.2.0-HikStyle</p>
+                </div>
+            </div>
+        `;
+        
+        // Hide/Show admin-only items
+        if (this.state.user.role !== 'admin') {
+            details.querySelector('.me-menu-item[onclick*="UserManage"]').classList.add('hidden');
+        }
+    }
+
+    renderServiceTab() {
+        const details = document.getElementById('central-details');
+        const totalOk = this.state.devices.filter(d => d.battery >= 20).length;
+        const totalLow = this.state.devices.filter(d => d.battery < 20).length;
+        
+        details.innerHTML = `
+            <div class="service-tab">
+                <div class="service-header">
+                    <h2>Estado del Servicio</h2>
+                    <p>Resumen de salud de todos los dispositivos</p>
+                </div>
+                
+                <div class="service-stats">
+                    <div class="s-stat-card ok">
+                        <span class="s-value">${totalOk}</span>
+                        <span class="s-label">Operativos</span>
+                    </div>
+                    <div class="s-stat-card warning">
+                        <span class="s-value">${totalLow}</span>
+                        <span class="s-label">Batería Baja</span>
+                    </div>
+                </div>
+
+                <div class="service-health-list">
+                    <h3>Puntos de Control</h3>
+                    <div class="health-item">
+                        <span class="h-icon status-online">●</span>
+                        <span class="h-text">Servidor Central</span>
+                        <span class="h-status">Normal</span>
+                    </div>
+                    <div class="health-item">
+                        <span class="h-icon status-online">●</span>
+                        <span class="h-text">Base de Datos</span>
+                        <span class="h-status">Normal</span>
+                    </div>
+                    <div class="health-item">
+                        <span class="h-icon ${totalLow > 0 ? 'status-offline' : 'status-online'}">●</span>
+                        <span class="h-text">Dispositivos Remotos</span>
+                        <span class="h-status">${totalLow > 0 ? 'Revisión Nec.' : 'Normal'}</span>
+                    </div>
+                </div>
+            </div>
+        `;
     }
 
     // User Management
@@ -645,8 +753,8 @@ class AlarmApp {
                         <div class="device-meta">
                             <p class="full-row">📍 ${d.location}</p>
                             <p class="${d.battery < 20 ? 'low-battery' : ''}">🔋 ${d.battery}%</p>
-                            <p>📅 ${d.installationDate}</p>
-                            <p class="full-row status-online" style="color: #10b981; font-weight: 600; font-size: 0.7rem; margin-top: 4px;">● En línea</p>
+                             <p>📅 ${d.installationDate}</p>
+                             <p class="full-row status-online" style="color: #10b981; font-weight: 600; font-size: 0.7rem; margin-top: 4px;"><span class="pulse-dot">●</span> En línea</p>
                         </div>
                     </div>
                     <div class="device-actions admin-only">
