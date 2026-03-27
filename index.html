@@ -141,20 +141,20 @@
         </main>
 
         <!-- Navegación Inferior (Móvil) -->
-        <nav class="bottom-nav">
-            <div class="nav-item active" onclick="app.switchTab('home')">
+        <nav class="mobile-nav">
+            <div class="nav-item active" data-tab="home" onclick="app.switchTab('home')">
                 <span class="nav-icon">🏠</span>
                 <span>Inicio</span>
             </div>
-            <div class="nav-item" onclick="app.switchTab('messages')">
+            <div class="nav-item" data-tab="messages" onclick="app.switchTab('messages')">
                 <span class="nav-icon">💬</span>
                 <span>Mensajes</span>
             </div>
-            <div class="nav-item" onclick="app.switchTab('service')">
+            <div class="nav-item" data-tab="service" onclick="app.switchTab('service')">
                 <span class="nav-icon">🛠️</span>
                 <span>Servicio</span>
             </div>
-            <div class="nav-item" onclick="app.switchTab('me')" id="logout-btn-mobile">
+            <div class="nav-item" data-tab="me" id="logout-btn-mobile" onclick="app.switchTab('me')">
                 <span class="nav-icon">👤</span>
                 <span>Yo</span>
             </div>

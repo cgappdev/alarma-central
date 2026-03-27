@@ -138,9 +138,6 @@ class AlarmApp {
             this.state.deviceSearch = e.target.value.toLowerCase();
             this.renderCurrentCentral();
         });
-
-        // Mobile specific
-        document.getElementById('logout-btn-mobile')?.addEventListener('click', () => this.logout());
     }
 
     login() {
@@ -251,9 +248,15 @@ class AlarmApp {
     }
 
     switchTab(tab) {
-        document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
-        const activeItem = document.querySelector(`.nav-item[onclick*="${tab}"]`);
-        if (activeItem) activeItem.classList.add('active');
+        if (!tab) return;
+        
+        // Update navigation UI
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.classList.remove('active');
+            if (item.getAttribute('data-tab') === tab) {
+                item.classList.add('active');
+            }
+        });
 
         const details = document.getElementById('central-details');
         
@@ -262,7 +265,6 @@ class AlarmApp {
                 details.classList.remove('hidden');
                 this.renderCurrentCentral();
             } else {
-                // If no central selected on mobile, show the selector or a welcome message
                 details.innerHTML = `
                     <div class="welcome-mobile">
                         <div class="welcome-icon">🏢</div>
@@ -285,6 +287,7 @@ class AlarmApp {
                     <p>No tienes mensajes nuevos en este momento.</p>
                 </div>
             `;
+            details.classList.remove('hidden');
         }
     }
 
