@@ -11,6 +11,30 @@ class AlarmApp {
         };
         this.loadInitialData();
         this.initEventListeners();
+        this.initFirebase();
+    }
+
+    initFirebase() {
+        if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
+            this.db = firebase.database();
+            this.cloudRef = this.db.ref('alarmState');
+            
+            // Listener para cambios en la nube
+            this.cloudRef.on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    console.log('Sincronización desde la nube recibida');
+                    this.state.centrales = data.centrales || [];
+                    this.state.devices = data.devices || [];
+                    this.state.users = data.users || [];
+                    this.saveState(true); // Solo guardar en LocalStorage para no re-subir
+                    this.render();
+                }
+            });
+            this.isCloudEnabled = true;
+        } else {
+            this.isCloudEnabled = false;
+        }
     }
 
     async loadInitialData() {
@@ -76,13 +100,22 @@ class AlarmApp {
         }
     }
 
-    saveState() {
-        localStorage.setItem('alarma-lg-state', JSON.stringify({
+    saveState(skipCloud = false) {
+        const dataToSave = {
             centrales: this.state.centrales,
             devices: this.state.devices,
             users: this.state.users,
             currentCentralId: this.state.currentCentralId
-        }));
+        };
+        
+        localStorage.setItem('alarma-lg-state', JSON.stringify(dataToSave));
+
+        // Subir a la nube si está habilitado y no se pidió omitir
+        if (this.isCloudEnabled && !skipCloud) {
+            this.cloudRef.set(dataToSave)
+                .then(() => console.log('Datos sincronizados en la nube'))
+                .catch(e => console.error('Error al subir a la nube:', e));
+        }
     }
 
     initEventListeners() {
