@@ -13,7 +13,9 @@ class AlarmApp {
         this.loadInitialData();
         this.initEventListeners();
         this.initFirebase();
-        this.checkForUpdates();
+        
+        // No bloqueamos el inicio por el chequeo de versión
+        this.checkForUpdates().catch(e => console.warn('Actualización skip:', e.message));
     }
 
     initFirebase() {
@@ -75,31 +77,55 @@ class AlarmApp {
     }
 
     async loadInitialData() {
+        console.log('Cargando datos iniciales...');
+        
+        // 1. Cargar lo que haya en localStorage
         await this.loadState();
-        // Si no hay datos de centrales, intentar cargar del servidor
-        if (this.state.centrales.length === 0) {
-            await this.fetchDataFromServer();
-        }
+        
+        // 2. Asegurar siempre usuarios básicos (admin/user) de inmediato
         this.bootstrapAdmin();
+
+        // 3. Intentar cargar del servidor de forma asíncrona (no bloqueante)
+        console.log('Intentando sincronizar con data.json...');
+        this.fetchDataFromServer().then(() => {
+            console.log('Sincronización con data.json completada');
+            this.render();
+        }).catch(e => {
+            console.warn('data.json no disponible:', e.message);
+            this.render();
+        });
+
         this.render();
     }
 
     bootstrapAdmin() {
-        if (this.state.users.length === 0) {
+        console.log('Verificando usuarios base...');
+        
+        // Aseguramos que el admin principal siempre exista
+        const hasAdmin = this.state.users.find(u => u.username === 'admin');
+        if (!hasAdmin) {
+            console.log('Inyectando admin por defecto...');
             this.state.users.push({
                 id: 'admin_initial',
                 username: 'admin',
                 password: '1105',
                 role: 'admin'
             });
+        }
+
+        // Aseguramos usuario hilda
+        const hasHilda = this.state.users.find(u => u.username.toLowerCase() === 'hilda');
+        if (!hasHilda) {
+            console.log('Inyectando hilda por defecto...');
             this.state.users.push({
                 id: 'user_initial',
-                username: 'user',
+                username: 'hilda',
                 password: '1106',
                 role: 'user'
             });
-            this.saveState();
         }
+        
+        this.saveState(true); // Guardar en local sin subir a la nube necesariamente
     }
 
     async checkForUpdates() {
@@ -239,18 +265,44 @@ class AlarmApp {
     }
 
     login() {
-        const usernameInput = document.getElementById('username').value;
-        const passwordInput = document.getElementById('password').value;
+        const usernameInput = document.getElementById('username').value.trim().toLowerCase();
+        const passwordInput = document.getElementById('password').value.trim();
+        const role = document.querySelector('input[name="role"]:checked')?.value || 'user';
 
-        const foundUser = this.state.users.find(u => u.username === usernameInput && u.password === passwordInput);
+        console.log(`Intento de acceso: ${usernameInput} (${role})`);
 
-        if (foundUser) {
-            this.state.user = { username: foundUser.username, role: foundUser.role };
+        if (!usernameInput || !passwordInput) {
+            alert('Por favor complete todos los campos');
+            return;
+        }
+
+        // --- EMERGENCIA: Fallback directo si nada más funciona ---
+        if (usernameInput === 'admin' && passwordInput === '1105' && role === 'admin') {
+            console.log('Login exitoso (Fallback de Emergencia)');
+            this.state.user = { username: 'admin', role: 'admin' };
             document.getElementById('login-overlay').classList.add('hidden');
             document.getElementById('app-container').classList.remove('hidden');
             this.render();
+            return;
+        }
+
+        // Buscamos en los usuarios cargados
+        const foundUser = this.state.users.find(u => 
+            u.username.toLowerCase() === usernameInput && 
+            u.password === passwordInput &&
+            u.role === role
+        );
+
+        if (foundUser) {
+            console.log('Acceso concedido');
+            this.state.user = { username: foundUser.username, role: foundUser.role };
+            document.getElementById('login-overlay').classList.add('hidden');
+            document.getElementById('app-container').classList.remove('hidden');
+            this.saveState(); // Guardar sesión
+            this.render();
         } else {
-            alert('Credenciales incorrectas');
+            console.warn('Credenciales no válidas');
+            alert('Usuario, contraseña o rol incorrectos');
         }
     }
 
