@@ -17,6 +17,7 @@
     --text-main: var(--hik-text);
     --text-muted: var(--hik-text-muted);
     --accent-green: #10b981; 
+    --accent-yellow: #ffca28; /* Material Yellow 600 - Clean & Vibrant */
     --danger: #cf1322;
     --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
@@ -59,14 +60,18 @@ h1, h2, h3 {
 }
 
 .login-card {
-    padding: 3rem;
-    border-radius: 2rem;
-    width: 400px;
+    padding: 2.5rem 2rem;
+    border-radius: 1.5rem;
+    width: 360px;
+    max-width: 90%;
     text-align: center;
-    animation: fadeIn 0.5s ease;
+    animation: fadeIn 0.6s ease-out;
     background: white !important;
     border: 1px solid var(--hik-border);
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 15px 45px rgba(0, 0, 0, 0.08);
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
 }
 
 .login-card h2 { font-size: 2.5rem; margin-bottom: 1rem; color: var(--hik-red); }
@@ -616,13 +621,23 @@ h1, h2, h3 {
     width: 500px;
     max-width: 95%;
     max-height: 85vh;
-    overflow-y: auto;
+    overflow-y: hidden; /* Changed from auto to hidden to manage scrolls in children */
     position: relative;
     background: white;
     box-shadow: 0 20px 50px rgba(0,0,0,0.15);
     display: flex;
     flex-direction: column;
     animation: modalEntrance 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--hik-border);
+    flex-shrink: 0;
 }
 
 /* Custom scrollbar for modals */
@@ -691,11 +706,47 @@ input[type="number"]::-webkit-outer-spin-button {
     background: #fafafa;
 }
 
-.role-selector { margin: 1rem 0; display: flex; justify-content: center; gap: 1rem; }
+.role-selector { 
+    margin: 0.5rem 0; 
+    display: flex; 
+    justify-content: center; 
+    gap: 1.5rem; 
+}
 .role-selector label {
-    color: var(--hik-red);
+    color: var(--hik-text);
     cursor: pointer;
+    font-weight: 500;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.role-selector input[type="radio"] {
+    accent-color: var(--hik-red);
+    width: 18px;
+    height: 18px;
+}
+.sync-link {
+    background: none;
+    border: none;
+    padding: 5px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.85rem;
+    color: var(--accent-green);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
     font-weight: 600;
+    transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    opacity: 0.8;
+}
+.sync-link:hover {
+    opacity: 1;
+    transform: translateY(-1px);
+    text-decoration: underline;
 }
 
 .badge {
@@ -763,7 +814,7 @@ input[type="number"]::-webkit-outer-spin-button {
 
 .dropdown-content button:hover { background: rgba(255,255,255,0.05); }
 
-.user-list-container { margin: 1.5rem 0; max-height: 300px; overflow-y: auto; }
+.user-list-container { margin: 1.5rem 0; max-height: 300px; overflow-y: auto; flex: 1; }
 .user-table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
 .user-table th, .user-table td { padding: 1rem; text-align: left; border-bottom: 1px solid var(--glass-border); }
 .user-table th { color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; }
@@ -865,6 +916,8 @@ input[type="number"]::-webkit-outer-spin-button {
 .mobile-list {
     list-style: none;
     padding: 0;
+    overflow-y: auto;
+    flex: 1;
 }
 
 .mobile-list li {

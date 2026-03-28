@@ -38,7 +38,7 @@
             </div>
             <button id="login-btn" class="primary-btn">Entrar</button>
             <p class="hint">Admin: admin/1105 - User: Hilda/1106</p>
-            <button onclick="app.resetFromServer()" class="text-btn" style="margin-top: 10px; font-size: 0.8rem; color: var(--accent-green);">🔄 Sincronizar con Servidor</button>
+            <button onclick="app.resetFromServer()" class="sync-link">🔄 Sincronizar con Servidor</button>
         </div>
     </div>
 
@@ -93,7 +93,9 @@
                 <div class="mobile-top-bar">
                     <div class="mobile-logo">AlarmaLG</div>
                     <div class="mobile-actions">
-                        <span class="mobile-action-icon" onclick="app.openCentralSelector()">📂</span>
+                        <span class="mobile-action-icon" style="color: var(--accent-yellow);" onclick="app.openCentralSelector()">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                        </span>
                         <span class="mobile-action-icon admin-only" onclick="app.openCentralModal()">➕</span>
                         <span class="mobile-action-icon" onclick="app.toggleSearch()">🔍</span>
                     </div>
