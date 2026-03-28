@@ -22,18 +22,41 @@ class AlarmApp {
             // Listener para cambios en la nube
             this.cloudRef.on('value', (snapshot) => {
                 const data = snapshot.val();
-                if (data) {
-                    console.log('Sincronización desde la nube recibida');
+                console.log('Firebase check:', data);
+                if (data && (data.centrales || data.devices)) {
+                    console.log('Datos recibidos de Firebase:', 
+                        (data.centrales?.length || 0), 'centrales,', 
+                        (data.devices?.length || 0), 'dispositivos');
                     this.state.centrales = data.centrales || [];
                     this.state.devices = data.devices || [];
                     this.state.users = data.users || [];
-                    this.saveState(true); // Solo guardar en LocalStorage para no re-subir
+                    this.saveState(true); 
                     this.render();
+                } else {
+                    console.log('Firebase está vacío o no es válido, manteniendo datos locales.');
                 }
             });
             this.isCloudEnabled = true;
         } else {
+            console.warn("Firebase no inicializado: SDK no encontrado o configuración inválida.");
             this.isCloudEnabled = false;
+        }
+    }
+
+    pushToCloud() {
+        if (!this.isCloudEnabled) return alert('Firebase no está configurado');
+        if (confirm('¿Deseas subir todos tus datos locales a la nube? Esto sobrescribirá lo que haya en la nube ahora mismo.')) {
+            this.saveState(false);
+            alert('Datos subidos correctamente a la nube.');
+        }
+    }
+
+    async restoreFromDataJson() {
+        if (confirm('¿Deseas recargar los datos del archivo data.json? Esto puede sobreescribir tus cambios locales.')) {
+            await this.fetchDataFromServer();
+            this.saveState();
+            this.render();
+            alert('Datos restaurados desde data.json');
         }
     }
 
@@ -348,6 +371,16 @@ class AlarmApp {
                         <span class="icon">⚙️</span>
                         <span class="label">Configuración</span>
                         <span class="arrow">›</span>
+                    </div>
+                    <div class="me-menu-item" onclick="app.pushToCloud()">
+                        <span class="icon">☁️</span>
+                        <span class="label">Subir datos locales a la nube</span>
+                        <span class="arrow">↑</span>
+                    </div>
+                    <div class="me-menu-item" onclick="app.restoreFromDataJson()">
+                        <span class="icon">📂</span>
+                        <span class="label">Restaurar desde archivo servidor</span>
+                        <span class="arrow">↓</span>
                     </div>
                     <div class="me-menu-item">
                         <span class="icon">ℹ️</span>
@@ -746,6 +779,52 @@ class AlarmApp {
         if (!central) {
             details.classList.add('hidden');
             return;
+        }
+
+        // REPARAR DOM SI FUE SOBRESCRITO POR OTRAS PESTAÑAS
+        if (!document.getElementById('devices-grid')) {
+            console.log('Restaurando estructura base de detalles de central');
+            details.innerHTML = `
+                <div class="central-info glass">
+                    <div class="flex-row">
+                        <h2 id="current-central-name">Seleccione una Central</h2>
+                        <div class="central-actions">
+                            <button id="print-central-btn" class="secondary-btn btn-sm">Imprimir PDF 📄</button>
+                            <button id="edit-central-btn" class="secondary-btn btn-sm admin-only">Editar ✏️</button>
+                            <button id="delete-central-btn" class="secondary-btn btn-sm danger admin-only">Eliminar 🗑️</button>
+                        </div>
+                    </div>
+                    <div class="info-grid">
+                        <div class="info-item"><strong>Ubicación:</strong> <span id="info-ub">--</span></div>
+                        <div class="info-item"><strong>IP:</strong> <span id="info-ip">--</span></div>
+                        <div class="info-item"><strong>Rack:</strong> <span id="info-rack">--</span></div>
+                        <div class="info-item"><strong>Batería:</strong> <span id="info-bat">--%</span></div>
+                    </div>
+                </div>
+
+                <div class="summary-section glass">
+                    <h4>Resumen de Dispositivos</h4>
+                    <div id="type-summary-grid" class="summary-grid">
+                        <!-- Se llenará dinámicamente -->
+                    </div>
+                </div>
+
+                <div class="devices-header">
+                    <div class="flex-row gap-m">
+                        <h3>Dispositivos Instalados</h3>
+                        <div class="search-box glass-mini">
+                            <input type="text" id="device-search" placeholder="🔍 Filtrar dispositivos...">
+                        </div>
+                    </div>
+                    <button id="add-device-btn" class="primary-btn admin-only">Adicionar Dispositivo</button>
+                </div>
+
+                <div id="devices-grid" class="devices-grid">
+                    <!-- Se llenará dinámicamente -->
+                </div>
+            `;
+            // Re-vincular eventos si es necesario (el constructor ya los vinculó al document o ID persistente)
+            this.initEventListeners(); 
         }
 
         details.classList.remove('hidden');

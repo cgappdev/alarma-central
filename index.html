@@ -89,6 +89,13 @@
                     <button class="secondary-btn" onclick="app.exportData()">Exportar 💾</button>
                     <button class="secondary-btn" onclick="app.importData()">Importar 📂</button>
                     <div class="dropdown">
+                        <button class="secondary-btn">Nube ☁️</button>
+                        <div class="dropdown-content">
+                            <button onclick="app.pushToCloud()">Subir datos locales a la nube ↑</button>
+                            <button onclick="app.restoreFromDataJson()">Restaurar desde Servidor ↓</button>
+                        </div>
+                    </div>
+                    <div class="dropdown">
                         <button class="secondary-btn">Reportes 📄</button>
                         <div class="dropdown-content">
                             <button onclick="app.generateGeneralReport()">Todas las Centrales</button>
