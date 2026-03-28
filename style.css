@@ -476,14 +476,35 @@ h1, h2, h3 {
 }
 
 .reorder-active {
-    animation: vibrate 0.3s infinite;
+    animation: vibrate 0.3s infinite linear;
     cursor: grab;
-    border: 1px dashed var(--hik-red);
-    padding-left: 2.5rem; /* Space for handle */
+    border: 1.5px dashed var(--hik-red) !important;
+    padding-left: 2.8rem !important; /* Space for handle */
+    background: #fffafa;
+    transform: scale(1.02);
+    box-shadow: 0 4px 15px rgba(207, 19, 34, 0.15);
 }
 
-.reorder-active:hover {
-    background: #fffafa;
+@keyframes vibrate {
+    0% { transform: translate(0, 0) rotate(0deg); }
+    25% { transform: translate(1px, 1px) rotate(0.5deg); }
+    50% { transform: translate(0, -1px) rotate(-0.5deg); }
+    75% { transform: translate(-1px, 1px) rotate(0deg); }
+    100% { transform: translate(0, 0) rotate(0deg); }
+}
+
+.drag-handle {
+    position: absolute;
+    top: 50%;
+    left: 10px;
+    transform: translateY(-50%);
+    cursor: grab;
+    color: var(--hik-red);
+    font-size: 1.5rem;
+    font-weight: bold;
+    padding: 10px 8px;
+    z-index: 100;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.2);
 }
 
 /* SortableJS Classes */

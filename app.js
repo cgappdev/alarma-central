@@ -933,6 +933,7 @@ class AlarmApp {
         }
 
         this.renderCurrentCentral();
+        this.applyPermissions();
 
         if (!this.state.reorderMode) {
             // Se guardó el orden al desactivar el modo
