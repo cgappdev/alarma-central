@@ -237,6 +237,33 @@ h1, h2, h3 {
     border: 1px solid #10b981;
 }
 
+.update-banner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 10001;
+    background: var(--hik-red);
+    color: white;
+    padding: 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    font-weight: 600;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+.update-banner button {
+    background: white;
+    color: var(--hik-red);
+    border: none;
+    padding: 6px 15px;
+    border-radius: 20px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
 .stat-pill .label {
     color: var(--text-muted);
     font-size: 0.75rem;

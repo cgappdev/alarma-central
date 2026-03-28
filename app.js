@@ -13,6 +13,7 @@ class AlarmApp {
         this.loadInitialData();
         this.initEventListeners();
         this.initFirebase();
+        this.checkForUpdates();
     }
 
     initFirebase() {
@@ -99,6 +100,34 @@ class AlarmApp {
             });
             this.saveState();
         }
+    }
+
+    async checkForUpdates() {
+        try {
+            const resp = await fetch('version.json?t=' + Date.now());
+            const data = await resp.json();
+            const currentVersion = localStorage.getItem('appVersion') || '1.0';
+            
+            if (data.version !== currentVersion) {
+                console.log("Nueva versión detectada:", data.version);
+                const banner = document.getElementById('update-banner');
+                if (banner) {
+                    banner.style.display = 'flex';
+                    document.getElementById('new-version-text').innerText = data.version;
+                }
+            }
+        } catch (e) {
+            console.warn("No se pudo comprobar actualizaciones.");
+        }
+    }
+
+    applyUpdate() {
+        fetch('version.json')
+            .then(r => r.json())
+            .then(data => {
+                localStorage.setItem('appVersion', data.version);
+                window.location.reload(true);
+            });
     }
 
     loadState() {
