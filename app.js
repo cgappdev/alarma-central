@@ -7,7 +7,8 @@ class AlarmApp {
             users: [], // { id, username, password, role }
             currentCentralId: null,
             centralSearch: '',
-            deviceSearch: ''
+            deviceSearch: '',
+            reorderMode: false
         };
         this.loadInitialData();
         this.initEventListeners();
@@ -22,13 +23,22 @@ class AlarmApp {
             // Listener para cambios en la nube
             this.cloudRef.on('value', (snapshot) => {
                 const data = snapshot.val();
-                console.log('Firebase check:', data);
                 if (data && (data.centrales || data.devices)) {
                     console.log('Datos recibidos de Firebase:', 
                         (data.centrales?.length || 0), 'centrales,', 
                         (data.devices?.length || 0), 'dispositivos');
+                    
+                    const remoteDevices = data.devices || [];
+                    const localDevices = this.state.devices || [];
+                    
+                    // SEGURIDAD: No sobrescribir si lo remoto tiene mucho menos que lo local (y local tiene datos)
+                    if (localDevices.length > 20 && remoteDevices.length < 15) {
+                        console.warn('¡Sincronización rechazada! Lo remoto tiene pocos dispositivos vs local.');
+                        return; 
+                    }
+
                     this.state.centrales = data.centrales || [];
-                    this.state.devices = data.devices || [];
+                    this.state.devices = remoteDevices;
                     this.state.users = data.users || [];
                     this.saveState(true); 
                     this.render();
@@ -37,7 +47,10 @@ class AlarmApp {
                 }
             });
             this.isCloudEnabled = true;
+            document.getElementById('debug-firebase').innerText = "Firebase: ✅ DB Conectada";
+            console.log("Firebase DB Conectada a:", firebaseConfig.databaseURL);
         } else {
+            document.getElementById('debug-firebase').innerText = "Firebase: ❌ Error/Desconectado";
             console.warn("Firebase no inicializado: SDK no encontrado o configuración inválida.");
             this.isCloudEnabled = false;
         }
@@ -220,11 +233,15 @@ class AlarmApp {
 
     applyPermissions() {
         const isAdmin = this.state.user?.role === 'admin';
+        console.log("Aplicando permisos. Admin:", isAdmin);
         document.querySelectorAll('.admin-only').forEach(el => {
             if (isAdmin) {
                 el.classList.remove('auth-hidden');
+                // Forzar despliegue si es el botón de reordenar
+                if (el.id === 'reorder-mode-btn') el.style.display = 'inline-block';
             } else {
                 el.classList.add('auth-hidden');
+                if (el.id === 'reorder-mode-btn') el.style.display = 'none';
             }
         });
     }
@@ -575,7 +592,10 @@ class AlarmApp {
             type: formData.get('type'),
             location: formData.get('location'),
             battery: formData.get('battery'),
-            installationDate: formData.get('installationDate')
+            installationDate: formData.get('installationDate'),
+            displayOrder: this.editingDeviceId 
+                ? (this.state.devices.find(d => d.id === this.editingDeviceId).displayOrder ?? 0)
+                : this.state.devices.filter(d => d.centralId === this.state.currentCentralId).length
         };
 
         if (this.editingDeviceId) {
@@ -816,15 +836,19 @@ class AlarmApp {
                             <input type="text" id="device-search" placeholder="🔍 Filtrar dispositivos...">
                         </div>
                     </div>
-                    <button id="add-device-btn" class="primary-btn admin-only">Adicionar Dispositivo</button>
+                    <div class="flex-row gap-s">
+                        <button id="reorder-mode-btn" class="secondary-btn admin-only" onclick="app.toggleReorderMode()">Reordenar ↕️</button>
+                        <button id="add-device-btn" class="primary-btn admin-only">Adicionar Dispositivo</button>
+                    </div>
                 </div>
 
                 <div id="devices-grid" class="devices-grid">
                     <!-- Se llenará dinámicamente -->
                 </div>
             `;
-            // Re-vincular eventos si es necesario (el constructor ya los vinculó al document o ID persistente)
+            // Re-vincular eventos y aplicar permisos a los nuevos elementos
             this.initEventListeners(); 
+            this.applyPermissions();
         }
 
         details.classList.remove('hidden');
@@ -833,6 +857,13 @@ class AlarmApp {
         document.getElementById('info-ip').innerText = central.ip;
         document.getElementById('info-rack').innerText = central.rack;
         document.getElementById('info-bat').innerText = `${central.battery}%`;
+
+        // Refrescar estado del botón de reordenar
+        const reorderBtn = document.getElementById('reorder-mode-btn');
+        if (reorderBtn) {
+            reorderBtn.innerText = this.state.reorderMode ? 'Guardar Orden ✅' : 'Reordenar ↕️';
+            reorderBtn.classList.toggle('active-mode', this.state.reorderMode);
+        }
 
         const grid = document.getElementById('devices-grid');
         grid.innerHTML = '';
@@ -846,8 +877,11 @@ class AlarmApp {
             );
         }
 
-        // Sort
+        // Sort: displayOrder first, then type/location as fallback
         devices.sort((a, b) => {
+            if (a.displayOrder !== undefined && b.displayOrder !== undefined) {
+                return a.displayOrder - b.displayOrder;
+            }
             const typeCompare = a.type.localeCompare(b.type);
             if (typeCompare !== 0) return typeCompare;
             return a.location.localeCompare(b.location);
@@ -859,9 +893,11 @@ class AlarmApp {
         } else {
             devices.forEach((d, index) => {
                 const card = document.createElement('div');
-                card.className = 'device-card glass staggered-fade-in';
+                card.className = `device-card glass staggered-fade-in ${this.state.reorderMode ? 'reorder-active' : ''}`;
+                card.setAttribute('data-id', d.id);
                 card.style.animationDelay = `${index * 0.05}s`;
                 card.innerHTML = `
+                    <div class="drag-handle admin-only ${this.state.reorderMode ? '' : 'hidden'}">⋮⋮</div>
                     <div class="device-icon-wrapper">${this.getDeviceIcon(d.type)}</div>
                     <div class="device-main-info">
                         <h4>${d.type.toUpperCase()}</h4>
@@ -879,7 +915,63 @@ class AlarmApp {
                 `;
                 grid.appendChild(card);
             });
+
+            if (this.state.reorderMode) {
+                this.initSortable();
+            }
         }
+    }
+
+    toggleReorderMode() {
+        if (this.state.user.role !== 'admin') return;
+        this.state.reorderMode = !this.state.reorderMode;
+        
+        const btn = document.getElementById('reorder-mode-btn');
+        if (btn) {
+            btn.innerText = this.state.reorderMode ? 'Guardar Orden ✅' : 'Reordenar ↕️';
+            btn.classList.toggle('active-mode', this.state.reorderMode);
+        }
+
+        this.renderCurrentCentral();
+
+        if (!this.state.reorderMode) {
+            // Se guardó el orden al desactivar el modo
+            this.saveState();
+        }
+    }
+
+    initSortable() {
+        const grid = document.getElementById('devices-grid');
+        if (!grid || typeof Sortable === 'undefined') return;
+
+        if (this.sortableInstance) {
+            this.sortableInstance.destroy();
+        }
+
+        this.sortableInstance = new Sortable(grid, {
+            animation: 150,
+            handle: '.drag-handle',
+            ghostClass: 'sortable-ghost',
+            chosenClass: 'sortable-chosen',
+            dragClass: 'sortable-drag',
+            onEnd: () => {
+                const updatedDevices = [...this.state.devices];
+                const cards = grid.querySelectorAll('.device-card');
+                
+                cards.forEach((card, index) => {
+                    const id = card.getAttribute('data-id');
+                    const deviceIndex = updatedDevices.findIndex(d => d.id === id);
+                    if (deviceIndex !== -1) {
+                        updatedDevices[deviceIndex].displayOrder = index;
+                    }
+                });
+
+                this.state.devices = updatedDevices;
+                // No guardamos inmediatamente en Firebase para evitar spam, 
+                // pero si el usuario confía en el guardado automático lo hacemos.
+                // En este caso, saveState() se llamará al salir del modo reordenar o al final.
+            }
+        });
     }
 
     getDeviceIcon(type) {
@@ -897,7 +989,11 @@ class AlarmApp {
         document.getElementById('total-centrales').innerText = this.state.centrales.length;
         document.getElementById('total-dispositivos').innerText = this.state.devices.length;
 
-        // Global Summary Grid
+        // Debug Badge Update
+        if (this.state.user) {
+            document.getElementById('debug-role').innerText = `Rol: ${this.state.user.role.toUpperCase()}`;
+            document.getElementById('debug-devices').innerText = `Disp: ${this.state.devices.length}`;
+        }
         const globalSummaryGrid = document.getElementById('global-summary-grid');
         if (globalSummaryGrid) {
             globalSummaryGrid.innerHTML = '';
