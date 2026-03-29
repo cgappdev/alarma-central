@@ -1,4 +1,4 @@
 {
-  "version": "3.7.9",
-  "notes": "v3.7.9: Ajuste de región Firebase us-central1 y sincronización definitiva."
+  "version": "3.8.0",
+  "notes": "v3.8.0: Liberación definitiva de sincronización y botón de limpieza manual."
 }

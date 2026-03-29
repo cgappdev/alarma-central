@@ -30,9 +30,8 @@ class AlarmApp {
                     const remoteResetId = data.resetId || null;
                     const localResetId = localStorage.getItem('last-reset-id');
                     
-                    // Si hay un sello de reinicio nuevo, forzamos borrado local
                     if (remoteResetId && remoteResetId !== localResetId) {
-                        console.log('¡Sello de Reinicio Maestro detectado! Limpiando este dispositivo...');
+                        console.log('¡Sello de Reinicio Maestro detectado!');
                         this.state.centrales = data.centrales || [];
                         this.state.devices = data.devices || [];
                         this.state.users = data.users || [];
@@ -42,30 +41,18 @@ class AlarmApp {
                         return;
                     }
 
-                    console.log('Datos recibidos de Firebase:', 
-                        (data.centrales?.length || 0), 'centrales,', 
-                        (data.devices?.length || 0), 'dispositivos');
-                    
-                    const remoteDevices = data.devices || [];
-                    const localDevices = this.state.devices || [];
-                    
-                    // SEGURIDAD: Solo bloquear si no hay un sello de reinicio activo
-                    if (localDevices.length > 10 && remoteDevices.length === 0) {
-                        console.warn('¡Sincronización automática de borrado RECHAZADA por seguridad!');
-                        return; 
-                    }
-
+                    console.log('Datos nube recibidos.');
                     this.state.centrales = data.centrales || [];
-                    this.state.devices = remoteDevices;
+                    this.state.devices = data.devices || [];
                     this.state.users = data.users || [];
                     this.saveState(true); 
                     this.render();
                 } else {
-                    console.log('Aviso: Firebase parece no tener datos para este usuario.');
+                    console.log('Firebase vacío.');
                 }
             }, (error) => {
-                console.error('ERROR de Lectura Firebase:', error.message);
-                document.getElementById('debug-firebase').innerText = "Firebase: ❌ Error de Lectura";
+                console.error('ERROR Firebase:', error.message);
+                document.getElementById('debug-firebase').innerText = "Firebase: ❌ Error";
             });
             this.isCloudEnabled = true;
             document.getElementById('debug-firebase').innerText = "Firebase: ✅ DB Conectada";
@@ -98,12 +85,11 @@ class AlarmApp {
         }
     }
 
-    async restoreFromDataJson() {
-        if (confirm('¿Deseas recargar los datos del archivo data.json? Esto puede sobreescribir tus cambios locales.')) {
-            await this.fetchDataFromServer();
-            this.saveState();
-            this.render();
-            alert('Datos restaurados desde data.json');
+    clearLocalMemory() {
+        if (confirm('🚨 ¿Deseas borrar TODA la información local de este móvil para descargar la nube de nuevo?')) {
+            localStorage.removeItem('alarma-lg-state');
+            localStorage.removeItem('last-reset-id');
+            location.reload();
         }
     }
 
@@ -597,16 +583,21 @@ class AlarmApp {
                         <span class="label">Restaurar desde archivo servidor</span>
                         <span class="arrow">↓</span>
                     </div>
-                    <div class="me-menu-item warning" onclick="app.hardReset()" style="color: var(--hik-red); border: 1px dashed var(--hik-red); margin-top: 10px;">
+                    <div class="me-menu-item warning" onclick="app.clearLocalMemory()" style="color: #ff9800; border: 1px dashed #ff9800; margin-top: 10px;">
+                        <span class="icon">🧹</span>
+                        <span class="label">LIMPIAR MEMORIA (SOLO MÓVIL)</span>
+                        <span class="arrow">↺</span>
+                    </div>
+                    <div class="me-menu-item danger" onclick="app.hardReset()" style="color: var(--hik-red); border: 1px dashed var(--hik-red); margin-top: 5px;">
                         <span class="icon">⚠️</span>
-                        <span class="label">REINICIAR TODO (BORRAR NUBE)</span>
+                        <span class="label">ELIMINAR TODO (NUBE + DISPOSITIVOS)</span>
                         <span class="arrow">🗑️</span>
                     </div>
                 </div>
 
                 <div class="logout-section">
                     <button class="logout-btn-full" onclick="app.logout()">Cerrar Sesión</button>
-                    <p class="app-version">Versión 3.7.9-Premium</p>
+                    <p class="app-version">Versión 3.8.0-Premium</p>
                 </div>
             </div>
         `;
