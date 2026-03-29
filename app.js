@@ -34,9 +34,11 @@ class AlarmApp {
                     const remoteDevices = data.devices || [];
                     const localDevices = this.state.devices || [];
                     
-                    // SEGURIDAD: No sobrescribir si lo remoto tiene mucho menos que lo local (y local tiene datos)
-                    if (localDevices.length > 20 && remoteDevices.length < 15) {
-                        console.warn('¡Sincronización rechazada! Lo remoto tiene pocos dispositivos vs local.');
+                    // SEGURIDAD: No sobrescribir automáticamente si lo remoto tiene mucho menos que lo local
+                    // y lo local ya tiene datos (evita que un login en blanco borre todo)
+                    if (localDevices.length > 5 && remoteDevices.length < (localDevices.length / 2)) {
+                        console.warn('¡Sincronización automática RECHAZADA! Los datos de la nube parecen incompletos.');
+                        // Opcional: Avisar al usuario
                         return; 
                     }
 
@@ -51,7 +53,7 @@ class AlarmApp {
             });
             this.isCloudEnabled = true;
             document.getElementById('debug-firebase').innerText = "Firebase: ✅ DB Conectada";
-            console.log("Firebase DB Conectada a:", firebaseConfig.databaseURL);
+            console.log("Firebase DB Conectada");
         } else {
             document.getElementById('debug-firebase').innerText = "Firebase: ❌ Error/Desconectado";
             console.warn("Firebase no inicializado: SDK no encontrado o configuración inválida.");
@@ -61,7 +63,13 @@ class AlarmApp {
 
     pushToCloud() {
         if (!this.isCloudEnabled) return alert('Firebase no está configurado');
-        if (confirm('¿Deseas subir todos tus datos locales a la nube? Esto sobrescribirá lo que haya en la nube ahora mismo.')) {
+        
+        const localCount = this.state.devices.length;
+        if (localCount === 0 && this.state.devices.length < 2) {
+             if (!confirm('⚠️ ¡ALERTA! Vas a subir 0 dispositivos. Esto borrará TODO en la nube. ¿Estás seguro?')) return;
+        }
+
+        if (confirm(`¿Deseas subir tus datos locales a la nube? (${localCount} dispositivos). Esto sobrescribirá la nube.`)) {
             this.saveState(false);
             alert('Datos subidos correctamente a la nube.');
         }
@@ -262,6 +270,16 @@ class AlarmApp {
             this.state.deviceSearch = e.target.value.toLowerCase();
             this.renderCurrentCentral();
         });
+    }
+
+    emergencyLogin() {
+        console.log('Login de Emergencia activado');
+        this.state.user = { username: 'admin', role: 'admin' };
+        document.getElementById('login-overlay').classList.add('hidden');
+        document.getElementById('app-container').classList.remove('hidden');
+        this.saveState(true); // Guardar sesión localmente
+        this.render();
+        alert('Acceso de Emergencia Concedido. Por favor, restaura tus datos desde la Nube o el Servidor.');
     }
 
     login() {
