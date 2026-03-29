@@ -26,7 +26,7 @@ class AlarmApp {
             // Listener para cambios en la nube
             this.cloudRef.on('value', (snapshot) => {
                 const data = snapshot.val();
-                if (data && (data.centrales || data.devices)) {
+                if (data) {
                     console.log('Datos recibidos de Firebase:', 
                         (data.centrales?.length || 0), 'centrales,', 
                         (data.devices?.length || 0), 'dispositivos');
@@ -34,11 +34,10 @@ class AlarmApp {
                     const remoteDevices = data.devices || [];
                     const localDevices = this.state.devices || [];
                     
-                    // SEGURIDAD: No sobrescribir automáticamente si lo remoto tiene mucho menos que lo local
-                    // y lo local ya tiene datos (evita que un login en blanco borre todo)
-                    if (localDevices.length > 5 && remoteDevices.length < (localDevices.length / 2)) {
-                        console.warn('¡Sincronización automática RECHAZADA! Los datos de la nube parecen incompletos.');
-                        // Opcional: Avisar al usuario
+                    // SEGURIDAD: Solo bloquear si no estamos en modo "hardReset" 
+                    // y la diferencia es drásticamente sospechosa (> 10 vs 0)
+                    if (localDevices.length > 10 && remoteDevices.length === 0 && !localStorage.getItem('hard-reset-pending')) {
+                        console.warn('¡Sincronización automática de borrado RECHAZADA por seguridad!');
                         return; 
                     }
 
@@ -47,8 +46,16 @@ class AlarmApp {
                     this.state.users = data.users || [];
                     this.saveState(true); 
                     this.render();
+                } else if (this.state.user && localStorage.getItem('hard-reset-pending')) {
+                    // Si recibimos NULL pero venimos de un Reset manual, limpiamos local.
+                    console.log('Firebase vacío (Reset confirmado). Limpiando local...');
+                    this.state.centrales = [];
+                    this.state.devices = [];
+                    this.saveState(true);
+                    localStorage.removeItem('hard-reset-pending');
+                    this.render();
                 } else {
-                    console.log('Firebase está vacío o no es válido, manteniendo datos locales.');
+                    console.log('Firebase está vacío o no es accesible.');
                 }
             });
             this.isCloudEnabled = true;
@@ -184,18 +191,31 @@ class AlarmApp {
     }
 
     async fetchDataFromServer() {
+        console.log('Intentando cargar datos desde servidor/memoria...');
+        
+        // 1. Intentar usar los datos precargados vía script (Solución CORS para local)
+        if (window.initialData) {
+            console.log('Datos detectados en memoria (initial-data.js). Cargando...');
+            this.state.centrales = window.initialData.centrales || [];
+            this.state.devices = window.initialData.devices || [];
+            this.state.users = window.initialData.users || [];
+            this.state.currentCentralId = window.initialData.currentCentralId || null;
+            return;
+        }
+
+        // 2. Fallback: Intentar fetch si no hay initialData (ej. producción)
         try {
-            const response = await fetch('data.json');
+            const response = await fetch('data.json?v=' + Date.now());
             if (response.ok) {
                 const data = await response.json();
                 this.state.centrales = data.centrales || [];
                 this.state.devices = data.devices || [];
                 this.state.users = data.users || [];
                 this.state.currentCentralId = data.currentCentralId || null;
-                console.log('Datos cargados desde el servidor');
+                console.log('Datos cargados vía fetch (data.json)');
             }
         } catch (e) {
-            console.error('Error al descargar datos del servidor:', e);
+            console.warn('No se pudo cargar data.json vía fetch (posible CORS).');
         }
     }
 
@@ -215,6 +235,42 @@ class AlarmApp {
                 .then(() => console.log('Datos sincronizados en la nube'))
                 .catch(e => console.error('Error al subir a la nube:', e));
         }
+    }
+
+    async hardReset() {
+        if (!confirm('⚠️ ¡PELIGRO! Esto borrará TODAS las centrales y dispositivos en TODOS los móviles y en la Nube. ¿Continuar?')) return;
+        
+        // Marcar que estamos en reset para que otros lo acepten
+        localStorage.setItem('hard-reset-pending', 'true');
+
+        const resetState = {
+            centrales: [],
+            devices: [],
+            users: [{
+                id: 'admin_initial',
+                username: 'admin',
+                password: '1105',
+                role: 'admin'
+            }],
+            currentCentralId: null
+        };
+
+        // Forzar limpieza en la Nube
+        if (this.isCloudEnabled) {
+            try {
+                await this.cloudRef.set(resetState);
+                console.log('Nube limpiada con éxito.');
+            } catch (e) {
+                console.error('Error al limpiar nube:', e);
+            }
+        }
+
+        // Limpiar Local
+        localStorage.removeItem('alarma-lg-state');
+        localStorage.setItem('alarma-lg-state', JSON.stringify(resetState));
+        
+        alert('Reinicio completado. La aplicación se recargará para limpiar el móvil y el PC.');
+        location.reload();
     }
 
     initEventListeners() {
@@ -399,6 +455,7 @@ class AlarmApp {
         document.getElementById('user-manage-modal').classList.add('hidden');
         document.getElementById('user-edit-modal').classList.add('hidden');
         document.getElementById('central-selector-modal')?.classList.add('hidden');
+        document.getElementById('normativas-modal')?.classList.add('hidden');
         this.editingDeviceId = null;
         this.editingUserId = null;
     }
@@ -417,6 +474,13 @@ class AlarmApp {
         if (searchBox) {
             searchBox.style.display = searchBox.style.display === 'block' ? 'none' : 'block';
         }
+    }
+
+    openNormativasModal() {
+        const modal = document.getElementById('normativas-modal');
+        const overlay = document.getElementById('modal-overlay');
+        overlay.classList.remove('hidden');
+        modal.classList.remove('hidden');
     }
 
     switchTab(tab) {
@@ -478,6 +542,11 @@ class AlarmApp {
                 </div>
                 
                 <div class="me-menu">
+                    <div class="me-menu-item" onclick="app.openNormativasModal()">
+                        <span class="icon">📜</span>
+                        <span class="label">Manual de Control Interno</span>
+                        <span class="arrow">›</span>
+                    </div>
                     <div class="me-menu-item" onclick="app.openUserManageModal()">
                         <span class="icon">👥</span>
                         <span class="label">Gestionar Usuarios</span>
@@ -498,16 +567,16 @@ class AlarmApp {
                         <span class="label">Restaurar desde archivo servidor</span>
                         <span class="arrow">↓</span>
                     </div>
-                    <div class="me-menu-item">
-                        <span class="icon">ℹ️</span>
-                        <span class="label">Acerca de AlarmaLG</span>
-                        <span class="arrow">›</span>
+                    <div class="me-menu-item warning" onclick="app.hardReset()" style="color: var(--hik-red); border: 1px dashed var(--hik-red); margin-top: 10px;">
+                        <span class="icon">⚠️</span>
+                        <span class="label">REINICIAR TODO (BORRAR NUBE)</span>
+                        <span class="arrow">🗑️</span>
                     </div>
                 </div>
 
                 <div class="logout-section">
                     <button class="logout-btn-full" onclick="app.logout()">Cerrar Sesión</button>
-                    <p class="app-version">Versión 1.2.0-HikStyle</p>
+                    <p class="app-version">Versión 3.7.4-Premium</p>
                 </div>
             </div>
         `;

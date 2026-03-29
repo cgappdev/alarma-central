@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=3.6.1">
+    <link rel="stylesheet" href="style.css?v=3.7.4">
     <!-- jspdf CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
@@ -316,6 +316,25 @@
                 <button class="secondary-btn modal-close">Cerrar</button>
             </div>
         </div>
+        <!-- Modal de Normativas de Control Interno -->
+        <div class="modal glass hidden" id="normativas-modal" style="width: 90%; max-width: 800px; max-height: 80vh; overflow-y: auto;">
+            <div class="flex-row">
+                <h2>Manual de Control Interno</h2>
+                <button class="secondary-btn modal-close">✕</button>
+            </div>
+            <div class="normativas-content" style="text-align: left; line-height: 1.6; padding: 20px;">
+                <h3 style="color: var(--hik-red);">(III) Innovación y Reforma de los Métodos de Evaluación del Control Interno</h3>
+                <p>En las instituciones administrativas tradicionales, la evaluación del control interno suele realizarse mediante auditorías a posteriori. Sin embargo, estas carecen de prospectiva. El modelo de gestión debe adaptarse a las necesidades de la economía de mercado. Se deben establecer mecanismos de supervisión multiforma, incluyendo auditorías sociales y gubernamentales.</p>
+                <p>Además, el control debe pasar de la supervisión post-evento a la prevención previa y el control durante el proceso, mejorando la capacidad de gestión de riesgos desde la fuente.</p>
+                
+                <h3 style="color: var(--hik-red); margin-top: 30px;">(IV) Mejora del Nivel de Informatización de la Evaluación del Control Interno</h3>
+                <p>Con el desarrollo de la oficina digital, han surgido diversos sistemas de negocio. El sistema puede limitar las irregularidades mediante nodos, permisos y flujos de trabajo. Sin embargo, a menudo los sistemas de diferentes departamentos están aislados, lo que dificulta la coherencia entre el procesamiento de negocios y la contabilidad financiera.</p>
+                <p>Las instituciones deben utilizar niveles avanzados de informatización para lograr una conexión fluida entre departamentos y sistemas, logrando que el procesamiento de negocios, la contabilidad financiera y otros procedimientos sean programados, sistemáticos y visuales. Esto mejora el control del entorno interno y la transparencia de la evaluación.</p>
+            </div>
+            <div class="modal-actions">
+                <button class="primary-btn modal-close">Entendido</button>
+            </div>
+        </div>
     </div>
 
     <input type="file" id="import-input" style="display:none" accept=".json">
@@ -325,8 +344,8 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
     
     <!-- Configuración de Firebase (Placeholder) -->
-    <script src="firebase-config.js"></script>
-
-    <script src="app.js?v=3.6.1"></script>
+    <script src="firebase-config.js?v=3.7.4"></script>
+    <script src="initial-data.js?v=3.7.4"></script>
+    <script src="app.js?v=3.7.4"></script>
 </body>
 </html>

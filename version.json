@@ -1,4 +1,4 @@
 {
-  "version": "3.7",
-  "notes": "v3.7: Mejoras de seguridad en la nube y recuperación de datos de Hemodinamia."
+  "version": "3.7.4",
+  "notes": "v3.7.4: Solución a la sincronización de borrado y reparación de botones en perfil."
 }

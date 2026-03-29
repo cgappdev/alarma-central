@@ -1,4 +1,4 @@
-{
+const initialData = {
   "user": null,
   "centrales": [
     {
@@ -22,4 +22,4 @@
   "currentCentralId": "1774354088001",
   "centralSearch": "",
   "deviceSearch": ""
-}
+}; window.initialData = initialData;
