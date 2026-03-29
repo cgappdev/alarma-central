@@ -1,14 +1,14 @@
 // COPIA AQUÍ TUS CREDENCIALES DE FIREBASE
 // Instrucciones en el Walkthrough
 const firebaseConfig = {
-  apiKey: "AIzaSyA6tYELfeA9d4N0k1-z5j8Dw9gb0oT_lds",
-  authDomain: "alarma-central.firebaseapp.com",
-  databaseURL: "https://alarma-central-default-rtdb.us-central1.firebasedatabase.app/",
-  projectId: "alarma-central",
-  storageBucket: "alarma-central.firebasestorage.app",
-  messagingSenderId: "115549279331",
-  appId: "1:115549279331:web:8f9f59d0a7b52cc6e81456",
-  measurementId: "G-NFPMEJEBQ8"
+  apiKey: "AIzaSyBDKIYmnslJPv3NX9F5eUQ_A_rQMGGo3uk",
+  authDomain: "alarma-pro-a903d.firebaseapp.com",
+  databaseURL: "https://alarma-pro-a903d-default-rtdb.firebaseio.com/",
+  projectId: "alarma-pro-a903d",
+  storageBucket: "alarma-pro-a903d.firebasestorage.app",
+  messagingSenderId: "408079567330",
+  appId: "1:408079567330:web:a453dbce735dc7fa1ed1bb",
+  measurementId: "G-0S1CTDDBF6"
 };
 
 // Inicializar Firebase si la config es válida
