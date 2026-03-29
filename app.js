@@ -171,6 +171,7 @@ class AlarmApp {
             
             if (data.version !== currentVersion) {
                 console.log("Nueva versión detectada:", data.version);
+                this.pendingVersion = data.version; // Guardar para aplicar después
                 const banner = document.getElementById('update-banner');
                 if (banner) {
                     banner.style.display = 'flex';
@@ -183,12 +184,20 @@ class AlarmApp {
     }
 
     applyUpdate() {
-        fetch('version.json')
-            .then(r => r.json())
-            .then(data => {
-                localStorage.setItem('appVersion', data.version);
-                window.location.reload(true);
-            });
+        // Usar la versión pendiente si existe, o buscarla de nuevo con cache-busting
+        const versionToSet = this.pendingVersion;
+        if (versionToSet) {
+            localStorage.setItem('appVersion', versionToSet);
+            // Redirigir con un parámetro aleatorio para FORZAR al navegador a recargar todo
+            window.location.href = window.location.pathname + '?v=' + Date.now();
+        } else {
+            fetch('version.json?t=' + Date.now())
+                .then(r => r.json())
+                .then(data => {
+                    localStorage.setItem('appVersion', data.version);
+                    window.location.href = window.location.pathname + '?v=' + Date.now();
+                });
+        }
     }
 
     loadState() {
@@ -597,7 +606,7 @@ class AlarmApp {
 
                 <div class="logout-section">
                     <button class="logout-btn-full" onclick="app.logout()">Cerrar Sesión</button>
-                    <p class="app-version">Versión 3.7.7-Premium</p>
+                    <p class="app-version">Versión 3.7.8-Premium</p>
                 </div>
             </div>
         `;
