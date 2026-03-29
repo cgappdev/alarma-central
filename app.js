@@ -34,8 +34,6 @@ class AlarmApp {
                     const remoteDevices = data.devices || [];
                     const localDevices = this.state.devices || [];
                     
-                    // SEGURIDAD: Solo bloquear si no estamos en modo "hardReset" 
-                    // y la diferencia es drásticamente sospechosa (> 10 vs 0)
                     if (localDevices.length > 10 && remoteDevices.length === 0 && !localStorage.getItem('hard-reset-pending')) {
                         console.warn('¡Sincronización automática de borrado RECHAZADA por seguridad!');
                         return; 
@@ -47,7 +45,6 @@ class AlarmApp {
                     this.saveState(true); 
                     this.render();
                 } else if (this.state.user && localStorage.getItem('hard-reset-pending')) {
-                    // Si recibimos NULL pero venimos de un Reset manual, limpiamos local.
                     console.log('Firebase vacío (Reset confirmado). Limpiando local...');
                     this.state.centrales = [];
                     this.state.devices = [];
@@ -55,30 +52,40 @@ class AlarmApp {
                     localStorage.removeItem('hard-reset-pending');
                     this.render();
                 } else {
-                    console.log('Firebase está vacío o no es accesible.');
+                    console.log('Aviso: Firebase parece no tener datos para este usuario.');
                 }
+            }, (error) => {
+                console.error('ERROR de Lectura Firebase:', error.message);
+                document.getElementById('debug-firebase').innerText = "Firebase: ❌ Error de Lectura";
             });
             this.isCloudEnabled = true;
             document.getElementById('debug-firebase').innerText = "Firebase: ✅ DB Conectada";
             console.log("Firebase DB Conectada");
         } else {
-            document.getElementById('debug-firebase').innerText = "Firebase: ❌ Error/Desconectado";
+            document.getElementById('debug-firebase').innerText = "Firebase: ❌ No configurado";
             console.warn("Firebase no inicializado: SDK no encontrado o configuración inválida.");
             this.isCloudEnabled = false;
         }
     }
 
     pushToCloud() {
-        if (!this.isCloudEnabled) return alert('Firebase no está configurado');
+        if (!this.isCloudEnabled) return alert('⚠️ Firebase no está configurado o conectado correctamente.');
         
         const localCount = this.state.devices.length;
-        if (localCount === 0 && this.state.devices.length < 2) {
-             if (!confirm('⚠️ ¡ALERTA! Vas a subir 0 dispositivos. Esto borrará TODO en la nube. ¿Estás seguro?')) return;
-        }
-
         if (confirm(`¿Deseas subir tus datos locales a la nube? (${localCount} dispositivos). Esto sobrescribirá la nube.`)) {
-            this.saveState(false);
-            alert('Datos subidos correctamente a la nube.');
+            const dataToSave = {
+                centrales: this.state.centrales,
+                devices: this.state.devices,
+                users: this.state.users,
+                currentCentralId: this.state.currentCentralId
+            };
+            
+            this.cloudRef.set(dataToSave)
+                .then(() => alert('✅ Datos subidos correctamente a la nube.'))
+                .catch(e => {
+                    console.error('Error Firebase:', e);
+                    alert('❌ Error al subir: ' + e.message + '\nVerifica la URL en firebase-config.js');
+                });
         }
     }
 
@@ -580,7 +587,7 @@ class AlarmApp {
 
                 <div class="logout-section">
                     <button class="logout-btn-full" onclick="app.logout()">Cerrar Sesión</button>
-                    <p class="app-version">Versión 3.7.5-Premium</p>
+                    <p class="app-version">Versión 3.7.6-Premium</p>
                 </div>
             </div>
         `;

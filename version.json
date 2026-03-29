@@ -1,4 +1,4 @@
 {
-  "version": "3.7.5",
-  "notes": "v3.7.5: Corrección de persistencia (los cambios manuales ya no se sobrescriben al recargar)."
+  "version": "3.7.6",
+  "notes": "v3.7.6: Herramientas de diagnóstico de Nube y estabilización de sincronización."
 }
