@@ -27,6 +27,21 @@ class AlarmApp {
             this.cloudRef.on('value', (snapshot) => {
                 const data = snapshot.val();
                 if (data) {
+                    const remoteResetId = data.resetId || null;
+                    const localResetId = localStorage.getItem('last-reset-id');
+                    
+                    // Si hay un sello de reinicio nuevo, forzamos borrado local
+                    if (remoteResetId && remoteResetId !== localResetId) {
+                        console.log('¡Sello de Reinicio Maestro detectado! Limpiando este dispositivo...');
+                        this.state.centrales = data.centrales || [];
+                        this.state.devices = data.devices || [];
+                        this.state.users = data.users || [];
+                        localStorage.setItem('last-reset-id', remoteResetId);
+                        this.saveState(true); 
+                        this.render();
+                        return;
+                    }
+
                     console.log('Datos recibidos de Firebase:', 
                         (data.centrales?.length || 0), 'centrales,', 
                         (data.devices?.length || 0), 'dispositivos');
@@ -34,7 +49,8 @@ class AlarmApp {
                     const remoteDevices = data.devices || [];
                     const localDevices = this.state.devices || [];
                     
-                    if (localDevices.length > 10 && remoteDevices.length === 0 && !localStorage.getItem('hard-reset-pending')) {
+                    // SEGURIDAD: Solo bloquear si no hay un sello de reinicio activo
+                    if (localDevices.length > 10 && remoteDevices.length === 0) {
                         console.warn('¡Sincronización automática de borrado RECHAZADA por seguridad!');
                         return; 
                     }
@@ -43,13 +59,6 @@ class AlarmApp {
                     this.state.devices = remoteDevices;
                     this.state.users = data.users || [];
                     this.saveState(true); 
-                    this.render();
-                } else if (this.state.user && localStorage.getItem('hard-reset-pending')) {
-                    console.log('Firebase vacío (Reset confirmado). Limpiando local...');
-                    this.state.centrales = [];
-                    this.state.devices = [];
-                    this.saveState(true);
-                    localStorage.removeItem('hard-reset-pending');
                     this.render();
                 } else {
                     console.log('Aviso: Firebase parece no tener datos para este usuario.');
@@ -249,10 +258,10 @@ class AlarmApp {
     }
 
     async hardReset() {
-        if (!confirm('⚠️ ¡PELIGRO! Esto borrará TODAS las centrales y dispositivos en TODOS los móviles y en la Nube. ¿Continuar?')) return;
+        if (!confirm('⚠️ ¡PELIGRO! Esto borrará TODAS las centrales y dispositivos en TODOS los móviles y en la Nube de forma definitiva. ¿Continuar?')) return;
         
-        // Marcar que estamos en reset para que otros lo acepten
-        localStorage.setItem('hard-reset-pending', 'true');
+        const resetId = Date.now().toString();
+        localStorage.setItem('last-reset-id', resetId);
 
         const resetState = {
             centrales: [],
@@ -263,14 +272,15 @@ class AlarmApp {
                 password: '1105',
                 role: 'admin'
             }],
-            currentCentralId: null
+            currentCentralId: null,
+            resetId: resetId // Sello Maestro
         };
 
         // Forzar limpieza en la Nube
         if (this.isCloudEnabled) {
             try {
                 await this.cloudRef.set(resetState);
-                console.log('Nube limpiada con éxito.');
+                console.log('Nube limpiada con Sello Maestro v' + resetId);
             } catch (e) {
                 console.error('Error al limpiar nube:', e);
             }
@@ -280,7 +290,7 @@ class AlarmApp {
         localStorage.removeItem('alarma-lg-state');
         localStorage.setItem('alarma-lg-state', JSON.stringify(resetState));
         
-        alert('Reinicio completado. La aplicación se recargará para limpiar el móvil y el PC.');
+        alert('Reinicio completado. El sello maestro ' + resetId + ' se ha enviado a la nube para limpiar todos los móviles.');
         location.reload();
     }
 
@@ -587,7 +597,7 @@ class AlarmApp {
 
                 <div class="logout-section">
                     <button class="logout-btn-full" onclick="app.logout()">Cerrar Sesión</button>
-                    <p class="app-version">Versión 3.7.6-Premium</p>
+                    <p class="app-version">Versión 3.7.7-Premium</p>
                 </div>
             </div>
         `;

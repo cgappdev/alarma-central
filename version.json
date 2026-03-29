@@ -1,4 +1,4 @@
 {
-  "version": "3.7.6",
-  "notes": "v3.7.6: Herramientas de diagnóstico de Nube y estabilización de sincronización."
+  "version": "3.7.7",
+  "notes": "v3.7.7: Sello de Borrado Maestro para sincronización forzada."
 }
