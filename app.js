@@ -49,7 +49,7 @@ class AlarmApp {
                     this.render();
                     
                     const timestamp = new Date().toLocaleTimeString();
-                    document.getElementById('debug-firebase').innerHTML = `Firebase: ✅ Datos (${timestamp})`;
+                    document.getElementById('debug-firebase').innerHTML = `<span class="heartbeat"></span> Firebase: ✅ Sincronizado (${timestamp})`;
                     
                     const viewer = document.getElementById('cloud-json-viewer');
                     if (viewer) {
@@ -63,7 +63,7 @@ class AlarmApp {
                     console.log('Firebase vacío.');
                     document.getElementById('debug-firebase').innerHTML = `Firebase: ☁️ Vacío`;
                     const viewer = document.getElementById('cloud-json-viewer');
-                    if (viewer) viewer.innerText = "NUBE VACÍA (Sin datos instalados)";
+                    if (viewer) viewer.innerText = "NUBE VACÍA (Esperando datos del PC)";
                 }
             }, (error) => {
                 console.error('ERROR Firebase:', error.message);
@@ -81,24 +81,37 @@ class AlarmApp {
         }
     }
 
-    pushToCloud() {
-        if (!this.isCloudEnabled) return alert('⚠️ Firebase no está configurado o conectado correctamente.');
+    async syncCloud(silent = false) {
+        if (!this.isCloudEnabled) return;
         
-        const localCount = this.state.devices.length;
-        if (confirm(`¿Deseas subir tus datos locales a la nube? (${localCount} dispositivos). Esto sobrescribirá la nube.`)) {
-            const dataToSave = {
-                centrales: this.state.centrales,
-                devices: this.state.devices,
-                users: this.state.users,
-                currentCentralId: this.state.currentCentralId
-            };
+        const dataToSave = {
+            centrales: this.state.centrales,
+            devices: this.state.devices,
+            users: this.state.users,
+            currentCentralId: this.state.currentCentralId,
+            resetId: localStorage.getItem('last-reset-id') || null
+        };
+
+        try {
+            await this.cloudRef.set(dataToSave);
+            console.log('✅ Datos sincronizados con la nube');
             
-            this.cloudRef.set(dataToSave)
-                .then(() => alert('✅ Datos subidos correctamente a la nube.'))
-                .catch(e => {
-                    console.error('Error Firebase:', e);
-                    alert('❌ Error al subir: ' + e.message + '\nVerifica la URL en firebase-config.js');
-                });
+            const badge = document.getElementById('debug-firebase');
+            if (badge) {
+                const now = new Date().toLocaleTimeString();
+                badge.innerHTML = `<span class="heartbeat"></span> Sincronizado (${now})`;
+                badge.className = 'debug-badge connected';
+            }
+            if (!silent) alert('✅ Datos subidos correctamente.');
+        } catch (e) {
+            console.error('Error al sincronizar:', e);
+            if (!silent) alert('❌ Error al subir: ' + e.message);
+        }
+    }
+
+    pushToCloud() {
+        if (confirm('¿Deseas enviar tus datos manuales a la nube ahora? (Sobrescribe la nube).')) {
+            this.syncCloud(false);
         }
     }
 
@@ -284,11 +297,9 @@ class AlarmApp {
         
         localStorage.setItem('alarma-lg-state', JSON.stringify(dataToSave));
 
-        // Subir a la nube si está habilitado y no se pidió omitir
+        // PILOTO AUTOMÁTICO: Subir a la nube silenciosamente cada vez que guardamos algo
         if (this.isCloudEnabled && !skipCloud) {
-            this.cloudRef.set(dataToSave)
-                .then(() => console.log('Datos sincronizados en la nube'))
-                .catch(e => console.error('Error al subir a la nube:', e));
+            this.syncCloud(true);
         }
     }
 
@@ -648,7 +659,7 @@ class AlarmApp {
 
                 <div class="logout-section">
                     <button class="logout-btn-full" onclick="app.logout()">Cerrar Sesión</button>
-                    <p class="app-version">Versión 4.0.0-PRO-Final</p>
+                    <p class="app-version">Versión 4.1.1-PRO-Auto</p>
                 </div>
             </div>
         `;
