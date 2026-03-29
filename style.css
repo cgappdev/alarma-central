@@ -1593,45 +1593,39 @@ input[type="number"]::-webkit-outer-spin-button {
         display: inline-block;
         animation: pulseStatus 2s infinite;
     }
-    /* Devices Management Layout on Mobile */
+    /* Devices Management Layout on Mobile - Stacked and Full-Width */
     .devices-header {
         flex-direction: column;
-        align-items: flex-start;
-        gap: 1rem;
+        align-items: stretch; /* Full width for children */
+        gap: 1.25rem;
         margin: 1.5rem 0;
     }
 
     .devices-header .flex-row.gap-s {
         width: 100%;
-        justify-content: space-between;
-        gap: 0.5rem;
+        flex-direction: column; /* Stack buttons! */
+        gap: 0.75rem;
     }
 
     .devices-header h3 {
-        font-size: 1.1rem;
+        font-size: 1.2rem;
         margin: 0;
         width: 100%;
-        border-bottom: 2px solid rgba(230, 0, 18, 0.1);
-        padding-bottom: 0.5rem;
+        color: var(--hik-red);
+        border-bottom: 1px solid var(--hik-border);
+        padding-bottom: 0.75rem;
     }
 
-    /* Standardize buttons on mobile */
+    /* Standardize buttons on mobile - Full Width */
     #reorder-mode-btn, #add-device-btn {
-        flex: 1;
-        padding: 0.6rem 0.5rem;
-        font-size: 0.8rem;
-        white-space: nowrap;
-        text-align: center;
+        width: 100%;
+        padding: 0.85rem;
+        font-size: 0.9rem;
         display: flex;
         justify-content: center;
         align-items: center;
-        border-radius: 0.5rem;
-    }
-
-    #add-device-btn {
-        background: var(--hik-red);
-        color: white;
-        box-shadow: 0 4px 8px rgba(230, 0, 18, 0.15);
+        border-radius: 0.75rem;
+        margin: 0;
     }
 }
 
