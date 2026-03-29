@@ -410,15 +410,6 @@ class AlarmApp {
         });
     }
 
-    emergencyLogin() {
-        console.log('Login de Emergencia activado');
-        this.state.user = { username: 'admin', role: 'admin' };
-        document.getElementById('login-overlay').classList.add('hidden');
-        document.getElementById('app-container').classList.remove('hidden');
-        this.saveState(true); // Guardar sesión localmente
-        this.render();
-        alert('Acceso de Emergencia Concedido. Por favor, restaura tus datos desde la Nube o el Servidor.');
-    }
 
     login() {
         const usernameInput = document.getElementById('username').value.trim().toLowerCase();
