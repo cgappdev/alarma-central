@@ -1,4 +1,4 @@
 {
-  "version": "3.7.8",
-  "notes": "v3.7.8: Estabilización definitiva del ciclo de actualización en móviles."
+  "version": "3.7.9",
+  "notes": "v3.7.9: Ajuste de región Firebase us-central1 y sincronización definitiva."
 }

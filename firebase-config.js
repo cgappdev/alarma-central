@@ -3,7 +3,7 @@
 const firebaseConfig = {
   apiKey: "AIzaSyA6tYELfeA9d4N0k1-z5j8Dw9gb0oT_lds",
   authDomain: "alarma-central.firebaseapp.com",
-  databaseURL: "https://alarma-central-default-rtdb.firebaseio.com/",
+  databaseURL: "https://alarma-central-default-rtdb.us-central1.firebasedatabase.app/",
   projectId: "alarma-central",
   storageBucket: "alarma-central.firebasestorage.app",
   messagingSenderId: "115549279331",

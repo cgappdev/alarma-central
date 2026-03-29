@@ -606,7 +606,7 @@ class AlarmApp {
 
                 <div class="logout-section">
                     <button class="logout-btn-full" onclick="app.logout()">Cerrar Sesión</button>
-                    <p class="app-version">Versión 3.7.8-Premium</p>
+                    <p class="app-version">Versión 3.7.9-Premium</p>
                 </div>
             </div>
         `;
