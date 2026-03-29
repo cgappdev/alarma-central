@@ -47,6 +47,9 @@ class AlarmApp {
                     this.state.users = data.users || [];
                     this.saveState(true); 
                     this.render();
+                    
+                    const timestamp = new Date().toLocaleTimeString();
+                    document.getElementById('debug-firebase').innerHTML = `Firebase: ✅ OK (${timestamp})`;
                 } else {
                     console.log('Firebase vacío.');
                 }
@@ -82,6 +85,29 @@ class AlarmApp {
                     console.error('Error Firebase:', e);
                     alert('❌ Error al subir: ' + e.message + '\nVerifica la URL en firebase-config.js');
                 });
+        }
+    }
+
+    async pullFromCloud() {
+        if (!this.isCloudEnabled) return alert('⚠️ Firebase no conectado.');
+        
+        if (confirm('¿Deseas FORZAR la descarga de los datos de la nube? (Sobrescribe local).')) {
+            try {
+                const snapshot = await this.cloudRef.once('value');
+                const data = snapshot.val();
+                if (data) {
+                    this.state.centrales = data.centrales || [];
+                    this.state.devices = data.devices || [];
+                    this.state.users = data.users || [];
+                    this.saveState(true);
+                    this.render();
+                    alert('✅ Datos descargados y sincronizados correctamente.');
+                } else {
+                    alert('⚠️ La nube parece estar vacía.');
+                }
+            } catch (e) {
+                alert('❌ Error al descargar: ' + e.message);
+            }
         }
     }
 
@@ -583,7 +609,12 @@ class AlarmApp {
                         <span class="label">Restaurar desde archivo servidor</span>
                         <span class="arrow">↓</span>
                     </div>
-                    <div class="me-menu-item warning" onclick="app.clearLocalMemory()" style="color: #ff9800; border: 1px dashed #ff9800; margin-top: 10px;">
+                    <div class="me-menu-item" onclick="app.pullFromCloud()" style="color: #4caf50; border: 1px dashed #4caf50; margin-top: 10px;">
+                        <span class="icon">📥</span>
+                        <span class="label">SINCRONIZAR AHORA (SOLO MÓVIL)</span>
+                        <span class="arrow">↓</span>
+                    </div>
+                    <div class="me-menu-item warning" onclick="app.clearLocalMemory()" style="color: #ff9800; border: 1px dashed #ff9800; margin-top: 5px;">
                         <span class="icon">🧹</span>
                         <span class="label">LIMPIAR MEMORIA (SOLO MÓVIL)</span>
                         <span class="arrow">↺</span>
@@ -597,7 +628,7 @@ class AlarmApp {
 
                 <div class="logout-section">
                     <button class="logout-btn-full" onclick="app.logout()">Cerrar Sesión</button>
-                    <p class="app-version">Versión 3.8.0-Premium</p>
+                    <p class="app-version">Versión 3.8.1-Premium</p>
                 </div>
             </div>
         `;
