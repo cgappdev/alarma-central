@@ -49,7 +49,7 @@ class AlarmApp {
                     this.render();
                     
                     const timestamp = new Date().toLocaleTimeString();
-                    document.getElementById('debug-firebase').innerHTML = `Firebase: ✅ OK (${timestamp})`;
+                    document.getElementById('debug-firebase').innerHTML = `Firebase: ✅ Datos (${timestamp})`;
                     
                     const viewer = document.getElementById('cloud-json-viewer');
                     if (viewer) {
@@ -61,10 +61,15 @@ class AlarmApp {
                     }
                 } else {
                     console.log('Firebase vacío.');
+                    document.getElementById('debug-firebase').innerHTML = `Firebase: ☁️ Vacío`;
+                    const viewer = document.getElementById('cloud-json-viewer');
+                    if (viewer) viewer.innerText = "NUBE VACÍA (Sin datos instalados)";
                 }
             }, (error) => {
                 console.error('ERROR Firebase:', error.message);
                 document.getElementById('debug-firebase').innerText = "Firebase: ❌ Error";
+                const viewer = document.getElementById('cloud-json-viewer');
+                if (viewer) viewer.innerText = "ERROR: " + error.message;
             });
             this.isCloudEnabled = true;
             document.getElementById('debug-firebase').innerText = "Firebase: ✅ DB Conectada";
@@ -643,7 +648,7 @@ class AlarmApp {
 
                 <div class="logout-section">
                     <button class="logout-btn-full" onclick="app.logout()">Cerrar Sesión</button>
-                    <p class="app-version">Versión 3.9.1-Premium</p>
+                    <p class="app-version">Versión 3.9.2-Premium</p>
                 </div>
             </div>
         `;
