@@ -1,4 +1,4 @@
 {
-  "version": "3.9.0",
-  "notes": "v3.9.0: Configuración Real de Firebase integrada y Sincronización Final."
+  "version": "3.9.1",
+  "notes": "v3.9.1: Inspector de Nube en tiempo real y Diagnóstico de Sincronización."
 }

@@ -50,6 +50,15 @@ class AlarmApp {
                     
                     const timestamp = new Date().toLocaleTimeString();
                     document.getElementById('debug-firebase').innerHTML = `Firebase: ✅ OK (${timestamp})`;
+                    
+                    const viewer = document.getElementById('cloud-json-viewer');
+                    if (viewer) {
+                        viewer.innerText = JSON.stringify({
+                            centrales: this.state.centrales.length,
+                            devices: this.state.devices.length,
+                            resetId: data.resetId || "none"
+                        }, null, 2);
+                    }
                 } else {
                     console.log('Firebase vacío.');
                 }
@@ -624,11 +633,17 @@ class AlarmApp {
                         <span class="label">ELIMINAR TODO (NUBE + DISPOSITIVOS)</span>
                         <span class="arrow">🗑️</span>
                     </div>
+
+                    <div class="cloud-diagnostic" style="margin-top: 20px; padding: 10px; background: #000; color: #0f0; font-family: monospace; border-radius: 8px; font-size: 11px;">
+                        <p style="margin: 0 0 5px 0;">🔌 ESTADO NUBE (DEBUG):</p>
+                        <pre id="cloud-json-viewer" style="margin: 0; white-space: pre-wrap; height: 100px; overflow-y: auto;">Esperando datos...</pre>
+                        <button onclick="app.pullFromCloud()" style="width: 100%; margin-top: 5px; padding: 4px; background: #333; color: #fff; border: 1px solid #555;">FORZAR RE-LECTURA</button>
+                    </div>
                 </div>
 
                 <div class="logout-section">
                     <button class="logout-btn-full" onclick="app.logout()">Cerrar Sesión</button>
-                    <p class="app-version">Versión 3.9.0-Premium</p>
+                    <p class="app-version">Versión 3.9.1-Premium</p>
                 </div>
             </div>
         `;
