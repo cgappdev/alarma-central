@@ -49,7 +49,10 @@ class AlarmApp {
                     this.render();
                     
                     const timestamp = new Date().toLocaleTimeString();
-                    document.getElementById('debug-firebase').innerHTML = `<span class="heartbeat"></span> Firebase: ✅ Sincronizado (${timestamp})`;
+                    const debugFirebase = document.getElementById('debug-firebase');
+                    if (debugFirebase) {
+                        debugFirebase.innerHTML = `<span class="heartbeat"></span> Firebase: ✅ Sincronizado (${timestamp})`;
+                    }
                     
                     const viewer = document.getElementById('cloud-json-viewer');
                     if (viewer) {
@@ -61,21 +64,33 @@ class AlarmApp {
                     }
                 } else {
                     console.log('Firebase vacío.');
-                    document.getElementById('debug-firebase').innerHTML = `Firebase: ☁️ Vacío`;
+                    const debugFirebase = document.getElementById('debug-firebase');
+                    if (debugFirebase) {
+                        debugFirebase.innerHTML = `Firebase: ☁️ Vacío`;
+                    }
                     const viewer = document.getElementById('cloud-json-viewer');
                     if (viewer) viewer.innerText = "NUBE VACÍA (Esperando datos del PC)";
                 }
             }, (error) => {
                 console.error('ERROR Firebase:', error.message);
-                document.getElementById('debug-firebase').innerText = "Firebase: ❌ Error";
+                const debugFirebase = document.getElementById('debug-firebase');
+                if (debugFirebase) {
+                    debugFirebase.innerText = "Firebase: ❌ Error";
+                }
                 const viewer = document.getElementById('cloud-json-viewer');
                 if (viewer) viewer.innerText = "ERROR: " + error.message;
             });
             this.isCloudEnabled = true;
-            document.getElementById('debug-firebase').innerText = "Firebase: ✅ DB Conectada";
+            const debugFirebase = document.getElementById('debug-firebase');
+            if (debugFirebase) {
+                debugFirebase.innerText = "Firebase: ✅ DB Conectada";
+            }
             console.log("Firebase DB Conectada");
         } else {
-            document.getElementById('debug-firebase').innerText = "Firebase: ❌ No configurado";
+            const debugFirebase = document.getElementById('debug-firebase');
+            if (debugFirebase) {
+                debugFirebase.innerText = "Firebase: ❌ No configurado";
+            }
             console.warn("Firebase no inicializado: SDK no encontrado o configuración inválida.");
             this.isCloudEnabled = false;
         }
@@ -619,47 +634,11 @@ class AlarmApp {
                         <span class="label">Gestionar Usuarios</span>
                         <span class="arrow">›</span>
                     </div>
-                    <div class="me-menu-item">
-                        <span class="icon">⚙️</span>
-                        <span class="label">Configuración</span>
-                        <span class="arrow">›</span>
-                    </div>
-                    <div class="me-menu-item" onclick="app.pushToCloud()">
-                        <span class="icon">☁️</span>
-                        <span class="label">Subir datos locales a la nube</span>
-                        <span class="arrow">↑</span>
-                    </div>
-                    <div class="me-menu-item" onclick="app.restoreFromDataJson()">
-                        <span class="icon">📂</span>
-                        <span class="label">Restaurar desde archivo servidor</span>
-                        <span class="arrow">↓</span>
-                    </div>
-                    <div class="me-menu-item" onclick="app.pullFromCloud()" style="color: #4caf50; border: 1px dashed #4caf50; margin-top: 10px;">
-                        <span class="icon">📥</span>
-                        <span class="label">SINCRONIZAR AHORA (SOLO MÓVIL)</span>
-                        <span class="arrow">↓</span>
-                    </div>
-                    <div class="me-menu-item warning" onclick="app.clearLocalMemory()" style="color: #ff9800; border: 1px dashed #ff9800; margin-top: 5px;">
-                        <span class="icon">🧹</span>
-                        <span class="label">LIMPIAR MEMORIA (SOLO MÓVIL)</span>
-                        <span class="arrow">↺</span>
-                    </div>
-                    <div class="me-menu-item danger" onclick="app.hardReset()" style="color: var(--hik-red); border: 1px dashed var(--hik-red); margin-top: 5px;">
-                        <span class="icon">⚠️</span>
-                        <span class="label">ELIMINAR TODO (NUBE + DISPOSITIVOS)</span>
-                        <span class="arrow">🗑️</span>
-                    </div>
-
-                    <div class="cloud-diagnostic" style="margin-top: 20px; padding: 10px; background: #000; color: #0f0; font-family: monospace; border-radius: 8px; font-size: 11px;">
-                        <p style="margin: 0 0 5px 0;">🔌 ESTADO NUBE (DEBUG):</p>
-                        <pre id="cloud-json-viewer" style="margin: 0; white-space: pre-wrap; height: 100px; overflow-y: auto;">Esperando datos...</pre>
-                        <button onclick="app.pullFromCloud()" style="width: 100%; margin-top: 5px; padding: 4px; background: #333; color: #fff; border: 1px solid #555;">FORZAR RE-LECTURA</button>
-                    </div>
                 </div>
 
                 <div class="logout-section">
                     <button class="logout-btn-full" onclick="app.logout()">Cerrar Sesión</button>
-                    <p class="app-version">Versión 4.1.1-PRO-Auto</p>
+                    <p class="app-version">Versión 4.1.2-PRO-Clean</p>
                 </div>
             </div>
         `;
@@ -1241,11 +1220,8 @@ class AlarmApp {
         document.getElementById('total-centrales').innerText = this.state.centrales.length;
         document.getElementById('total-dispositivos').innerText = this.state.devices.length;
 
-        // Debug Badge Update
-        if (this.state.user) {
-            document.getElementById('debug-role').innerText = `Rol: ${this.state.user.role.toUpperCase()}`;
-            document.getElementById('debug-devices').innerText = `Disp: ${this.state.devices.length}`;
-        }
+        // Debug Badge Update (Removed)
+
         const globalSummaryGrid = document.getElementById('global-summary-grid');
         if (globalSummaryGrid) {
             globalSummaryGrid.innerHTML = '';

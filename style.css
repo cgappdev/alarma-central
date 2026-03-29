@@ -1593,6 +1593,46 @@ input[type="number"]::-webkit-outer-spin-button {
         display: inline-block;
         animation: pulseStatus 2s infinite;
     }
+    /* Devices Management Layout on Mobile */
+    .devices-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+        margin: 1.5rem 0;
+    }
+
+    .devices-header .flex-row.gap-s {
+        width: 100%;
+        justify-content: space-between;
+        gap: 0.5rem;
+    }
+
+    .devices-header h3 {
+        font-size: 1.1rem;
+        margin: 0;
+        width: 100%;
+        border-bottom: 2px solid rgba(230, 0, 18, 0.1);
+        padding-bottom: 0.5rem;
+    }
+
+    /* Standardize buttons on mobile */
+    #reorder-mode-btn, #add-device-btn {
+        flex: 1;
+        padding: 0.6rem 0.5rem;
+        font-size: 0.8rem;
+        white-space: nowrap;
+        text-align: center;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border-radius: 0.5rem;
+    }
+
+    #add-device-btn {
+        background: var(--hik-red);
+        color: white;
+        box-shadow: 0 4px 8px rgba(230, 0, 18, 0.15);
+    }
 }
 
 /* Global Animation for Status Pulse */

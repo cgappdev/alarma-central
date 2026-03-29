@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=4.1.1">
+    <link rel="stylesheet" href="style.css?v=4.1.2">
     <!-- jspdf CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
@@ -76,12 +76,8 @@
                         <span id="total-dispositivos" class="value">0</span>
                     </div>
                 </div>
-                <!-- Debug Badge: Visible en la cabecera para técnicos -->
-                <div id="debug-info-badge" class="debug-info glass">
-                    <span id="debug-role">Rol: --</span> | 
-                    <span id="debug-devices">Disp: 0</span> | 
-                    <span id="debug-firebase">Firebase: ⏳</span>
-                </div>
+                <!-- Debug Badge: Eliminado para una interfaz más limpia -->
+
                 <!-- Resumen Global de Dispositivos -->
                 <div id="global-summary-container" class="global-summary">
                     <div id="global-summary-grid" class="summary-grid">
@@ -105,13 +101,6 @@
                     <button class="secondary-btn admin-only" onclick="app.openUserManageModal()">Usuarios 👥</button>
                     <button class="secondary-btn" onclick="app.exportData()">Exportar 💾</button>
                     <button class="secondary-btn" onclick="app.importData()">Importar 📂</button>
-                    <div class="dropdown">
-                        <button class="secondary-btn">Nube ☁️</button>
-                        <div class="dropdown-content">
-                            <button onclick="app.pushToCloud()">Subir datos locales a la nube ↑</button>
-                            <button onclick="app.restoreFromDataJson()">Restaurar desde Servidor ↓</button>
-                        </div>
-                    </div>
                     <div class="dropdown">
                         <button class="secondary-btn">Reportes 📄</button>
                         <div class="dropdown-content">
@@ -344,8 +333,8 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
     
     <!-- Configuración de Firebase (Placeholder) -->
-    <script src="firebase-config.js?v=4.1.1"></script>
-    <script src="initial-data.js?v=4.1.1"></script>
-    <script src="app.js?v=4.1.1"></script>
+    <script src="firebase-config.js?v=4.1.2"></script>
+    <script src="initial-data.js?v=4.1.2"></script>
+    <script src="app.js?v=4.1.2"></script>
 </body>
 </html>
