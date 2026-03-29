@@ -1,4 +1,4 @@
 {
-  "version": "3.7.4",
-  "notes": "v3.7.4: Solución a la sincronización de borrado y reparación de botones en perfil."
+  "version": "3.7.5",
+  "notes": "v3.7.5: Corrección de persistencia (los cambios manuales ya no se sobrescriben al recargar)."
 }

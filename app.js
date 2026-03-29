@@ -100,15 +100,19 @@ class AlarmApp {
         // 2. Asegurar siempre usuarios básicos (admin/user) de inmediato
         this.bootstrapAdmin();
 
-        // 3. Intentar cargar del servidor de forma asíncrona (no bloqueante)
-        console.log('Intentando sincronizar con data.json...');
-        this.fetchDataFromServer().then(() => {
-            console.log('Sincronización con data.json completada');
-            this.render();
-        }).catch(e => {
-            console.warn('data.json no disponible:', e.message);
-            this.render();
-        });
+        // 3. SEEDING INTELIGENTE: Solo cargar de los archivos base si la app está vacía
+        if (this.state.centrales.length === 0) {
+            console.log('Aplicación vacía. Intentando cargar datos semilla desde data.json...');
+            this.fetchDataFromServer().then(() => {
+                console.log('Datos semilla de data.json cargados.');
+                this.render();
+            }).catch(e => {
+                console.warn('data.json no disponible:', e.message);
+                this.render();
+            });
+        } else {
+            console.log('Cargados ' + this.state.centrales.length + ' centrales desde la memoria local.');
+        }
 
         this.render();
     }
@@ -576,7 +580,7 @@ class AlarmApp {
 
                 <div class="logout-section">
                     <button class="logout-btn-full" onclick="app.logout()">Cerrar Sesión</button>
-                    <p class="app-version">Versión 3.7.4-Premium</p>
+                    <p class="app-version">Versión 3.7.5-Premium</p>
                 </div>
             </div>
         `;
