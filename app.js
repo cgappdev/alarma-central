@@ -124,42 +124,6 @@ class AlarmApp {
         }
     }
 
-    pushToCloud() {
-        if (confirm('¿Deseas enviar tus datos manuales a la nube ahora? (Sobrescribe la nube).')) {
-            this.syncCloud(false);
-        }
-    }
-
-    async pullFromCloud() {
-        if (!this.isCloudEnabled) return alert('⚠️ Firebase no conectado.');
-        
-        if (confirm('¿Deseas FORZAR la descarga de los datos de la nube? (Sobrescribe local).')) {
-            try {
-                const snapshot = await this.cloudRef.once('value');
-                const data = snapshot.val();
-                if (data) {
-                    this.state.centrales = data.centrales || [];
-                    this.state.devices = data.devices || [];
-                    this.state.users = data.users || [];
-                    this.saveState(true);
-                    this.render();
-                    alert('✅ Datos descargados y sincronizados correctamente.');
-                } else {
-                    alert('⚠️ La nube parece estar vacía.');
-                }
-            } catch (e) {
-                alert('❌ Error al descargar: ' + e.message);
-            }
-        }
-    }
-
-    clearLocalMemory() {
-        if (confirm('🚨 ¿Deseas borrar TODA la información local de este móvil para descargar la nube de nuevo?')) {
-            localStorage.removeItem('alarma-lg-state');
-            localStorage.removeItem('last-reset-id');
-            location.reload();
-        }
-    }
 
     async loadInitialData() {
         console.log('Cargando datos iniciales...');
@@ -870,23 +834,6 @@ class AlarmApp {
         reader.readAsText(file);
     }
 
-    async resetFromServer() {
-        if (confirm('Esto borrará sus cambios locales y recargará los datos originales del servidor. ¿Continuar?')) {
-            localStorage.removeItem('alarma-lg-state');
-            this.state = {
-                user: null,
-                centrales: [],
-                devices: [],
-                users: [],
-                currentCentralId: null,
-                centralSearch: '',
-                deviceSearch: ''
-            };
-            await this.loadInitialData();
-            alert('Datos sincronizados correctamente');
-            location.reload(); // Recargar para asegurar estado limpio
-        }
-    }
 
     // PDF Reporting
     generateGeneralReport() {
