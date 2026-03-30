@@ -1435,7 +1435,9 @@ input[type="number"]::-webkit-outer-spin-button {
         letter-spacing: 0;
     }
 
-
+    .dashboard-header-main.header-box {
+        margin-top: 1.5rem !important; /* Espacio extra para que no se recorte */
+    }
 
     .me-tab {
         padding: 0;
