@@ -1414,6 +1414,31 @@ input[type="number"]::-webkit-outer-spin-button {
         margin-bottom: 0.5rem;
     }
 
+    /* Tab Layout Refinement for 5 items */
+    .mobile-nav {
+        gap: 0.25rem;
+        padding-top: 0.5rem;
+    }
+
+    .nav-item {
+        flex: 1;
+        gap: 0.15rem;
+        padding: 0.25rem;
+    }
+
+    .nav-icon {
+        font-size: 1.3rem;
+    }
+
+    .nav-item span {
+        font-size: 0.65rem;
+        letter-spacing: 0;
+    }
+
+    .dashboard-header-main.header-box {
+        display: none; /* Hidden by default, toggled by switchTab */
+    }
+
     .me-tab {
         padding: 0;
         background: var(--hik-bg);

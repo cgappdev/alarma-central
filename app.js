@@ -574,6 +574,15 @@ class AlarmApp {
         });
 
         const details = document.getElementById('central-details');
+        const dashboardHeader = document.querySelector('.dashboard-header-main');
+        
+        // Toggle global dashboard visibility
+        if (tab === 'control') {
+            dashboardHeader?.classList.remove('hidden');
+            this.updateStats(); // Refresh counters
+        } else {
+            dashboardHeader?.classList.add('hidden');
+        }
         
         if (tab === 'home') {
             if (this.state.currentCentralId) {
@@ -590,9 +599,14 @@ class AlarmApp {
                 `;
                 details.classList.remove('hidden');
             }
+        } else if (tab === 'control') {
+            // Dashboard header is already toggled above, clear details area
+            details.classList.add('hidden');
         } else if (tab === 'me') {
+            details.classList.remove('hidden');
             this.renderMeTab();
         } else if (tab === 'service') {
+            details.classList.remove('hidden');
             this.renderServiceTab();
         } else if (tab === 'messages') {
             details.innerHTML = `

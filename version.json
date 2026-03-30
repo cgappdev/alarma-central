@@ -1,4 +1,4 @@
 {
-  "version": "4.2.0",
-  "notes": "v4.2.0-PRO: Finalización del diseño móvil del encabezado. Diseño compacto con soporte optimizado de Safe Area."
+  "version": "4.3.0",
+  "notes": "v4.3.0-PRO: Nueva estructura de navegación móvile. Lanzamiento de la pestaña 'Panel' dedicada al Centro de Control."
 }
