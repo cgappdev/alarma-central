@@ -1,4 +1,4 @@
 {
-  "version": "4.1.9",
-  "notes": "v4.1.9-PRO: Mejora de áreas seguras (Safe Area) en el encabezado móvil para evitar recortes por notch."
+  "version": "4.2.0",
+  "notes": "v4.2.0-PRO: Finalización del diseño móvil del encabezado. Diseño compacto con soporte optimizado de Safe Area."
 }

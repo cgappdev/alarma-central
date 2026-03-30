@@ -1008,10 +1008,10 @@ input[type="number"]::-webkit-outer-spin-button {
         border-bottom: 1px solid var(--hik-border) !important;
         border-radius: 0;
         margin-bottom: 0;
-        padding: 0.75rem 1rem;
-        /* Soporte Robusto para Notches (iPhones) */
-        padding-top: 45px !important; /* Fallback para navegadores older */
-        padding-top: calc(env(safe-area-inset-top, 44px) + 10px) !important;
+        padding: 0.5rem 1rem;
+        /* Diseño Compacto con Safe Area */
+        padding-top: 35px !important; /* Fallback */
+        padding-top: calc(env(safe-area-inset-top, 44px) + 5px) !important;
         padding-left: calc(env(safe-area-inset-left, 0px) + 1rem) !important;
         padding-right: calc(env(safe-area-inset-right, 0px) + 1rem) !important;
         
@@ -1022,8 +1022,8 @@ input[type="number"]::-webkit-outer-spin-button {
         width: 100% !important;
         z-index: 99999 !important;
         display: flex !important;
-        min-height: 90px !important;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important;
+        min-height: 75px !important; /* Más compacto */
+        box-shadow: 0 4px 15px rgba(0,0,0,0.06) !important;
         visibility: visible !important;
         opacity: 1 !important;
         box-sizing: border-box !important;
@@ -1033,8 +1033,8 @@ input[type="number"]::-webkit-outer-spin-button {
         padding: 0;
         flex: 1;
         overflow-y: auto;
-        padding-top: 110px !important; /* Base space */
-        padding-top: calc(100px + env(safe-area-inset-top, 44px)) !important; /* Dynamic space */
+        padding-top: 95px !important; /* Base space */
+        padding-top: calc(85px + env(safe-area-inset-top, 44px)) !important; /* Dynamic space */
         padding-bottom: 80px; 
         background: var(--hik-bg);
     }
