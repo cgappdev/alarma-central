@@ -201,11 +201,12 @@ h1, h2, h3 {
 }
 
 .dashboard-header-main h1 {
-    font-size: 1.3rem; /* Smaler as requested */
-    color: var(--hik-red); /* More llamativo */
+    display: block !important;
+    font-size: 1.4rem;
+    color: var(--hik-red);
     text-transform: uppercase;
     letter-spacing: 2px;
-    margin-bottom: 1rem;
+    margin: 0.5rem 0 1.25rem;
     font-weight: 700;
 }
 
@@ -1436,7 +1437,8 @@ input[type="number"]::-webkit-outer-spin-button {
     }
 
     .dashboard-header-main.header-box {
-        margin-top: 1.5rem !important; /* Espacio extra para que no se recorte */
+        margin: 2rem 1rem 2.5rem !important; /* Incrementamos el margen superior */
+        display: block; 
     }
 
     .me-tab {

@@ -1,4 +1,4 @@
 {
-  "version": "4.3.2",
-  "notes": "v4.3.2-PRO: Ajuste de márgenes en el Panel móvil. Se evita el recorte del recuadro bajo el encabezado fijo."
+  "version": "4.3.3",
+  "notes": "v4.3.3-PRO: Corrección del título en el Panel. Se aumenta el margen y se asegura la visibilidad del encabezado 'Centro de Control'."
 }
