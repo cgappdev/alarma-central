@@ -1,4 +1,4 @@
 {
-  "version": "4.1.8",
-  "notes": "v4.1.8-PRO: Rediseño de encabezado principal. Título compacto, color llamativo y contenedor en recuadro."
+  "version": "4.1.9",
+  "notes": "v4.1.9-PRO: Mejora de áreas seguras (Safe Area) en el encabezado móvil para evitar recortes por notch."
 }
