@@ -2,12 +2,18 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>AlarmaLG - Control Central Premium</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=4.1.2">
+    <link rel="stylesheet" href="style.css?v=4.1.7">
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#E60012">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <!-- jspdf CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
@@ -46,7 +52,7 @@
     <div id="app-container" class="hidden">
         <aside class="sidebar glass">
             <div class="sidebar-header">
-                <h3>Centrales</h3>
+                <h3><span style="color: var(--accent-yellow); margin-right: 8px;">📁</span>Centrales</h3>
             </div>
             <div class="sidebar-actions admin-only">
                 <button id="add-central-btn" class="primary-btn full-width">+ Añadir Central</button>
@@ -61,6 +67,35 @@
                 <button id="logout-btn-sidebar" class="secondary-btn">Cerrar Sesión</button>
             </div>
         </aside>
+
+        <header class="main-header glass">
+            <div class="mobile-top-bar">
+                <div class="mobile-logo">
+                    <span style="color: var(--accent-yellow); margin-right: 5px;">📁</span>AlarmaLG
+                </div>
+                <div class="mobile-actions">
+                    <span class="mobile-action-icon" style="color: var(--accent-yellow);" onclick="app.openCentralSelector()">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                    </span>
+                    <span class="mobile-action-icon admin-only" onclick="app.openCentralModal()">➕</span>
+                    <span class="mobile-action-icon" onclick="app.toggleSearch()">🔍</span>
+                </div>
+            </div>
+            <div class="actions">
+                <button class="secondary-btn admin-only" onclick="app.openUserManageModal()">Usuarios 👥</button>
+                <button class="secondary-btn" onclick="window.open('https://cgappdev.github.io/alarma-central/', '_blank')">Ver Nube 🌐</button>
+                <button class="secondary-btn" onclick="app.exportData()">Exportar 💾</button>
+                <button class="secondary-btn" onclick="app.importData()">Importar 📂</button>
+                <div class="dropdown">
+                    <button class="secondary-btn">Reportes 📄</button>
+                    <div class="dropdown-content">
+                        <button onclick="app.generateGeneralReport()">Todas las Centrales</button>
+                        <button onclick="app.generateSpecificReport()">Central Actual</button>
+                    </div>
+                </div>
+                <button id="logout-btn-header" class="secondary-btn">Salir 🔒</button>
+            </div>
+        </header>
 
         <main class="content">
             <div class="dashboard-header-main">
@@ -84,33 +119,6 @@
                     </div>
                 </div>
             </div>
-
-            <header class="main-header glass">
-                <div class="mobile-top-bar">
-                    <div class="mobile-logo">AlarmaLG</div>
-                    <div class="mobile-actions">
-                        <span class="mobile-action-icon" style="color: var(--accent-yellow);" onclick="app.openCentralSelector()">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
-                        </span>
-                        <span class="mobile-action-icon admin-only" onclick="app.openCentralModal()">➕</span>
-                        <span class="mobile-action-icon" onclick="app.toggleSearch()">🔍</span>
-                    </div>
-                </div>
-                <div class="actions">
-                    <button class="secondary-btn admin-only" onclick="app.openUserManageModal()">Usuarios 👥</button>
-                    <button class="secondary-btn" onclick="window.open('https://cgappdev.github.io/alarma-central/', '_blank')">Ver Nube 🌐</button>
-                    <button class="secondary-btn" onclick="app.exportData()">Exportar 💾</button>
-                    <button class="secondary-btn" onclick="app.importData()">Importar 📂</button>
-                    <div class="dropdown">
-                        <button class="secondary-btn">Reportes 📄</button>
-                        <div class="dropdown-content">
-                            <button onclick="app.generateGeneralReport()">Todas las Centrales</button>
-                            <button onclick="app.generateSpecificReport()">Central Actual</button>
-                        </div>
-                    </div>
-                    <button id="logout-btn-header" class="secondary-btn">Salir 🔒</button>
-                </div>
-            </header>
 
             <section id="central-details" class="details-section">
                 <div class="central-info glass">
@@ -333,8 +341,23 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
     
     <!-- Configuración de Firebase (Placeholder) -->
-    <script src="firebase-config.js?v=4.1.2"></script>
-    <script src="initial-data.js?v=4.1.2"></script>
-    <script src="app.js?v=4.1.2"></script>
+    <script src="firebase-config.js?v=4.1.7"></script>
+    <script src="initial-data.js?v=4.1.7"></script>
+    <script src="app.js?v=4.1.7"></script>
+    
+    <!-- PWA Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then((registration) => {
+                        console.log('SW: Registered', registration.scope);
+                    })
+                    .catch((err) => {
+                        console.log('SW: Failed', err);
+                    });
+            });
+        }
+    </script>
 </body>
 </html>

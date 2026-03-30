@@ -182,40 +182,71 @@ class AlarmApp {
     }
 
     async checkForUpdates() {
+        // 1. Chequeo manual via version.json
         try {
             const resp = await fetch('version.json?t=' + Date.now());
             const data = await resp.json();
             const currentVersion = localStorage.getItem('appVersion') || '1.0';
             
             if (data.version !== currentVersion) {
-                console.log("Nueva versión detectada:", data.version);
-                this.pendingVersion = data.version; // Guardar para aplicar después
-                const banner = document.getElementById('update-banner');
-                if (banner) {
-                    banner.style.display = 'flex';
-                    document.getElementById('new-version-text').innerText = data.version;
-                }
+                console.log("Nueva versión detectada (JSON):", data.version);
+                this.pendingVersion = data.version; 
+                this.showUpdateBanner(data.version);
             }
         } catch (e) {
-            console.warn("No se pudo comprobar actualizaciones.");
+            console.warn("No se pudo comprobar actualización via JSON.");
+        }
+
+        // 2. Chequeo via Service Worker (PWA Standard)
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.ready.then(registration => {
+                registration.onupdatefound = () => {
+                    const installingWorker = registration.installing;
+                    installingWorker.onstatechange = () => {
+                        if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            console.log('Nuevo Service Worker detectado (PWA Update)');
+                            this.showUpdateBanner('PWA Optimized');
+                        }
+                    };
+                };
+            });
+        }
+    }
+
+    showUpdateBanner(versionLabel) {
+        const banner = document.getElementById('update-banner');
+        if (banner) {
+            banner.style.display = 'flex';
+            const textEl = document.getElementById('new-version-text');
+            if (textEl) textEl.innerText = versionLabel;
         }
     }
 
     applyUpdate() {
-        // Usar la versión pendiente si existe, o buscarla de nuevo con cache-busting
         const versionToSet = this.pendingVersion;
+        
+        // Si hay una versión de Service Worker esperando, se activará al recargar
+        // debido a skipWaiting() en el sw.js.
+        
         if (versionToSet) {
             localStorage.setItem('appVersion', versionToSet);
-            // Redirigir con un parámetro aleatorio para FORZAR al navegador a recargar todo
-            window.location.href = window.location.pathname + '?v=' + Date.now();
         } else {
+            // Intentar obtenerla de nuevo si no estaba guardada
             fetch('version.json?t=' + Date.now())
                 .then(r => r.json())
                 .then(data => {
                     localStorage.setItem('appVersion', data.version);
-                    window.location.href = window.location.pathname + '?v=' + Date.now();
-                });
+                    this.reloadApp();
+                })
+                .catch(() => this.reloadApp());
+            return;
         }
+        this.reloadApp();
+    }
+
+    reloadApp() {
+        // Redirigir con un parámetro aleatorio para FORZAR al navegador a recargar todo
+        window.location.href = window.location.pathname + '?v=' + Date.now();
     }
 
     loadState() {
@@ -409,6 +440,12 @@ class AlarmApp {
             this.state.user = { username: foundUser.username, role: foundUser.role };
             document.getElementById('login-overlay').classList.add('hidden');
             document.getElementById('app-container').classList.remove('hidden');
+            
+            // Forzar volver al tope de la pantalla al entrar
+            const contentArea = document.querySelector('.content');
+            if (contentArea) contentArea.scrollTop = 0;
+            window.scrollTo(0, 0);
+
             this.saveState(); // Guardar sesión
             this.render();
         } else {
@@ -522,6 +559,11 @@ class AlarmApp {
 
     switchTab(tab) {
         if (!tab) return;
+        
+        // Reset scroll position on tab switch
+        const contentArea = document.querySelector('.content');
+        if (contentArea) contentArea.scrollTop = 0;
+        window.scrollTo(0, 0);
         
         // Update navigation UI
         document.querySelectorAll('.nav-item').forEach(item => {
@@ -824,12 +866,20 @@ class AlarmApp {
         if (!file) return;
         const reader = new FileReader();
         reader.onload = (event) => {
-            const data = JSON.parse(event.target.result);
-            this.state.centrales = data.centrales || [];
-            this.state.devices = data.devices || [];
-            this.saveState();
-            this.render();
-            alert('Datos recuperados con éxito');
+            try {
+                const data = JSON.parse(event.target.result);
+                this.state.centrales = data.centrales || [];
+                this.state.devices = data.devices || [];
+                // Ahora también restauramos la lista de usuarios (administradores y operadores)
+                this.state.users = data.users || [];
+                
+                this.saveState();
+                this.render();
+                alert('🚀 Restauración Total Exitosa: Centrales, Dispositivos y Usuarios recuperados.');
+            } catch (err) {
+                console.error('Error al importar:', err);
+                alert('❌ El archivo no es un respaldo válido.');
+            }
         };
         reader.readAsText(file);
     }
@@ -937,7 +987,7 @@ class AlarmApp {
                 li.className = c.id === this.state.currentCentralId ? 'active' : '';
                 li.innerHTML = `
                     <span class="icon" style="color: var(--accent-yellow);">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
                     </span> 
                     <span class="name">${c.name}</span>
                     <span class="count-pill">${deviceCount}</span>
