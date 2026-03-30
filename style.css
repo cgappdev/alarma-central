@@ -200,14 +200,18 @@ h1, h2, h3 {
     animation: fadeIn 0.8s ease;
 }
 
-.dashboard-header-main h1 {
+#main-dashboard-title.dashboard-title-main {
     display: block !important;
-    font-size: 1.4rem;
-    color: var(--hik-red);
+    visibility: visible !important;
+    font-size: 1.6rem !important;
+    color: var(--hik-red) !important;
     text-transform: uppercase;
     letter-spacing: 2px;
-    margin: 0.5rem 0 1.25rem;
-    font-weight: 700;
+    margin: 0.5rem 0 1.5rem !important;
+    padding-top: 10px !important;
+    font-weight: 700 !important;
+    text-align: center !important;
+    opacity: 1 !important;
 }
 
 .stats-pills {
