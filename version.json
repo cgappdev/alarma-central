@@ -1,4 +1,4 @@
 {
-  "version": "4.3.0",
-  "notes": "v4.3.0-PRO: Nueva estructura de navegación móvile. Lanzamiento de la pestaña 'Panel' dedicada al Centro de Control."
+  "version": "4.3.1",
+  "notes": "v4.3.1-PRO: Corrección de visibilidad en la pestaña Panel. Resuelto problema de estados CSS/JS."
 }
