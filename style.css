@@ -189,18 +189,23 @@ h1, h2, h3 {
     animation: fadeIn 0.5s ease;
 }
 
-.dashboard-header-main {
-    text-align: center;
-    margin-bottom: 2.5rem;
+.dashboard-header-main.header-box {
+    margin: 0 1rem 2.5rem;
+    padding: 1.5rem 1rem;
+    border-radius: 1.5rem;
+    background: white;
+    border: 1px solid var(--hik-border);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.05);
+    text-align: center; /* Important! */
     animation: fadeIn 0.8s ease;
 }
 
 .dashboard-header-main h1 {
-    font-size: 2.2rem;
-    color: var(--text-main);
+    font-size: 1.3rem; /* Smaler as requested */
+    color: var(--hik-red); /* More llamativo */
     text-transform: uppercase;
-    letter-spacing: 4px;
-    margin-bottom: 1.25rem;
+    letter-spacing: 2px;
+    margin-bottom: 1rem;
     font-weight: 700;
 }
 
