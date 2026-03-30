@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=4.3.4">
+    <link rel="stylesheet" href="style.css?v=4.3.5">
     <!-- PWA -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#E60012">
@@ -71,7 +71,8 @@
         <header class="main-header glass">
             <div class="mobile-top-bar">
                 <div class="mobile-logo">
-                    <span style="color: var(--accent-yellow); margin-right: 5px;">📁</span>AlarmaLG
+                    <span id="mobile-logo-icon" style="color: var(--accent-yellow); margin-right: 5px;">📁</span>
+                    <span id="mobile-logo-text">AlarmaLG</span>
                 </div>
                 <div class="mobile-actions">
                     <span class="mobile-action-icon" style="color: var(--accent-yellow);" onclick="app.openCentralSelector()">
@@ -99,7 +100,7 @@
 
         <main class="content">
             <div class="dashboard-header-main glass-card header-box hidden">
-                <h2 id="main-dashboard-title" class="dashboard-title-main">Centro de Control</h2>
+                <!-- El título ahora se maneja en la barra superior (Dynamic Header) -->
                 <div class="stats-pills">
                     <div class="stat-pill">
                         <span class="label">Total Centrales:</span>
@@ -345,9 +346,9 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
     
     <!-- Configuración de Firebase (Placeholder) -->
-    <script src="firebase-config.js?v=4.3.4"></script>
-    <script src="initial-data.js?v=4.3.4"></script>
-    <script src="app.js?v=4.3.4"></script>
+    <script src="firebase-config.js?v=4.3.5"></script>
+    <script src="initial-data.js?v=4.3.5"></script>
+    <script src="app.js?v=4.3.5"></script>
     
     <!-- PWA Service Worker Registration -->
     <script>

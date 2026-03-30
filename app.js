@@ -575,13 +575,19 @@ class AlarmApp {
 
         const details = document.getElementById('central-details');
         const dashboardHeader = document.querySelector('.dashboard-header-main');
+        const logoText = document.getElementById('mobile-logo-text');
+        const logoIcon = document.getElementById('mobile-logo-icon');
         
-        // Toggle global dashboard visibility
+        // Toggle global dashboard visibility and Dynamic Header Title
         if (tab === 'control') {
             dashboardHeader?.classList.remove('hidden');
+            if (logoText) logoText.innerText = 'Centro de Control';
+            if (logoIcon) logoIcon.style.display = 'none';
             this.updateStats(); // Refresh counters
         } else {
             dashboardHeader?.classList.add('hidden');
+            if (logoText) logoText.innerText = 'AlarmaLG';
+            if (logoIcon) logoIcon.style.display = 'inline-block';
         }
         
         if (tab === 'home') {

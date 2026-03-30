@@ -197,22 +197,9 @@ h1, h2, h3 {
     border: 1px solid var(--hik-border);
     box-shadow: 0 8px 25px rgba(0,0,0,0.05);
     text-align: center; /* Important! */
-    animation: fadeIn 0.8s ease;
 }
 
-#main-dashboard-title.dashboard-title-main {
-    display: block !important;
-    visibility: visible !important;
-    font-size: 1.6rem !important;
-    color: var(--hik-red) !important;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    margin: 0.5rem 0 1.5rem !important;
-    padding-top: 10px !important;
-    font-weight: 700 !important;
-    text-align: center !important;
-    opacity: 1 !important;
-}
+/* Reglas obsoletas de título removidas */
 
 .stats-pills {
     display: flex;
