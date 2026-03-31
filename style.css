@@ -199,7 +199,30 @@ h1, h2, h3 {
     text-align: center; /* Important! */
 }
 
-/* Reglas obsoletas de título removidas */
+/* Central Details Banner */
+.central-title-banner {
+    width: 100%;
+    text-align: center;
+    border-bottom: 2px solid var(--hik-border);
+    padding-bottom: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.central-title-banner h2 {
+    color: var(--hik-red) !important;
+    text-transform: uppercase;
+    font-weight: 700;
+    font-size: 1.4rem;
+    margin: 0;
+}
+
+.central-actions-row {
+    display: flex;
+    justify-content: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+}
 
 .stats-pills {
     display: flex;

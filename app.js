@@ -1044,13 +1044,13 @@ class AlarmApp {
             console.log('Restaurando estructura base de detalles de central');
             details.innerHTML = `
                 <div class="central-info glass">
-                    <div class="flex-row">
+                    <div class="central-title-banner">
                         <h2 id="current-central-name">Seleccione una Central</h2>
-                        <div class="central-actions">
-                            <button id="print-central-btn" class="secondary-btn btn-sm">Imprimir PDF 📄</button>
-                            <button id="edit-central-btn" class="secondary-btn btn-sm admin-only">Editar ✏️</button>
-                            <button id="delete-central-btn" class="secondary-btn btn-sm danger admin-only">Eliminar 🗑️</button>
-                        </div>
+                    </div>
+                    <div class="central-actions-row">
+                        <button id="print-central-btn" class="secondary-btn btn-sm">Imprimir PDF 📄</button>
+                        <button id="edit-central-btn" class="secondary-btn btn-sm admin-only">Editar ✏️</button>
+                        <button id="delete-central-btn" class="secondary-btn btn-sm danger admin-only">Eliminar 🗑️</button>
                     </div>
                     <div class="info-grid">
                         <div class="info-item"><strong>Ubicación:</strong> <span id="info-ub">--</span></div>
