@@ -1039,8 +1039,8 @@ class AlarmApp {
             return;
         }
 
-        // REPARAR DOM SI FUE SOBRESCRITO POR OTRAS PESTAÑAS
-        if (!document.getElementById('devices-grid')) {
+        // REPARAR DOM SI FUE SOBRESCRITO O ES UNA VERSIÓN ANTIGUA
+        if (!document.getElementById('devices-grid') || !document.querySelector('.central-title-banner')) {
             console.log('Restaurando estructura base de detalles de central');
             details.innerHTML = `
                 <div class="central-info glass">
