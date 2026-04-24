@@ -1101,7 +1101,18 @@ class AlarmApp {
                 </div>
             `;
             // Re-vincular eventos y aplicar permisos a los nuevos elementos
-            this.initEventListeners(); 
+            document.getElementById('print-central-btn').addEventListener('click', () => this.generateSpecificReport());
+            document.getElementById('edit-central-btn').addEventListener('click', () => this.openCentralModal(true));
+            document.getElementById('delete-central-btn').addEventListener('click', () => this.deleteCentral());
+            document.getElementById('add-device-btn').addEventListener('click', () => this.openDeviceModal());
+            document.getElementById('device-search').addEventListener('input', (e) => {
+                this.state.deviceSearch = e.target.value.toLowerCase();
+                this.renderCurrentCentral();
+            });
+            document.getElementById('current-central-name').addEventListener('click', () => {
+                this.state.currentCentralId = null;
+                this.render();
+            });
             this.applyPermissions();
         }
 
@@ -1390,6 +1401,10 @@ class AlarmApp {
             return;
         }
 
+        device.maintenanceLogs.forEach(log => {
+            if (!log.id) log.id = log.date; 
+        });
+
         device.maintenanceLogs.sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(log => {
             const div = document.createElement('div');
             div.className = 'maintenance-entry';
@@ -1399,32 +1414,90 @@ class AlarmApp {
                     <span class="m-date">📅 ${new Date(log.date).toLocaleDateString()}</span>
                 </div>
                 <div class="m-action">${log.action}</div>
+                <div class="m-actions admin-only" style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px; border-top: 1px solid #eee; padding-top: 8px;">
+                    <button class="icon-btn edit" onclick="app.editMaintenanceLog('${deviceId}', '${log.id}')" style="width: 28px; height: 28px; font-size: 0.8rem;">✏️</button>
+                    <button class="icon-btn danger" onclick="app.deleteMaintenanceLog('${deviceId}', '${log.id}')" style="width: 28px; height: 28px; font-size: 0.8rem;">🗑️</button>
+                </div>
             `;
             container.appendChild(div);
         });
+
+        this.applyPermissions(); // Hide edit/delete if not admin
+    }
+
+    editMaintenanceLog(deviceId, logId) {
+        const device = this.state.devices.find(d => d.id === deviceId);
+        if (!device || !device.maintenanceLogs) return;
+        const log = device.maintenanceLogs.find(l => l.id === logId);
+        if (!log) return;
+        
+        document.getElementById('maint-log-id').value = log.id;
+        const form = document.getElementById('maintenance-form');
+        form.technician.value = log.technician;
+        form.action.value = log.action;
+        
+        const title = document.getElementById('maint-form-title');
+        if (title) title.innerText = 'Editar Registro';
+        const btn = document.getElementById('maint-submit-btn');
+        if (btn) btn.innerText = 'Guardar Cambios';
+        const cancelBtn = document.getElementById('maint-cancel-btn');
+        if (cancelBtn) cancelBtn.classList.remove('hidden');
+    }
+
+    cancelEditMaintenance() {
+        const form = document.getElementById('maintenance-form');
+        if (form) form.reset();
+        const hiddenId = document.getElementById('maint-log-id');
+        if (hiddenId) hiddenId.value = '';
+        
+        const title = document.getElementById('maint-form-title');
+        if (title) title.innerText = 'Nuevo Registro';
+        const btn = document.getElementById('maint-submit-btn');
+        if (btn) btn.innerText = 'Añadir Registro';
+        const cancelBtn = document.getElementById('maint-cancel-btn');
+        if (cancelBtn) cancelBtn.classList.add('hidden');
+    }
+
+    deleteMaintenanceLog(deviceId, logId) {
+        if (!confirm('¿Seguro que desea eliminar este registro de mantenimiento?')) return;
+        const device = this.state.devices.find(d => d.id === deviceId);
+        if (!device || !device.maintenanceLogs) return;
+        
+        device.maintenanceLogs = device.maintenanceLogs.filter(l => l.id !== logId);
+        this.saveState();
+        this.renderMaintenanceLogs(deviceId);
     }
 
     handleMaintenanceSubmit(e) {
         e.preventDefault();
         const formData = new FormData(e.target);
         const deviceId = document.getElementById('maint-device-id').value;
+        const logId = document.getElementById('maint-log-id').value;
         const device = this.state.devices.find(d => d.id === deviceId);
 
         if (!device) return;
-
-        const newEntry = {
-            technician: formData.get('technician'),
-            action: formData.get('action'),
-            date: new Date().toISOString()
-        };
-
         if (!device.maintenanceLogs) device.maintenanceLogs = [];
-        device.maintenanceLogs.push(newEntry);
+
+        if (logId) {
+            const index = device.maintenanceLogs.findIndex(l => l.id === logId);
+            if (index !== -1) {
+                device.maintenanceLogs[index].technician = formData.get('technician');
+                device.maintenanceLogs[index].action = formData.get('action');
+            }
+        } else {
+            const newEntry = {
+                id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
+                technician: formData.get('technician'),
+                action: formData.get('action'),
+                date: new Date().toISOString()
+            };
+            device.maintenanceLogs.push(newEntry);
+        }
 
         this.saveState();
         this.renderMaintenanceLogs(deviceId);
-        e.target.reset();
-        alert('Registro añadido exitosamente.');
+        this.cancelEditMaintenance();
+        alert(logId ? 'Registro actualizado exitosamente.' : 'Registro añadido exitosamente.');
     }
 
     // --- LÓGICA DE BÚSQUEDA GLOBAL ---

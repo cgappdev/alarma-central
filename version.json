@@ -1,4 +1,4 @@
 {
-  "version": "4.4.3",
-  "notes": "v4.4.3: Reducción del tamaño del menú superior (Usuarios, Ver Nube, etc.) para aprovechar mejor el espacio vertical."
+  "version": "4.4.4",
+  "notes": "v4.4.4: Correcciones visuales en modales móviles y sistema de edición/eliminación de mantenimiento."
 }

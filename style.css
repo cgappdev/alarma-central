@@ -24,6 +24,14 @@
 
 .auth-hidden { display: none !important; }
 
+.flex-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
 body {
     font-family: 'Outfit', sans-serif;
     background-color: var(--bg);
@@ -685,6 +693,7 @@ h1, h2, h3 {
     display: flex;
     flex-direction: column;
     animation: modalEntrance 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    box-sizing: border-box;
 }
 
 .modal-actions {
@@ -723,7 +732,7 @@ h1, h2, h3 {
 
 .input-group { margin-bottom: 1.25rem; text-align: left; }
 .input-group label { display: block; margin-bottom: 0.5rem; color: var(--text-muted); font-size: 0.9rem; }
-.input-group input, .input-group select {
+.input-group input, .input-group select, .input-group textarea {
     width: 100%;
     padding: 1rem 1.25rem; /* Taller for easier typing */
     background: white;
@@ -734,6 +743,11 @@ h1, h2, h3 {
     transition: all 0.3s ease;
     font-size: 1.05rem; /* Larger text for inputs */
     box-sizing: border-box;
+}
+
+.input-group textarea {
+    resize: vertical;
+    min-height: 80px;
 }
 
 /* Specific resets for date and number inputs to ensure border consistency */
@@ -1108,15 +1122,20 @@ input[type="number"]::-webkit-outer-spin-button {
         box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
 
-    .flex-row h2#current-central-name {
-        font-size: 1.1rem;
-        color: var(--hik-text);
-        font-weight: 600;
+    .central-title-banner h2 {
+        font-size: 1.1rem !important;
+        white-space: normal;
+        text-align: center;
     }
 
-    .central-actions {
-        display: flex;
-        gap: 0.5rem;
+    .central-actions-row {
+        gap: 0.4rem;
+        flex-wrap: wrap;
+    }
+
+    .central-actions-row .secondary-btn {
+        padding: 0.4rem 0.6rem;
+        font-size: 0.75rem;
     }
 
     .info-grid {
@@ -1132,7 +1151,8 @@ input[type="number"]::-webkit-outer-spin-button {
     }
 
     .info-item span {
-        font-size: 0.9rem;
+        font-size: 0.85rem;
+        word-break: break-all;
     }
 
     /* Device Grid on Mobile */
@@ -1315,6 +1335,7 @@ input[type="number"]::-webkit-outer-spin-button {
         backdrop-filter: none;
         -webkit-backdrop-filter: none;
         box-shadow: 0 5px 30px rgba(0,0,0,0.2) !important;
+        padding: 1.5rem !important;
     }
 
     .modal h2 {

@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=4.4.3">
+    <link rel="stylesheet" href="style.css?v=4.4.4">
     <!-- PWA -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#E60012">
@@ -217,7 +217,7 @@
     <!-- Modales -->
     <div id="modal-overlay" class="overlay hidden">
         <!-- User Management Modal -->
-        <div class="modal glass hidden" id="user-manage-modal" style="width: 600px;">
+        <div class="modal glass hidden" id="user-manage-modal" style="max-width: 600px; width: 100%; box-sizing: border-box;">
             <div class="flex-row">
                 <h2>Gestión de Usuarios</h2>
                 <button class="primary-btn btn-sm" onclick="app.openUserEditModal()">+ Nuevo Usuario</button>
@@ -329,7 +329,7 @@
             </form>
         </div>
 
-        <div class="modal glass hidden" id="maintenance-modal" style="width: 550px;">
+        <div class="modal glass hidden" id="maintenance-modal" style="max-width: 550px; width: 100%; box-sizing: border-box;">
             <div class="flex-row">
                 <h2>🛠️ Historial de Mantenimiento</h2>
                 <button class="secondary-btn modal-close">VOLVER</button>
@@ -338,9 +338,10 @@
                 <!-- Entries dinámicas -->
             </div>
             <div class="maintenance-form-area">
-                <h4>Nuevo Registro</h4>
+                <h4 id="maint-form-title">Nuevo Registro</h4>
                 <form id="maintenance-form">
                     <input type="hidden" id="maint-device-id">
+                    <input type="hidden" id="maint-log-id">
                     <div class="input-group">
                         <label>Técnico</label>
                         <input type="text" name="technician" placeholder="Nombre del técnico" required>
@@ -350,7 +351,8 @@
                         <textarea name="action" placeholder="Ej: Cambio de batería, limpieza..." required></textarea>
                     </div>
                     <div class="modal-actions">
-                        <button type="submit" class="primary-btn">Añadir Registro</button>
+                        <button type="button" class="secondary-btn btn-sm hidden" id="maint-cancel-btn" onclick="app.cancelEditMaintenance()">Cancelar</button>
+                        <button type="submit" class="primary-btn btn-sm" id="maint-submit-btn">Añadir Registro</button>
                     </div>
                 </form>
             </div>
@@ -397,9 +399,9 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
     
     <!-- Configuración de Firebase (Placeholder) -->
-    <script src="firebase-config.js?v=4.4.3"></script>
-    <script src="initial-data.js?v=4.4.3"></script>
-    <script src="app.js?v=4.4.3"></script>
+    <script src="firebase-config.js?v=4.4.4"></script>
+    <script src="initial-data.js?v=4.4.4"></script>
+    <script src="app.js?v=4.4.4"></script>
     
     <!-- PWA Service Worker Registration -->
     <script>
