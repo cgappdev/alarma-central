@@ -658,14 +658,34 @@ class AlarmApp {
                 </div>
                 
                 <div class="me-menu">
+                    <div class="me-menu-item" onclick="window.open('https://cgappdev.github.io/alarma-central/', '_blank')">
+                        <span class="icon">🌐</span>
+                        <span class="label">Ver Nube en Vivo</span>
+                        <span class="arrow">›</span>
+                    </div>
                     <div class="me-menu-item" onclick="app.openNormativasModal()">
                         <span class="icon">📜</span>
                         <span class="label">Manual de Control Interno</span>
                         <span class="arrow">›</span>
                     </div>
-                    <div class="me-menu-item" onclick="app.openUserManageModal()">
+                    <div class="me-menu-item admin-only" onclick="app.openUserManageModal()">
                         <span class="icon">👥</span>
                         <span class="label">Gestionar Usuarios</span>
+                        <span class="arrow">›</span>
+                    </div>
+                    <div class="me-menu-item admin-only" onclick="app.generateGeneralReport()">
+                        <span class="icon">📄</span>
+                        <span class="label">Reporte General (PDF)</span>
+                        <span class="arrow">›</span>
+                    </div>
+                    <div class="me-menu-item admin-only" onclick="app.exportData()">
+                        <span class="icon">💾</span>
+                        <span class="label">Exportar Respaldo</span>
+                        <span class="arrow">›</span>
+                    </div>
+                    <div class="me-menu-item admin-only" onclick="app.importData()">
+                        <span class="icon">📂</span>
+                        <span class="label">Importar Respaldo</span>
                         <span class="arrow">›</span>
                     </div>
                 </div>
