@@ -512,7 +512,7 @@ h1, h2, h3 {
 
 .devices-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); /* More columns */
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); /* More columns, wider for PC */
     gap: 1rem;
     perspective: 1000px;
 }
@@ -657,9 +657,9 @@ h1, h2, h3 {
 
 /* Modals & Inputs */
 .modal {
-    padding: 2rem;
+    padding: 2.5rem;
     border-radius: 1.5rem;
-    width: 500px;
+    width: 600px; /* Wider for easier data entry on PC */
     max-width: 95%;
     max-height: 85vh;
     overflow-y: hidden; /* Changed from auto to hidden to manage scrolls in children */
@@ -709,14 +709,14 @@ h1, h2, h3 {
 .input-group label { display: block; margin-bottom: 0.5rem; color: var(--text-muted); font-size: 0.9rem; }
 .input-group input, .input-group select {
     width: 100%;
-    padding: 0.85rem 1.25rem;
+    padding: 1rem 1.25rem; /* Taller for easier typing */
     background: white;
     border: 1px solid var(--hik-border);
     border-radius: 1rem;
     color: var(--text-main);
     font-family: inherit;
     transition: all 0.3s ease;
-    font-size: 1rem;
+    font-size: 1.05rem; /* Larger text for inputs */
     box-sizing: border-box;
 }
 
