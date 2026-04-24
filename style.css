@@ -83,12 +83,14 @@ h1, h2, h3 {
 #app-container {
     display: grid;
     grid-template-columns: 280px 1fr;
+    grid-template-rows: auto 1fr;
     height: 100vh;
     height: 100dvh;
 }
 
 /* Sidebar */
 .sidebar {
+    grid-row: 1 / -1;
     height: 100%;
     padding: 1.5rem 0.5rem;
     display: flex;
