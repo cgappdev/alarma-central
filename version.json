@@ -1,4 +1,4 @@
 {
-  "version": "4.4.2",
-  "notes": "v4.4.2: Mejoras en la presentación y usabilidad en PC (formularios más amplios y tarjetas más grandes)."
+  "version": "4.4.3",
+  "notes": "v4.4.3: Reducción del tamaño del menú superior (Usuarios, Ver Nube, etc.) para aprovechar mejor el espacio vertical."
 }
