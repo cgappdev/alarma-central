@@ -13,9 +13,22 @@ class AlarmApp {
         this.loadInitialData();
         this.initEventListeners();
         this.initFirebase();
+        this.initConnectivityMonitor();
         
         // No bloqueamos el inicio por el chequeo de versión
         this.checkForUpdates().catch(e => console.warn('Actualización skip:', e.message));
+    }
+
+    initConnectivityMonitor() {
+        window.addEventListener('firebase-connection-changed', (e) => {
+            const connected = e.detail.connected;
+            const cloudIcon = document.getElementById('cloud-status');
+            if (cloudIcon) {
+                cloudIcon.classList.toggle('online', connected);
+                cloudIcon.classList.toggle('offline', !connected);
+                cloudIcon.title = connected ? 'Nube Conectada 🟢' : 'Modo fuera de línea 🔴';
+            }
+        });
     }
 
     initFirebase() {
@@ -375,6 +388,9 @@ class AlarmApp {
 
         // Users
         document.getElementById('user-form').addEventListener('submit', (e) => this.handleUserSubmit(e));
+
+        // Maintenance
+        document.getElementById('maintenance-form')?.addEventListener('submit', (e) => this.handleMaintenanceSubmit(e));
 
         // Modals
         document.querySelectorAll('.modal-close').forEach(btn => {
@@ -1147,6 +1163,7 @@ class AlarmApp {
                         </div>
                     </div>
                     <div class="device-actions admin-only">
+                        <button onclick="app.openMaintenanceModal('${d.id}')" class="icon-btn info" title="Historial">📋</button>
                         <button onclick="app.openDeviceModal(true, '${d.id}')" class="icon-btn edit">✏️</button>
                         <button onclick="app.deleteDevice('${d.id}')" class="icon-btn danger">🗑️</button>
                     </div>
@@ -1260,6 +1277,9 @@ class AlarmApp {
             });
         }
 
+        // --- NEW: Global Management Report (Consolidado Global) ---
+        this.renderGlobalConsolidado();
+
         // Specific Central Summary Grid
         const summaryGrid = document.getElementById('type-summary-grid');
         if (!summaryGrid) return;
@@ -1291,6 +1311,183 @@ class AlarmApp {
                 summaryGrid.appendChild(item);
             }
         });
+    }
+
+    renderGlobalConsolidado() {
+        const alertsContainer = document.getElementById('alertas-bateria');
+        const recentContainer = document.getElementById('ultimas-instalaciones');
+        
+        if (!alertsContainer || !recentContainer) return;
+
+        // 1. Alert Log: Battery < 20%
+        const lowBatteryDevices = this.state.devices.filter(d => d.battery < 20);
+        alertsContainer.innerHTML = '';
+        
+        if (lowBatteryDevices.length === 0) {
+            alertsContainer.innerHTML = '<p class="empty-msg">✅ Todos los equipos tienen batería óptima.</p>';
+        } else {
+            lowBatteryDevices.forEach(d => {
+                const central = this.state.centrales.find(c => c.id === d.centralId);
+                const div = document.createElement('div');
+                div.className = 'consolidated-item alert-item';
+                div.innerHTML = `
+                    <div class="item-icon">${this.getDeviceIcon(d.type)}</div>
+                    <div class="item-info">
+                        <strong>${d.type.toUpperCase()} - ${d.location}</strong>
+                        <small>Central: ${central ? central.name : 'Desconocida'}</small>
+                    </div>
+                    <div class="item-status low-battery">🔋 ${d.battery}%</div>
+                `;
+                alertsContainer.appendChild(div);
+            });
+        }
+
+        // 2. Recent Installations (Last 10)
+        const recentDevices = [...this.state.devices]
+            .sort((a, b) => new Date(b.installationDate) - new Date(a.installationDate))
+            .slice(0, 10);
+            
+        recentContainer.innerHTML = '';
+        if (recentDevices.length === 0) {
+            recentContainer.innerHTML = '<p class="empty-msg">No hay registros recientes.</p>';
+        } else {
+            recentDevices.forEach(d => {
+                const central = this.state.centrales.find(c => c.id === d.centralId);
+                const div = document.createElement('div');
+                div.className = 'consolidated-item';
+                div.innerHTML = `
+                    <div class="item-icon">${this.getDeviceIcon(d.type)}</div>
+                    <div class="item-info">
+                        <strong>${d.type.toUpperCase()} - ${d.location}</strong>
+                        <small>Instalado: ${d.installationDate} | Central: ${central ? central.name : '-'}</small>
+                    </div>
+                `;
+                recentContainer.appendChild(div);
+            });
+        }
+    }
+
+    // --- LÓGICA DE MANTENIMIENTO ---
+    openMaintenanceModal(deviceId) {
+        this.currentMaintenanceDeviceId = deviceId;
+        const overlay = document.getElementById('modal-overlay');
+        const modal = document.getElementById('maintenance-modal');
+        document.getElementById('maint-device-id').value = deviceId;
+        
+        overlay.classList.remove('hidden');
+        modal.classList.remove('hidden');
+        this.renderMaintenanceLogs(deviceId);
+    }
+
+    renderMaintenanceLogs(deviceId) {
+        const device = this.state.devices.find(d => d.id === deviceId);
+        const container = document.getElementById('maintenance-list');
+        if (!container) return;
+        container.innerHTML = '';
+
+        if (!device.maintenanceLogs || device.maintenanceLogs.length === 0) {
+            container.innerHTML = '<p class="empty-msg">No hay registros de mantenimiento para este equipo.</p>';
+            return;
+        }
+
+        device.maintenanceLogs.sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(log => {
+            const div = document.createElement('div');
+            div.className = 'maintenance-entry';
+            div.innerHTML = `
+                <div class="m-entry-header">
+                    <span class="m-tech">👤 ${log.technician}</span>
+                    <span class="m-date">📅 ${new Date(log.date).toLocaleDateString()}</span>
+                </div>
+                <div class="m-action">${log.action}</div>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    handleMaintenanceSubmit(e) {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const deviceId = document.getElementById('maint-device-id').value;
+        const device = this.state.devices.find(d => d.id === deviceId);
+
+        if (!device) return;
+
+        const newEntry = {
+            technician: formData.get('technician'),
+            action: formData.get('action'),
+            date: new Date().toISOString()
+        };
+
+        if (!device.maintenanceLogs) device.maintenanceLogs = [];
+        device.maintenanceLogs.push(newEntry);
+
+        this.saveState();
+        this.renderMaintenanceLogs(deviceId);
+        e.target.reset();
+        alert('Registro añadido exitosamente.');
+    }
+
+    // --- LÓGICA DE BÚSQUEDA GLOBAL ---
+    handleGlobalSearch() {
+        const input = document.getElementById('global-search-input');
+        const query = input.value.toLowerCase().trim();
+        const resultsContainer = document.getElementById('global-summary-container');
+        
+        if (!query) {
+            resultsContainer.style.display = 'block';
+            this.updateStats(); // Standard view
+            return;
+        }
+
+        // Hide normal summary grid and show results
+        resultsContainer.style.display = 'block'; // Or create a new container
+        this.renderSearchResults(query);
+    }
+
+    renderSearchResults(query) {
+        const grid = document.getElementById('global-summary-grid');
+        grid.innerHTML = `<h3 style="grid-column: 1/-1; margin-bottom: 20px;">Resultados para: "${query}"</h3>`;
+        
+        const filtered = this.state.devices.filter(d => 
+            d.location.toLowerCase().includes(query) || 
+            d.type.toLowerCase().includes(query)
+        );
+
+        if (filtered.length === 0) {
+            grid.innerHTML += '<p style="grid-column: 1/-1; text-align: center; padding: 20px;">No se encontraron dispositivos coincidentes.</p>';
+            return;
+        }
+
+        filtered.forEach(d => {
+            const central = this.state.centrales.find(c => c.id === d.centralId);
+            const card = document.createElement('div');
+            card.className = 'device-card search-result-card';
+            card.innerHTML = `
+                <div class="device-icon">${this.getDeviceIcon(d.type)}</div>
+                <div class="device-info">
+                    <div class="device-type">${d.type.toUpperCase()}</div>
+                    <div class="device-loc">${d.location}</div>
+                    <div class="device-central-name" style="font-size: 0.7rem; color: var(--hik-red);">Central: ${central ? central.name : '-'}</div>
+                </div>
+                <div class="device-status">
+                    <span class="status-dot online"></span>
+                    <span class="battery-val ${d.battery < 20 ? 'low' : ''}">${d.battery}% 🔋</span>
+                </div>
+                <div class="device-actions">
+                    <button onclick="app.openMaintenanceModal('${d.id}')" class="icon-btn info">📋</button>
+                    <button onclick="app.navigateToDevice('${d.centralId}', '${d.id}')" class="icon-btn go">➡️</button>
+                </div>
+            `;
+            grid.appendChild(card);
+        });
+    }
+
+    navigateToDevice(centralId, deviceId) {
+        this.state.currentCentralId = centralId;
+        this.saveState();
+        this.switchTab('home');
+        this.renderCurrentCentral();
+        // Option: highlight device
     }
 }
 

@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=4.3.7">
+    <link rel="stylesheet" href="style.css?v=4.4.1">
     <!-- PWA -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#E60012">
@@ -80,6 +80,7 @@
                     </span>
                     <span class="mobile-action-icon admin-only" onclick="app.openCentralModal()">➕</span>
                     <span class="mobile-action-icon" onclick="app.toggleSearch()">🔍</span>
+                    <span id="cloud-status" class="mobile-action-icon cloud-icon offline" title="Estado de la Nube">☁️</span>
                 </div>
             </div>
             <div class="actions">
@@ -113,10 +114,33 @@
                 </div>
                 <!-- Debug Badge: Eliminado para una interfaz más limpia -->
 
-                <!-- Resumen Global de Dispositivos -->
+                <div class="search-header">
+                    <div class="search-box glass">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" id="global-search-input" placeholder="Buscar dispositivo (ej: 'sirena', 'sala', 'almacén')..." oninput="app.handleGlobalSearch()">
+                    </div>
+                </div>
+
                 <div id="global-summary-container" class="global-summary">
                     <div id="global-summary-grid" class="summary-grid">
                         <!-- Se llenará dinámicamente -->
+                    </div>
+                </div>
+
+                <!-- Nuevas Secciones del Consolidado Global -->
+                <div class="consolidado-global-grid">
+                    <div class="consolidado-card alerts-section glass">
+                        <h4>⚠️ Alertas de Mantenimiento</h4>
+                        <div id="alertas-bateria" class="alert-list">
+                            <!-- Baterías bajas de todas las centrales -->
+                        </div>
+                    </div>
+                    
+                    <div class="consolidado-card recent-section glass">
+                        <h4>📅 Instalaciones Recientes</h4>
+                        <div id="ultimas-instalaciones" class="recent-list">
+                            <!-- Últimos 10 dispositivos -->
+                        </div>
                     </div>
                 </div>
             </div>
@@ -305,6 +329,33 @@
             </form>
         </div>
 
+        <div class="modal glass hidden" id="maintenance-modal" style="width: 550px;">
+            <div class="flex-row">
+                <h2>🛠️ Historial de Mantenimiento</h2>
+                <button class="secondary-btn modal-close">VOLVER</button>
+            </div>
+            <div id="maintenance-list" class="maintenance-list">
+                <!-- Entries dinámicas -->
+            </div>
+            <div class="maintenance-form-area">
+                <h4>Nuevo Registro</h4>
+                <form id="maintenance-form">
+                    <input type="hidden" id="maint-device-id">
+                    <div class="input-group">
+                        <label>Técnico</label>
+                        <input type="text" name="technician" placeholder="Nombre del técnico" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Acción Realizada</label>
+                        <textarea name="action" placeholder="Ej: Cambio de batería, limpieza..." required></textarea>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="submit" class="primary-btn">Añadir Registro</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
         <!-- Mobile Central Selector Modal -->
         <div class="modal glass hidden" id="central-selector-modal">
             <h2>Seleccionar Central</h2>
@@ -322,7 +373,7 @@
         <div class="modal glass hidden" id="normativas-modal" style="width: 90%; max-width: 800px; max-height: 80vh; overflow-y: auto;">
             <div class="flex-row">
                 <h2>Manual de Control Interno</h2>
-                <button class="secondary-btn modal-close">✕</button>
+                <button class="secondary-btn modal-close">VOLVER</button>
             </div>
             <div class="normativas-content" style="text-align: left; line-height: 1.6; padding: 20px;">
                 <h3 style="color: var(--hik-red);">(III) Innovación y Reforma de los Métodos de Evaluación del Control Interno</h3>
@@ -346,9 +397,9 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
     
     <!-- Configuración de Firebase (Placeholder) -->
-    <script src="firebase-config.js?v=4.3.7"></script>
-    <script src="initial-data.js?v=4.3.7"></script>
-    <script src="app.js?v=4.3.7"></script>
+    <script src="firebase-config.js?v=4.4.1"></script>
+    <script src="initial-data.js?v=4.4.1"></script>
+    <script src="app.js?v=4.4.1"></script>
     
     <!-- PWA Service Worker Registration -->
     <script>

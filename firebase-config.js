@@ -17,6 +17,13 @@ if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "AIzaSyA6tYELfeA9d4N0k1-z
         firebase.initializeApp(firebaseConfig);
         console.log("Firebase inicializado correctamente");
         
+        // Monitoreo de Conexión en tiempo real
+        const connectedRef = firebase.database().ref(".info/connected");
+        connectedRef.on("value", (snap) => {
+            const isConnected = snap.val() === true;
+            window.dispatchEvent(new CustomEvent('firebase-connection-changed', { detail: { connected: isConnected } }));
+        });
+        
         // Alerta si la URL parece ser la de por defecto de ejemplo
         if (firebaseConfig.databaseURL.includes("default-rtdb")) {
             console.warn("⚠️ Usando Database URL genérica. Si no ves tus datos, verifica la URL en la consola de Firebase.");

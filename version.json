@@ -1,4 +1,4 @@
 {
-  "version": "4.3.7",
-  "notes": "v4.3.7-PRO: Forzado de estructura DOM para el banner del título de la central. Corrección de actualización visual."
+  "version": "4.4.1",
+  "notes": "v4.4.1: Aumento de tamaño de fuente en las tarjetas de dispositivos (tipo, ubicación, batería, fecha)."
 }
