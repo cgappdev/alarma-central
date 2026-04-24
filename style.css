@@ -337,6 +337,14 @@ h1, h2, h3 {
     box-shadow: 0 2px 8px rgba(0,0,0,0.03);
 }
 
+.mobile-top-bar {
+    display: none; /* Only visible on mobile screens */
+}
+
+.mobile-nav {
+    display: none; /* Hide on desktop */
+}
+
 .actions { 
     display: flex; 
     gap: 1rem; 
