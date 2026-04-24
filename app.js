@@ -546,6 +546,7 @@ class AlarmApp {
         document.getElementById('user-edit-modal').classList.add('hidden');
         document.getElementById('central-selector-modal')?.classList.add('hidden');
         document.getElementById('normativas-modal')?.classList.add('hidden');
+        document.getElementById('maintenance-modal')?.classList.add('hidden');
         this.editingDeviceId = null;
         this.editingUserId = null;
     }
