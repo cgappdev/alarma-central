@@ -99,6 +99,27 @@ class AlarmApp {
                 debugFirebase.innerText = "Firebase: ✅ DB Conectada";
             }
             console.log("Firebase DB Conectada");
+
+            // --- Firebase Auth Listener ---
+            firebase.auth().onAuthStateChanged((user) => {
+                if (user) {
+                    console.log('Firebase Auth: Sesión activa ->', user.email);
+                    const username = user.email.split('@')[0];
+                    // Asegurar que state.user exista para evitar parpadeos
+                    if (!this.state.user) {
+                        this.state.user = { username: username, role: username === 'admin' ? 'admin' : 'user' };
+                    }
+                    document.getElementById('login-overlay').classList.add('hidden');
+                    document.getElementById('app-container').classList.remove('hidden');
+                    this.render();
+                } else {
+                    console.log('Firebase Auth: Ninguna sesión activa');
+                    this.state.user = null;
+                    document.getElementById('login-overlay').classList.remove('hidden');
+                    document.getElementById('app-container').classList.add('hidden');
+                }
+            });
+
         } else {
             const debugFirebase = document.getElementById('debug-firebase');
             if (debugFirebase) {
@@ -422,58 +443,55 @@ class AlarmApp {
     }
 
 
-    login() {
+    async login() {
         const usernameInput = document.getElementById('username').value.trim().toLowerCase();
         const passwordInput = document.getElementById('password').value.trim();
         const role = document.querySelector('input[name="role"]:checked')?.value || 'user';
-
-        console.log(`Intento de acceso: ${usernameInput} (${role})`);
 
         if (!usernameInput || !passwordInput) {
             alert('Por favor complete todos los campos');
             return;
         }
 
-        // --- EMERGENCIA: Fallback directo si nada más funciona ---
-        if (usernameInput === 'admin' && passwordInput === '1105' && role === 'admin') {
-            console.log('Login exitoso (Fallback de Emergencia)');
-            this.state.user = { username: 'admin', role: 'admin' };
-            document.getElementById('login-overlay').classList.add('hidden');
-            document.getElementById('app-container').classList.remove('hidden');
-            this.render();
-            return;
-        }
+        const email = usernameInput.replace(/\s+/g, '') + '@alarmalg.com';
+        const loginBtn = document.getElementById('login-btn');
+        loginBtn.innerText = 'Verificando...';
+        loginBtn.disabled = true;
 
-        // Buscamos en los usuarios cargados
-        const foundUser = this.state.users.find(u => 
-            u.username.toLowerCase() === usernameInput && 
-            u.password === passwordInput &&
-            u.role === role
-        );
-
-        if (foundUser) {
-            console.log('Acceso concedido');
-            this.state.user = { username: foundUser.username, role: foundUser.role };
-            document.getElementById('login-overlay').classList.add('hidden');
-            document.getElementById('app-container').classList.remove('hidden');
+        try {
+            // Intentar Iniciar Sesión con Firebase
+            await firebase.auth().signInWithEmailAndPassword(email, passwordInput);
+            console.log('Acceso concedido por Firebase Auth');
+            
+            // Buscar el usuario en la BD para aplicar el rol correcto
+            const foundUser = this.state.users.find(u => u.username.toLowerCase() === usernameInput);
+            this.state.user = { 
+                username: foundUser ? foundUser.username : usernameInput, 
+                role: foundUser ? foundUser.role : (usernameInput === 'admin' ? 'admin' : 'user') 
+            };
             
             // Forzar volver al tope de la pantalla al entrar
             const contentArea = document.querySelector('.content');
             if (contentArea) contentArea.scrollTop = 0;
             window.scrollTo(0, 0);
 
-            this.saveState(); // Guardar sesión
-            this.render();
-        } else {
-            console.warn('Credenciales no válidas');
-            alert('Usuario, contraseña o rol incorrectos');
+        } catch (error) {
+            console.warn('Credenciales no válidas en Firebase:', error.code);
+            alert('Usuario o contraseña incorrectos. Si es tu primera vez, el administrador debe crear tu cuenta.');
+        } finally {
+            loginBtn.innerText = 'Entrar';
+            loginBtn.disabled = false;
         }
     }
 
     logout() {
-        this.state.user = null;
-        document.getElementById('login-overlay').classList.remove('hidden');
-        document.getElementById('app-container').classList.add('hidden');
+        if (typeof firebase !== 'undefined' && firebase.auth) {
+            firebase.auth().signOut().catch(e => console.error(e));
+        } else {
+            this.state.user = null;
+            document.getElementById('login-overlay').classList.remove('hidden');
+            document.getElementById('app-container').classList.add('hidden');
+        }
     }
 
     applyPermissions() {
@@ -796,26 +814,62 @@ class AlarmApp {
         this.editingUserId = null;
     }
 
-    handleUserSubmit(e) {
+    async handleUserSubmit(e) {
         e.preventDefault();
         const formData = new FormData(e.target);
-        const userData = {
-            id: this.editingUserId || Date.now().toString(),
-            username: formData.get('username'),
-            password: formData.get('password'),
-            role: formData.get('role')
-        };
+        const usernameInput = formData.get('username').trim().toLowerCase();
+        const passwordInput = formData.get('password').trim();
+        const roleInput = formData.get('role');
+        const email = usernameInput.replace(/\s+/g, '') + '@alarmalg.com';
 
-        if (this.editingUserId) {
-            const index = this.state.users.findIndex(u => u.id === this.editingUserId);
-            this.state.users[index] = userData;
-        } else {
-            this.state.users.push(userData);
+        const submitBtn = e.target.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerText;
+        submitBtn.innerText = 'Guardando...';
+        submitBtn.disabled = true;
+
+        try {
+            if (!this.editingUserId) {
+                // Nuevo Usuario: Crear credencial en Firebase Auth
+                if (typeof firebase !== 'undefined' && firebase.auth) {
+                    // Usamos una app secundaria para no desloguear al admin actual
+                    const secondaryApp = firebase.apps.find(a => a.name === "Secondary") || firebase.initializeApp(firebaseConfig, "Secondary");
+                    await secondaryApp.auth().createUserWithEmailAndPassword(email, passwordInput);
+                    await secondaryApp.auth().signOut();
+                    console.log('Usuario creado en Firebase Auth exitosamente.');
+                }
+            } else {
+                // Si es edición de contraseña, en Firebase Auth requeriría Admin SDK.
+                // Como workaround básico, solo actualizamos en BD. Para cambiar pass en Auth, 
+                // el admin tendría que borrarlo y recrearlo, o el usuario usar "reset password".
+                console.warn('Nota: La contraseña en Firebase Auth no se actualiza desde aquí sin Admin SDK.');
+            }
+
+            const userData = {
+                id: this.editingUserId || Date.now().toString(),
+                username: usernameInput,
+                password: passwordInput, // Mantenemos para fallback o referencia (inseguro, pero útil para migración)
+                role: roleInput
+            };
+
+            if (this.editingUserId) {
+                const index = this.state.users.findIndex(u => u.id === this.editingUserId);
+                this.state.users[index] = userData;
+            } else {
+                this.state.users.push(userData);
+            }
+
+            this.saveState();
+            this.closeUserEditModal();
+            this.renderUserList();
+            alert(this.editingUserId ? 'Usuario actualizado en base de datos.' : 'Usuario creado en Firebase y base de datos.');
+
+        } catch (error) {
+            console.error('Error al gestionar usuario en Firebase:', error);
+            alert('Error: ' + error.message);
+        } finally {
+            submitBtn.innerText = originalText;
+            submitBtn.disabled = false;
         }
-
-        this.saveState();
-        this.closeUserEditModal();
-        this.renderUserList();
     }
 
     deleteUser(id) {
