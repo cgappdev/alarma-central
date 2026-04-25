@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=4.5.0">
+    <link rel="stylesheet" href="style.css?v=4.5.1">
     <!-- PWA -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#E60012">
@@ -93,6 +93,7 @@
                     <div class="dropdown-content">
                         <button onclick="app.generateGeneralReport()">Todas las Centrales</button>
                         <button onclick="app.generateSpecificReport()">Central Actual</button>
+                        <button onclick="app.generateIpReport()">Reporte de IPs</button>
                     </div>
                 </div>
                 <button id="logout-btn-header" class="secondary-btn">Salir 🔒</button>
@@ -140,6 +141,13 @@
                         <h4>📅 Instalaciones Recientes</h4>
                         <div id="ultimas-instalaciones" class="recent-list">
                             <!-- Últimos 10 dispositivos -->
+                        </div>
+                    </div>
+
+                    <div class="consolidado-card ips-section glass admin-only">
+                        <h4>📋 Listado de IPs de Centrales</h4>
+                        <div id="lista-ips-global" class="recent-list">
+                            <!-- IPs de todas las centrales -->
                         </div>
                     </div>
                 </div>

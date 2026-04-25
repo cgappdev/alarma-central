@@ -696,6 +696,16 @@ class AlarmApp {
                         <span class="label">Reporte General (PDF)</span>
                         <span class="arrow">›</span>
                     </div>
+                    <div class="me-menu-item admin-only" onclick="app.switchTab('control'); setTimeout(() => document.querySelector('.ips-section')?.scrollIntoView({behavior: 'smooth'}), 300)">
+                        <span class="icon">📋</span>
+                        <span class="label">Ver Reporte de IPs (En App)</span>
+                        <span class="arrow">›</span>
+                    </div>
+                    <div class="me-menu-item admin-only" onclick="app.generateIpReport()">
+                        <span class="icon">📄</span>
+                        <span class="label">Reporte de IPs (PDF)</span>
+                        <span class="arrow">›</span>
+                    </div>
                     <div class="me-menu-item admin-only" onclick="app.exportData()">
                         <span class="icon">💾</span>
                         <span class="label">Exportar Respaldo</span>
@@ -710,7 +720,7 @@ class AlarmApp {
 
                 <div class="logout-section">
                     <button class="logout-btn-full" onclick="app.logout()">Cerrar Sesión</button>
-                    <p class="app-version">Versión 4.1.2-PRO-Clean</p>
+                    <p class="app-version">Versión 4.5.1-PRO-IPView</p>
                 </div>
             </div>
         `;
@@ -996,6 +1006,24 @@ class AlarmApp {
     }
 
 
+    _showPDF(doc, filename) {
+        if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+            // En móviles, abrir en pestaña nueva para previsualizar (Blob URL es más confiable que DataURI)
+            const blob = doc.output('blob');
+            const url = URL.createObjectURL(blob);
+            window.open(url, '_blank');
+            // Intentar guardarlo también por si acaso
+            setTimeout(() => {
+                doc.save(filename);
+                // Limpiar el URL después de un tiempo para liberar memoria
+                setTimeout(() => URL.revokeObjectURL(url), 60000);
+            }, 2000);
+        } else {
+            // En escritorio, descarga directa convencional
+            doc.save(filename);
+        }
+    }
+
     // PDF Reporting
     generateGeneralReport() {
         const { jsPDF } = window.jspdf;
@@ -1016,7 +1044,29 @@ class AlarmApp {
             startY: 40
         });
 
-        doc.save('reporte_general_centrales.pdf');
+        this._showPDF(doc, 'reporte_general_centrales.pdf');
+    }
+
+    generateIpReport() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        
+        doc.setFontSize(18);
+        doc.text('Reporte de Direcciones IP de Centrales', 14, 20);
+        doc.setFontSize(12);
+        doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 14, 30);
+
+        const tableData = this.state.centrales.map(c => [
+            c.name, c.location, c.ip, c.rack
+        ]);
+
+        doc.autoTable({
+            head: [['Nombre de la Central', 'Ubicación', 'Dirección IP', 'Rack / Observaciones']],
+            body: tableData,
+            startY: 40
+        });
+
+        this._showPDF(doc, 'reporte_ips_centrales.pdf');
     }
 
     generateSpecificReport() {
@@ -1065,7 +1115,7 @@ class AlarmApp {
             startY: 73
         });
 
-        doc.save(`reporte_${central.name}.pdf`);
+        this._showPDF(doc, `reporte_${central.name}.pdf`);
     }
 
     // Rendering
@@ -1449,6 +1499,24 @@ class AlarmApp {
                     </div>
                 `;
                 recentContainer.appendChild(div);
+            });
+        }
+        // 3. IPs List (Global)
+        const ipsContainer = document.getElementById('lista-ips-global');
+        if (ipsContainer) {
+            ipsContainer.innerHTML = '';
+            this.state.centrales.forEach(c => {
+                const div = document.createElement('div');
+                div.className = 'consolidated-item';
+                div.innerHTML = `
+                    <div class="item-icon" style="color: var(--hik-red);">🌐</div>
+                    <div class="item-info">
+                        <strong>${c.name}</strong>
+                        <small>📍 ${c.location} | 📂 ${c.rack}</small>
+                    </div>
+                    <div class="item-status" style="color: var(--hik-text); font-family: monospace; font-size: 0.85rem;">${c.ip}</div>
+                `;
+                ipsContainer.appendChild(div);
             });
         }
     }

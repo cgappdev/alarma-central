@@ -1,4 +1,4 @@
 {
-  "version": "4.4.6",
-  "notes": "v4.4.6: Se agregaron los botones de Nube, Reportes y Respaldos al menú móvil (pestaña Yo)."
+  "version": "4.5.1",
+  "notes": "v4.5.1: Se implementó la visualización directa del reporte de IPs en la pestaña de Panel y acceso directo en pestaña Yo."
 }
