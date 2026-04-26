@@ -783,7 +783,7 @@ class AlarmApp {
 
                 <div class="logout-section">
                     <button class="logout-btn-full" onclick="app.logout()">Cerrar Sesión</button>
-                    <p class="app-version">Versión 4.5.8-PRO-CCTV</p>
+                    <p class="app-version">Versión 4.5.9-PRO-CCTV</p>
                 </div>
             </div>
         `;
@@ -1189,6 +1189,10 @@ class AlarmApp {
         this.switchTab(this.state.currentTab || 'home', true);
         this.updateStats();
         this.applyPermissions();
+        
+        // Anti-Wobble: Force horizontal scroll to 0
+        document.documentElement.scrollLeft = 0;
+        document.body.scrollLeft = 0;
     }
 
     renderCentralesList() {

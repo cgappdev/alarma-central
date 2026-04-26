@@ -1,4 +1,4 @@
 {
-  "version": "4.5.8",
-  "notes": "v4.5.8: Corrección de estabilidad táctil (evita desplazamiento horizontal) y optimización de contenedores."
+  "version": "4.5.9",
+  "notes": "v4.5.9: Ajustes críticos de estabilidad móvil (Anti-Wobble mejorado) y corrección de anchos en modales y login."
 }
