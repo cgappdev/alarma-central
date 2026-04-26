@@ -1,4 +1,4 @@
-const CACHE_NAME = 'alarma-lg-v4.5.1';
+const CACHE_NAME = 'alarma-lg-v4.5.4';
 const ASSETS = [
     './',
     './index.html',

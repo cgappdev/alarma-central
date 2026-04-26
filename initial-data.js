@@ -2,88 +2,195 @@ const initialData = {
   "user": null,
   "centrales": [
     {
-      "id": "1774354088001",
+      "id": "1774140704702",
       "name": "Hemodinamia",
       "location": "Hemodinamia",
       "ip": "192.168.017.023",
-      "rack": "hemodinamia",
-      "battery": "100"
+      "rack": "Hemodinamia",
+      "battery": "100",
+      "piso": "1"
     },
     {
-      "id": "1774354088002",
+      "id": "1774141837982",
       "name": "Pediatria",
       "location": "Pediatria",
       "ip": "192.168.17.030",
       "rack": "Cuarto Sistemas Hemodinamia",
-      "battery": "100"
+      "battery": "100",
+      "piso": "1"
     },
     {
-      "id": "1774354088003",
+      "id": "1774178485093",
       "name": "Salud Mental",
       "location": "Salud Mental",
       "ip": "192.168.17.12",
       "rack": "Salud Mental",
-      "battery": "100"
+      "battery": "100",
+      "piso": "1"
     },
     {
-      "id": "1774354088004",
+      "id": "1774220594363",
       "name": "Urgencias Piso 1",
       "location": "Urgencias Piso 1",
       "ip": "192.168.17.63",
       "rack": "Urgencias Piso 1",
-      "battery": "100"
+      "battery": "100",
+      "piso": "1"
     },
     {
-      "id": "1774354088005",
+      "id": "1774220645707",
       "name": "HPosQuirurgicos",
       "location": "HPosQuirurgicos",
       "ip": "192.168.17.20",
       "rack": "HPosQuirurgicos",
-      "battery": "100"
+      "battery": "100",
+      "piso": "1"
     },
     {
-      "id": "1774354088006",
+      "id": "1774220696315",
       "name": "HPosQuirurgicosOrtopedia",
       "location": "HPosQuirurgicosOrtopedia",
       "ip": "192.168.17.23",
       "rack": "HPosQuirurgicosOrtopedia",
-      "battery": "100"
+      "battery": "100",
+      "piso": "1"
     },
     {
-      "id": "1774354088007",
+      "id": "1774220918042",
       "name": "Uci A-B-C Piso 2",
       "location": "Uci A-B-C Piso 2",
       "ip": "192.168.17.56",
       "rack": "Uci A-B-C Piso 2",
-      "battery": "100"
+      "battery": "100",
+      "piso": "2"
     },
     {
-      "id": "1774354088008",
+      "id": "1774220962018",
       "name": "GinecoObstetriciaEspecialidades",
       "location": "GinecoObstetriciaEspecialidades",
-      "ip": "192.168.17.32",
+      "ip": "192.168.1732",
       "rack": "GinecoObstetriciaEspecialidades",
-      "battery": "100"
+      "battery": "100",
+      "piso": "2"
     },
     {
-      "id": "1774354088009",
+      "id": "1774224339961",
       "name": "Uci D Piso 3",
       "location": "Uci D Piso 3",
       "ip": "192.168.17.24",
       "rack": "Uci D Piso 3",
-      "battery": "100"
+      "battery": "100",
+      "piso": "3"
     }
   ],
-  "devices": [],
+  "devices": [
+    {
+      "id": "1774140829606",
+      "centralId": "1774140704702",
+      "type": "sirena",
+      "location": "Sala de Espera",
+      "battery": "100",
+      "installationDate": "2025-12-17"
+    },
+    {
+      "id": "1774140995870",
+      "centralId": "1774140704702",
+      "type": "sirena",
+      "location": "Cocina Lavado",
+      "battery": "100",
+      "installationDate": "2025-12-17"
+    },
+    {
+      "id": "1774141188406",
+      "centralId": "1774140704702",
+      "type": "teclado",
+      "location": "Vigilancia",
+      "battery": "100",
+      "installationDate": "2025-12-17"
+    },
+    {
+      "id": "1774142615949",
+      "centralId": "1774140704702",
+      "type": "panico",
+      "location": "Hemodinamia",
+      "battery": "100",
+      "installationDate": "2025-12-17"
+    },
+    {
+      "id": "1774142692333",
+      "centralId": "1774140704702",
+      "type": "repetidor",
+      "location": "Pasillo Mitad Cocina",
+      "battery": "100",
+      "installationDate": "2025-12-17"
+    },
+    {
+      "id": "1774142732909",
+      "centralId": "1774140704702",
+      "type": "humo",
+      "location": "Zona Via Radio 2",
+      "battery": "100",
+      "installationDate": "2025-12-17"
+    },
+    {
+      "id": "1774302120300",
+      "centralId": "1774178485093",
+      "type": "sirena",
+      "location": "Salud Menta",
+      "battery": "100",
+      "installationDate": "2025-12-17"
+    },
+    {
+      "id": "1774308015666",
+      "centralId": "1774140704702",
+      "type": "sirena",
+      "location": "Laboratorio Clinico",
+      "battery": "100",
+      "installationDate": "2025-12-17"
+    },
+    {
+      "id": "1774308099946",
+      "centralId": "1774140704702",
+      "type": "repetidor",
+      "location": "Pasillo Banco de Sangre Mitad",
+      "battery": "100",
+      "installationDate": "2025-12-17"
+    },
+    {
+      "id": "1774308243297",
+      "centralId": "1774140704702",
+      "type": "humo",
+      "location": "Secado 1",
+      "battery": "100",
+      "installationDate": "2025-12-17"
+    },
+    {
+      "id": "1774308309515",
+      "centralId": "1774140704702",
+      "type": "humo",
+      "location": "Zona 6 Servic",
+      "battery": "100",
+      "installationDate": "2025-12-17"
+    }
+  ],
   "users": [
     {
       "id": "admin_initial",
       "username": "admin",
       "password": "1105",
       "role": "admin"
+    },
+    {
+      "id": "1774144593677",
+      "username": "Hilda",
+      "password": "1106",
+      "role": "user"
     }
   ],
-  "currentCentralId": "1774354088001",
+  "currentCentralId": "1774140704702",
   "centralSearch": "",
-  "deviceSearch": ""
+  "deviceSearch": "",
+  "cameras": [],
+  "poeSwitches": [],
+  "nvrs": []
 }; window.initialData = initialData;

@@ -686,7 +686,7 @@ h1, h2, h3 {
     width: 600px; /* Wider for easier data entry on PC */
     max-width: 95%;
     max-height: 85vh;
-    overflow-y: hidden; /* Changed from auto to hidden to manage scrolls in children */
+    overflow-y: auto; /* Permite desplazamiento si el contenido es largo */
     position: relative;
     background: white;
     box-shadow: 0 20px 50px rgba(0,0,0,0.15);
@@ -2006,3 +2006,183 @@ input[type="number"]::-webkit-outer-spin-button {
     .search-header { margin-bottom: 1rem; }
     .search-box.glass { padding: 0.6rem 0.8rem; }
 }
+
+/* CCTV Section Styles */
+.cctv-header {
+    padding: 1.5rem;
+    border-radius: 1rem;
+    margin-bottom: 2rem;
+    background: white;
+    border: 1px solid var(--hik-border);
+}
+
+.cctv-category {
+    margin-bottom: 3rem;
+}
+
+.cctv-category h3 {
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--hik-red);
+    display: inline-block;
+    color: var(--hik-red);
+}
+
+.photo-upload-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+    background: #f8fafc;
+    padding: 15px;
+    border-radius: 12px;
+    border: 1px dashed var(--hik-border);
+}
+
+.photo-preview {
+    position: relative;
+    width: 100%;
+    max-width: 200px;
+    aspect-ratio: 16/9;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+}
+
+.photo-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.remove-photo {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: rgba(0,0,0,0.6);
+    color: white;
+    border: none;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cctv-card-photo {
+    width: 100%;
+    aspect-ratio: 16/9;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 10px;
+    background: #eee;
+}
+
+.cctv-card-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.cctv-card-photo:hover img {
+    transform: scale(1.1);
+}
+
+.cctv-badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: white;
+    z-index: 5;
+    text-transform: uppercase;
+}
+
+.badge-camera { background: #3b82f6; }
+.badge-switch { background: #10b981; }
+.badge-nvr { background: #8b5cf6; }
+
+.empty-msg {
+    color: var(--text-muted);
+    font-style: italic;
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 2rem;
+    background: rgba(0,0,0,0.02);
+    border-radius: 1rem;
+    border: 1px dashed var(--hik-border);
+}
+
+#cctv-extra-fields {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px dashed var(--hik-border);
+}
+
+/* Cloud Status & Sync Animations */
+.cloud-icon {
+    transition: all 0.4s ease;
+    cursor: help;
+}
+
+.cloud-icon.online {
+    color: var(--accent-green) !important;
+    filter: drop-shadow(0 0 5px rgba(16, 185, 129, 0.4));
+}
+
+.cloud-icon.offline {
+    color: var(--text-muted) !important;
+    opacity: 0.6;
+}
+
+.cloud-icon.syncing {
+    animation: cloudPulse 1.2s infinite ease-in-out;
+    color: #2196F3 !important; /* Blue while syncing */
+}
+
+@keyframes cloudPulse {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.3); opacity: 0.7; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.sync-status-msg {
+    position: fixed;
+    bottom: 80px;
+    right: 20px;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    animation: slideInUp 0.3s ease;
+}
+
+@keyframes slideInUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes modalEntrance {
+    from { transform: scale(0.9); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+

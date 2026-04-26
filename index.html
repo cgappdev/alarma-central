@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=4.5.1">
+    <link rel="stylesheet" href="style.css?v=4.5.4">
     <!-- PWA -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#E60012">
@@ -94,8 +94,11 @@
                         <button onclick="app.generateGeneralReport()">Todas las Centrales</button>
                         <button onclick="app.generateSpecificReport()">Central Actual</button>
                         <button onclick="app.generateIpReport()">Reporte de IPs</button>
+                        <button onclick="app.generateCctvReport()">Reporte CCTV</button>
                     </div>
                 </div>
+                <button class="secondary-btn" style="background: #333; color: white;" onclick="app.debugState()">Diagnóstico 🛠️</button>
+                <button class="secondary-btn" onclick="app.switchTab('cctv')">CCTV 📹</button>
                 <button id="logout-btn-header" class="secondary-btn">Salir 🔒</button>
             </div>
         </header>
@@ -167,6 +170,7 @@
                         <div class="info-item"><strong>Ubicación:</strong> <span id="info-ub">--</span></div>
                         <div class="info-item"><strong>IP:</strong> <span id="info-ip">--</span></div>
                         <div class="info-item"><strong>Rack:</strong> <span id="info-rack">--</span></div>
+                        <div class="info-item"><strong>Piso:</strong> <span id="info-piso">--</span></div>
                         <div class="info-item"><strong>Batería:</strong> <span id="info-bat">--%</span></div>
                     </div>
                 </div>
@@ -195,6 +199,34 @@
                     <!-- Se llenará dinámicamente -->
                 </div>
             </section>
+
+            <section id="cctv-section" class="details-section hidden">
+                <div class="cctv-header glass">
+                    <div class="flex-row">
+                        <h2>Infraestructura CCTV</h2>
+                        <div class="cctv-actions admin-only">
+                            <button class="primary-btn btn-sm" onclick="app.openCctvModal('camera')">+ Cámara</button>
+                            <button class="primary-btn btn-sm" onclick="app.openCctvModal('switch')">+ Switch PoE</button>
+                            <button class="primary-btn btn-sm" onclick="app.openCctvModal('nvr')">+ NVR</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="cctv-grid-container">
+                    <div class="cctv-category">
+                        <h3>📹 Cámaras</h3>
+                        <div id="cameras-grid" class="devices-grid"></div>
+                    </div>
+                    <div class="cctv-category">
+                        <h3>🔌 Switches PoE</h3>
+                        <div id="switches-grid" class="devices-grid"></div>
+                    </div>
+                    <div class="cctv-category">
+                        <h3>🖥️ Grabadores (NVR)</h3>
+                        <div id="nvrs-grid" class="devices-grid"></div>
+                    </div>
+                </div>
+            </section>
         </main>
 
         <!-- Navegación Inferior (Móvil) -->
@@ -206,6 +238,10 @@
             <div class="nav-item" data-tab="control" onclick="app.switchTab('control')">
                 <span class="nav-icon">📊</span>
                 <span>Panel</span>
+            </div>
+            <div class="nav-item" data-tab="cctv" onclick="app.switchTab('cctv')">
+                <span class="nav-icon">📹</span>
+                <span>CCTV</span>
             </div>
             <div class="nav-item" data-tab="messages" onclick="app.switchTab('messages')">
                 <span class="nav-icon">💬</span>
@@ -270,7 +306,7 @@
                 </div>
                 <div class="modal-actions">
                     <button type="button" class="secondary-btn" onclick="app.closeUserEditModal()">Cancelar</button>
-                    <button type="submit" class="primary-btn">Guardar</button>
+                    <button type="submit" class="primary-btn">Grabar</button>
                 </div>
             </form>
         </div>
@@ -293,6 +329,10 @@
                 <div class="input-group">
                     <label>Rack de Conexión</label>
                     <input type="text" name="rack" required>
+                </div>
+                <div class="input-group">
+                    <label>Piso</label>
+                    <input type="text" name="piso" placeholder="Ej: 1, 2, Sótano..." required>
                 </div>
                 <div class="input-group">
                     <label>Carga Batería (%)</label>
@@ -321,6 +361,10 @@
                 <div class="input-group">
                     <label>Ubicación</label>
                     <input type="text" name="location" required>
+                </div>
+                <div class="input-group">
+                    <label>Piso</label>
+                    <input type="text" name="piso" placeholder="Ej: 1, 2..." required>
                 </div>
                 <div class="input-group">
                     <label>Carga Batería (%)</label>
@@ -398,6 +442,51 @@
                 <button class="primary-btn modal-close">Entendido</button>
             </div>
         </div>
+
+        <!-- CCTV Modal -->
+        <div class="modal glass hidden" id="cctv-modal">
+            <h2 id="cctv-modal-title">Nuevo Dispositivo CCTV</h2>
+            <form id="cctv-form">
+                <input type="hidden" name="cctv-type">
+                <div class="input-group">
+                    <label>Nombre / Identificador</label>
+                    <input type="text" name="name" required placeholder="Ej: Cámara Pasillo 1">
+                </div>
+                <div class="input-group">
+                    <label>Dirección IP</label>
+                    <input type="text" name="ip" required placeholder="192.168.1.x">
+                </div>
+                <div class="input-group">
+                    <label>Ubicación Física</label>
+                    <input type="text" name="location" required placeholder="Ej: Rack Principal">
+                </div>
+                <div class="input-group">
+                    <label>Piso</label>
+                    <input type="text" name="piso" placeholder="Ej: 1, 2...">
+                </div>
+                
+                <!-- Dynamic fields based on type -->
+                <div id="cctv-extra-fields"></div>
+                
+                <div id="camera-photo-section" class="input-group hidden">
+                    <label>Foto de Cobertura</label>
+                    <div class="photo-upload-container">
+                        <input type="file" id="camera-photo-input" accept="image/*" capture="environment" style="display: none;">
+                        <button type="button" class="secondary-btn btn-sm" onclick="document.getElementById('camera-photo-input').click()">📸 Tomar/Subir Foto</button>
+                        <div id="camera-photo-preview" class="photo-preview hidden">
+                            <img src="" alt="Vista previa">
+                            <button type="button" class="remove-photo" onclick="app.clearCameraPhoto()">×</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="secondary-btn danger hidden" id="cctv-delete-btn">Borrar</button>
+                    <button type="button" class="secondary-btn modal-close">Cancelar</button>
+                    <button type="submit" class="primary-btn">Guardar</button>
+                </div>
+            </form>
+        </div>
     </div>
 
     <input type="file" id="import-input" style="display:none" accept=".json">
@@ -408,9 +497,9 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
     
     <!-- Configuración de Firebase -->
-    <script src="firebase-config.js?v=4.5.0"></script>
-    <script src="initial-data.js?v=4.5.0"></script>
-    <script src="app.js?v=4.5.0"></script>
+    <script src="firebase-config.js?v=4.5.4"></script>
+    <script src="initial-data.js?v=4.5.4"></script>
+    <script src="app.js?v=4.5.4"></script>
     
     <!-- PWA Service Worker Registration -->
     <script>

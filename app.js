@@ -4,12 +4,16 @@ class AlarmApp {
             user: null, // { username, role }
             centrales: [],
             devices: [],
+            cameras: [],
+            poeSwitches: [],
+            nvrs: [],
             users: [], // { id, username, password, role }
             currentCentralId: null,
             centralSearch: '',
             deviceSearch: '',
             reorderMode: false
         };
+        this.currentCameraPhoto = null;
         this.loadInitialData();
         this.initEventListeners();
         this.initFirebase();
@@ -47,6 +51,9 @@ class AlarmApp {
                         console.log('¡Sello de Reinicio Maestro detectado!');
                         this.state.centrales = data.centrales || [];
                         this.state.devices = data.devices || [];
+                        this.state.cameras = data.cameras || [];
+                        this.state.poeSwitches = data.poeSwitches || [];
+                        this.state.nvrs = data.nvrs || [];
                         this.state.users = data.users || [];
                         localStorage.setItem('last-reset-id', remoteResetId);
                         this.saveState(true); 
@@ -57,6 +64,9 @@ class AlarmApp {
                     console.log('Datos nube recibidos.');
                     this.state.centrales = data.centrales || [];
                     this.state.devices = data.devices || [];
+                    this.state.cameras = data.cameras || [];
+                    this.state.poeSwitches = data.poeSwitches || [];
+                    this.state.nvrs = data.nvrs || [];
                     this.state.users = data.users || [];
                     this.saveState(true); 
                     this.render();
@@ -133,9 +143,15 @@ class AlarmApp {
     async syncCloud(silent = false) {
         if (!this.isCloudEnabled) return;
         
+        const cloudIcon = document.getElementById('cloud-status');
+        if (cloudIcon) cloudIcon.classList.add('syncing');
+
         const dataToSave = {
             centrales: this.state.centrales,
             devices: this.state.devices,
+            cameras: this.state.cameras,
+            poeSwitches: this.state.poeSwitches,
+            nvrs: this.state.nvrs,
             users: this.state.users,
             currentCentralId: this.state.currentCentralId,
             resetId: localStorage.getItem('last-reset-id') || null
@@ -145,6 +161,11 @@ class AlarmApp {
             await this.cloudRef.set(dataToSave);
             console.log('✅ Datos sincronizados con la nube');
             
+            if (cloudIcon) {
+                cloudIcon.classList.remove('syncing');
+                cloudIcon.classList.add('online');
+            }
+
             const badge = document.getElementById('debug-firebase');
             if (badge) {
                 const now = new Date().toLocaleTimeString();
@@ -154,6 +175,7 @@ class AlarmApp {
             if (!silent) alert('✅ Datos subidos correctamente.');
         } catch (e) {
             console.error('Error al sincronizar:', e);
+            if (cloudIcon) cloudIcon.classList.remove('syncing');
             if (!silent) alert('❌ Error al subir: ' + e.message);
         }
     }
@@ -290,6 +312,9 @@ class AlarmApp {
                 const parsed = JSON.parse(saved);
                 this.state.centrales = parsed.centrales || [];
                 this.state.devices = parsed.devices || [];
+                this.state.cameras = parsed.cameras || [];
+                this.state.poeSwitches = parsed.poeSwitches || [];
+                this.state.nvrs = parsed.nvrs || [];
                 this.state.users = parsed.users || [];
                 if (parsed.currentCentralId && this.state.centrales.find(c => c.id === parsed.currentCentralId)) {
                     this.state.currentCentralId = parsed.currentCentralId;
@@ -310,6 +335,9 @@ class AlarmApp {
             console.log('Datos detectados en memoria (initial-data.js). Cargando...');
             this.state.centrales = window.initialData.centrales || [];
             this.state.devices = window.initialData.devices || [];
+            this.state.cameras = window.initialData.cameras || [];
+            this.state.poeSwitches = window.initialData.poeSwitches || [];
+            this.state.nvrs = window.initialData.nvrs || [];
             this.state.users = window.initialData.users || [];
             this.state.currentCentralId = window.initialData.currentCentralId || null;
             return;
@@ -322,6 +350,9 @@ class AlarmApp {
                 const data = await response.json();
                 this.state.centrales = data.centrales || [];
                 this.state.devices = data.devices || [];
+                this.state.cameras = data.cameras || [];
+                this.state.poeSwitches = data.poeSwitches || [];
+                this.state.nvrs = data.nvrs || [];
                 this.state.users = data.users || [];
                 this.state.currentCentralId = data.currentCentralId || null;
                 console.log('Datos cargados vía fetch (data.json)');
@@ -335,14 +366,18 @@ class AlarmApp {
         const dataToSave = {
             centrales: this.state.centrales,
             devices: this.state.devices,
+            cameras: this.state.cameras,
+            poeSwitches: this.state.poeSwitches,
+            nvrs: this.state.nvrs,
             users: this.state.users,
             currentCentralId: this.state.currentCentralId
         };
         
         localStorage.setItem('alarma-lg-state', JSON.stringify(dataToSave));
 
-        // PILOTO AUTOMÁTICO: Subir a la nube silenciosamente cada vez que guardamos algo
+        // SUBIDA INMEDIATA A LA NUBE: No opcional para evitar pérdida de datos
         if (this.isCloudEnabled && !skipCloud) {
+            console.log('Sincronizando con la nube para evitar pérdida de datos...');
             this.syncCloud(true);
         }
     }
@@ -409,6 +444,17 @@ class AlarmApp {
 
         // Users
         document.getElementById('user-form').addEventListener('submit', (e) => this.handleUserSubmit(e));
+
+        // CCTV
+        document.getElementById('cctv-form').addEventListener('submit', (e) => this.handleCctvSubmit(e));
+        document.getElementById('cctv-delete-btn')?.addEventListener('click', () => {
+            if (this.editingCctvId && confirm('¿Eliminar este dispositivo CCTV?')) {
+                const type = document.getElementById('cctv-form')['cctv-type'].value;
+                this.deleteCctv(type, this.editingCctvId);
+                this.closeModals();
+            }
+        });
+        document.getElementById('camera-photo-input')?.addEventListener('change', (e) => this.handleCameraPhoto(e));
 
         // Maintenance
         document.getElementById('maintenance-form')?.addEventListener('submit', (e) => this.handleMaintenanceSubmit(e));
@@ -526,6 +572,7 @@ class AlarmApp {
             form.location.value = central.location;
             form.ip.value = central.ip;
             form.rack.value = central.rack;
+            form.piso.value = central.piso || '';
             form.battery.value = central.battery;
         } else {
             form.reset();
@@ -549,6 +596,7 @@ class AlarmApp {
             const device = this.state.devices.find(d => d.id === deviceId);
             form.type.value = device.type;
             form.location.value = device.location;
+            form.piso.value = device.piso || '';
             form.battery.value = device.battery;
             form.installationDate.value = device.installationDate;
         } else {
@@ -565,8 +613,11 @@ class AlarmApp {
         document.getElementById('central-selector-modal')?.classList.add('hidden');
         document.getElementById('normativas-modal')?.classList.add('hidden');
         document.getElementById('maintenance-modal')?.classList.add('hidden');
+        document.getElementById('cctv-modal')?.classList.add('hidden');
+        this.clearCameraPhoto();
         this.editingDeviceId = null;
         this.editingUserId = null;
+        this.editingCctvId = null;
     }
 
     // Mobile specific methods
@@ -609,6 +660,7 @@ class AlarmApp {
         });
 
         const details = document.getElementById('central-details');
+        const cctvSection = document.getElementById('cctv-section');
         const dashboardHeader = document.querySelector('.dashboard-header-main');
         const logoText = document.getElementById('mobile-logo-text');
         const logoIcon = document.getElementById('mobile-logo-icon');
@@ -625,6 +677,10 @@ class AlarmApp {
             if (logoIcon) logoIcon.style.display = 'inline-block';
         }
         
+        // Hide all sections first
+        details.classList.add('hidden');
+        cctvSection?.classList.add('hidden');
+
         if (tab === 'home') {
             if (this.state.currentCentralId) {
                 details.classList.remove('hidden');
@@ -649,6 +705,9 @@ class AlarmApp {
         } else if (tab === 'service') {
             details.classList.remove('hidden');
             this.renderServiceTab();
+        } else if (tab === 'cctv') {
+            cctvSection?.classList.remove('hidden');
+            this.renderCCTVTab();
         } else if (tab === 'messages') {
             details.innerHTML = `
                 <div class="empty-tab">
@@ -720,7 +779,7 @@ class AlarmApp {
 
                 <div class="logout-section">
                     <button class="logout-btn-full" onclick="app.logout()">Cerrar Sesión</button>
-                    <p class="app-version">Versión 4.5.1-PRO-IPView</p>
+                    <p class="app-version">Versión 4.5.4-PRO-CCTV</p>
                 </div>
             </div>
         `;
@@ -903,6 +962,7 @@ class AlarmApp {
             location: formData.get('location'),
             ip: formData.get('ip'),
             rack: formData.get('rack'),
+            piso: formData.get('piso'),
             battery: formData.get('battery')
         };
 
@@ -939,6 +999,7 @@ class AlarmApp {
             centralId: this.state.currentCentralId,
             type: formData.get('type'),
             location: formData.get('location'),
+            piso: formData.get('piso'),
             battery: formData.get('battery'),
             installationDate: formData.get('installationDate'),
             displayOrder: this.editingDeviceId 
@@ -1035,11 +1096,11 @@ class AlarmApp {
         doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 14, 30);
 
         const tableData = this.state.centrales.map(c => [
-            c.name, c.location, c.ip, c.rack, `${c.battery}%`
+            c.name, c.location, c.piso || '-', c.ip, c.rack, `${c.battery}%`
         ]);
 
         doc.autoTable({
-            head: [['Nombre', 'Ubicación', 'IP', 'Rack', 'Batería']],
+            head: [['Nombre', 'Ubicación', 'Piso', 'IP', 'Rack', 'Batería']],
             body: tableData,
             startY: 40
         });
@@ -1057,11 +1118,11 @@ class AlarmApp {
         doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 14, 30);
 
         const tableData = this.state.centrales.map(c => [
-            c.name, c.location, c.ip, c.rack
+            c.name, c.location, c.piso || '-', c.ip, c.rack
         ]);
 
         doc.autoTable({
-            head: [['Nombre de la Central', 'Ubicación', 'Dirección IP', 'Rack / Observaciones']],
+            head: [['Nombre de la Central', 'Ubicación', 'Piso', 'Dirección IP', 'Rack / Observaciones']],
             body: tableData,
             startY: 40
         });
@@ -1086,7 +1147,7 @@ class AlarmApp {
         doc.setFontSize(18);
         doc.text(`Reporte Central: ${central.name}`, 14, 20);
         doc.setFontSize(12);
-        doc.text(`Ubicación: ${central.location} | IP: ${central.ip}`, 14, 30);
+        doc.text(`Ubicación: ${central.location} | Piso: ${central.piso || '-'} | IP: ${central.ip}`, 14, 30);
         doc.text(`Rack: ${central.rack} | Batería: ${central.battery}%`, 14, 38);
 
         // Resumen de Totales por tipo
@@ -1106,11 +1167,11 @@ class AlarmApp {
         doc.text('Detalle de Dispositivos Instalados:', 14, 68);
 
         const tableData = devices.map(d => [
-            d.type.toUpperCase(), d.location, `${d.battery}%`, d.installationDate
+            d.type.toUpperCase(), d.location, d.piso || '-', `${d.battery}%`, d.installationDate
         ]);
 
         doc.autoTable({
-            head: [['Tipo', 'Ubicación', 'Batería', 'F. Instalación']],
+            head: [['Tipo', 'Ubicación', 'Piso', 'Batería', 'F. Instalación']],
             body: tableData,
             startY: 73
         });
@@ -1135,7 +1196,8 @@ class AlarmApp {
             container.innerHTML = '';
             const filtered = this.state.centrales.filter(c => 
                 c.name.toLowerCase().includes(this.state.centralSearch) ||
-                c.location.toLowerCase().includes(this.state.centralSearch)
+                c.location.toLowerCase().includes(this.state.centralSearch) ||
+                (c.piso && c.piso.toLowerCase().includes(this.state.centralSearch))
             );
 
             if (filtered.length === 0 && this.state.centralSearch) {
@@ -1197,6 +1259,7 @@ class AlarmApp {
                         <div class="info-item"><strong>Ubicación:</strong> <span id="info-ub">--</span></div>
                         <div class="info-item"><strong>IP:</strong> <span id="info-ip">--</span></div>
                         <div class="info-item"><strong>Rack:</strong> <span id="info-rack">--</span></div>
+                        <div class="info-item"><strong>Piso:</strong> <span id="info-piso">--</span></div>
                         <div class="info-item"><strong>Batería:</strong> <span id="info-bat">--%</span></div>
                     </div>
                 </div>
@@ -1246,6 +1309,7 @@ class AlarmApp {
         document.getElementById('info-ub').innerText = central.location;
         document.getElementById('info-ip').innerText = central.ip;
         document.getElementById('info-rack').innerText = central.rack;
+        document.getElementById('info-piso').innerText = central.piso || '--';
         document.getElementById('info-bat').innerText = `${central.battery}%`;
 
         // Refrescar estado del botón de reordenar
@@ -1292,7 +1356,7 @@ class AlarmApp {
                     <div class="device-main-info">
                         <h4>${d.type.toUpperCase()}</h4>
                         <div class="device-meta">
-                            <p class="full-row">📍 ${d.location}</p>
+                            <p class="full-row">📍 ${d.location} (Piso ${d.piso || '-'})</p>
                             <p class="${d.battery < 20 ? 'low-battery' : ''}">🔋 ${d.battery}%</p>
                              <p>📅 ${d.installationDate}</p>
                              <p class="full-row status-online" style="color: #10b981; font-weight: 600; font-size: 0.7rem; margin-top: 4px;"><span class="pulse-dot">●</span> En línea</p>
@@ -1373,6 +1437,9 @@ class AlarmApp {
             case 'panico': return '🛑';
             case 'repetidor': return '📡';
             case 'humo': return '☁️';
+            case 'camera': return '📹';
+            case 'switch': return '🔌';
+            case 'nvr': return '🖥️';
             default: return '📦';
         }
     }
@@ -1407,6 +1474,27 @@ class AlarmApp {
                         <span class="icon">${this.getDeviceIcon(type.id)}</span>
                         <span class="count">${globalCounts[type.id]}</span>
                         <span class="label">${type.name}</span>
+                    `;
+                    globalSummaryGrid.appendChild(item);
+                }
+            });
+
+            // Añadir CCTV al resumen global
+            const cctvStats = [
+                { id: 'camera', name: 'Cámaras', count: this.state.cameras.length },
+                { id: 'switch', name: 'Switches', count: this.state.poeSwitches.length },
+                { id: 'nvr', name: 'Grabadores', count: this.state.nvrs.length }
+            ];
+
+            cctvStats.forEach(stat => {
+                if (stat.count > 0) {
+                    const item = document.createElement('div');
+                    item.className = 'summary-item';
+                    item.style.borderColor = 'var(--hik-red)';
+                    item.innerHTML = `
+                        <span class="icon">${this.getDeviceIcon(stat.id)}</span>
+                        <span class="count">${stat.count}</span>
+                        <span class="label">${stat.name}</span>
                     `;
                     globalSummaryGrid.appendChild(item);
                 }
@@ -1469,7 +1557,7 @@ class AlarmApp {
                 div.innerHTML = `
                     <div class="item-icon">${this.getDeviceIcon(d.type)}</div>
                     <div class="item-info">
-                        <strong>${d.type.toUpperCase()} - ${d.location}</strong>
+                        <strong>${d.type.toUpperCase()} - ${d.location} (Piso ${d.piso || '-'})</strong>
                         <small>Central: ${central ? central.name : 'Desconocida'}</small>
                     </div>
                     <div class="item-status low-battery">🔋 ${d.battery}%</div>
@@ -1494,7 +1582,7 @@ class AlarmApp {
                 div.innerHTML = `
                     <div class="item-icon">${this.getDeviceIcon(d.type)}</div>
                     <div class="item-info">
-                        <strong>${d.type.toUpperCase()} - ${d.location}</strong>
+                        <strong>${d.type.toUpperCase()} - ${d.location} (Piso ${d.piso || '-'})</strong>
                         <small>Instalado: ${d.installationDate} | Central: ${central ? central.name : '-'}</small>
                     </div>
                 `;
@@ -1512,7 +1600,7 @@ class AlarmApp {
                     <div class="item-icon" style="color: var(--hik-red);">🌐</div>
                     <div class="item-info">
                         <strong>${c.name}</strong>
-                        <small>📍 ${c.location} | 📂 ${c.rack}</small>
+                        <small>📍 ${c.location} | Piso: ${c.piso || '-'} | 📂 ${c.rack}</small>
                     </div>
                     <div class="item-status" style="color: var(--hik-text); font-family: monospace; font-size: 0.85rem;">${c.ip}</div>
                 `;
@@ -1534,7 +1622,14 @@ class AlarmApp {
     }
 
     renderMaintenanceLogs(deviceId) {
-        const device = this.state.devices.find(d => d.id === deviceId);
+        // Buscar en dispositivos de alarma o CCTV
+        let device = this.state.devices.find(d => d.id === deviceId);
+        if (!device) {
+            device = this.state.cameras.find(d => d.id === deviceId) || 
+                     this.state.poeSwitches.find(d => d.id === deviceId) || 
+                     this.state.nvrs.find(d => d.id === deviceId);
+        }
+        
         const container = document.getElementById('maintenance-list');
         if (!container) return;
         container.innerHTML = '';
@@ -1569,7 +1664,12 @@ class AlarmApp {
     }
 
     editMaintenanceLog(deviceId, logId) {
-        const device = this.state.devices.find(d => d.id === deviceId);
+        let device = this.state.devices.find(d => d.id === deviceId);
+        if (!device) {
+            device = this.state.cameras.find(d => d.id === deviceId) || 
+                     this.state.poeSwitches.find(d => d.id === deviceId) || 
+                     this.state.nvrs.find(d => d.id === deviceId);
+        }
         if (!device || !device.maintenanceLogs) return;
         const log = device.maintenanceLogs.find(l => l.id === logId);
         if (!log) return;
@@ -1603,7 +1703,12 @@ class AlarmApp {
 
     deleteMaintenanceLog(deviceId, logId) {
         if (!confirm('¿Seguro que desea eliminar este registro de mantenimiento?')) return;
-        const device = this.state.devices.find(d => d.id === deviceId);
+        let device = this.state.devices.find(d => d.id === deviceId);
+        if (!device) {
+            device = this.state.cameras.find(d => d.id === deviceId) || 
+                     this.state.poeSwitches.find(d => d.id === deviceId) || 
+                     this.state.nvrs.find(d => d.id === deviceId);
+        }
         if (!device || !device.maintenanceLogs) return;
         
         device.maintenanceLogs = device.maintenanceLogs.filter(l => l.id !== logId);
@@ -1616,7 +1721,12 @@ class AlarmApp {
         const formData = new FormData(e.target);
         const deviceId = document.getElementById('maint-device-id').value;
         const logId = document.getElementById('maint-log-id').value;
-        const device = this.state.devices.find(d => d.id === deviceId);
+        let device = this.state.devices.find(d => d.id === deviceId);
+        if (!device) {
+            device = this.state.cameras.find(d => d.id === deviceId) || 
+                     this.state.poeSwitches.find(d => d.id === deviceId) || 
+                     this.state.nvrs.find(d => d.id === deviceId);
+        }
 
         if (!device) return;
         if (!device.maintenanceLogs) device.maintenanceLogs = [];
@@ -1666,13 +1776,9 @@ class AlarmApp {
         
         const filtered = this.state.devices.filter(d => 
             d.location.toLowerCase().includes(query) || 
-            d.type.toLowerCase().includes(query)
+            d.type.toLowerCase().includes(query) ||
+            (d.piso && d.piso.toLowerCase().includes(query))
         );
-
-        if (filtered.length === 0) {
-            grid.innerHTML += '<p style="grid-column: 1/-1; text-align: center; padding: 20px;">No se encontraron dispositivos coincidentes.</p>';
-            return;
-        }
 
         filtered.forEach(d => {
             const central = this.state.centrales.find(c => c.id === d.centralId);
@@ -1682,7 +1788,7 @@ class AlarmApp {
                 <div class="device-icon">${this.getDeviceIcon(d.type)}</div>
                 <div class="device-info">
                     <div class="device-type">${d.type.toUpperCase()}</div>
-                    <div class="device-loc">${d.location}</div>
+                    <div class="device-loc">${d.location} (Piso ${d.piso || '-'})</div>
                     <div class="device-central-name" style="font-size: 0.7rem; color: var(--hik-red);">Central: ${central ? central.name : '-'}</div>
                 </div>
                 <div class="device-status">
@@ -1696,6 +1802,44 @@ class AlarmApp {
             `;
             grid.appendChild(card);
         });
+
+        // Buscar en CCTV
+        const cctvFiltered = [
+            ...this.state.cameras.map(c => ({...c, cctvType: 'camera'})),
+            ...this.state.poeSwitches.map(s => ({...s, cctvType: 'switch'})),
+            ...this.state.nvrs.map(n => ({...n, cctvType: 'nvr'}))
+        ].filter(i => 
+            i.name.toLowerCase().includes(query) || 
+            i.location.toLowerCase().includes(query) ||
+            i.ip.toLowerCase().includes(query)
+        );
+
+        cctvFiltered.forEach(i => {
+            const card = document.createElement('div');
+            card.className = 'device-card search-result-card';
+            card.style.borderLeftColor = 'var(--hik-red)';
+            card.innerHTML = `
+                <div class="device-icon">${this.getDeviceIcon(i.cctvType)}</div>
+                <div class="device-info">
+                    <div class="device-type">${i.cctvType.toUpperCase()}</div>
+                    <div class="device-loc">${i.name} - ${i.location}</div>
+                    <div class="device-central-name" style="font-size: 0.7rem; color: var(--hik-red);">Infraestructura CCTV</div>
+                </div>
+                <div class="device-status">
+                    <span class="status-dot online"></span>
+                    <span style="font-size: 0.75rem;">${i.ip}</span>
+                </div>
+                <div class="device-actions">
+                    <button onclick="app.openMaintenanceModal('${i.id}')" class="icon-btn info">📋</button>
+                    <button onclick="app.switchTab('cctv')" class="icon-btn go">➡️</button>
+                </div>
+            `;
+            grid.appendChild(card);
+        });
+
+        if (filtered.length === 0 && cctvFiltered.length === 0) {
+            grid.innerHTML += '<p style="grid-column: 1/-1; text-align: center; padding: 20px;">No se encontraron dispositivos o cámaras coincidentes.</p>';
+        }
     }
 
     navigateToDevice(centralId, deviceId) {
@@ -1705,7 +1849,369 @@ class AlarmApp {
         this.renderCurrentCentral();
         // Option: highlight device
     }
-}
 
+    // CCTV Methods
+    openCctvModal(type, isEdit = false, id = null) {
+        const modal = document.getElementById('cctv-modal');
+        const overlay = document.getElementById('modal-overlay');
+        const form = document.getElementById('cctv-form');
+        const title = document.getElementById('cctv-modal-title');
+        const extraFields = document.getElementById('cctv-extra-fields');
+
+        this.editingCctvId = id;
+        form['cctv-type'].value = type;
+        extraFields.innerHTML = '';
+
+        const deleteBtn = document.getElementById('cctv-delete-btn');
+        if (deleteBtn) {
+            if (isEdit && id) {
+                deleteBtn.classList.remove('hidden');
+            } else {
+                deleteBtn.classList.add('hidden');
+            }
+        }
+
+        const typeLabels = { camera: 'Cámara', switch: 'Switch PoE', nvr: 'NVR' };
+        title.innerText = (isEdit ? 'Editar ' : 'Nuevo ') + typeLabels[type];
+
+        // Dynamic fields based on type
+        if (type === 'camera') {
+            extraFields.innerHTML = `
+                <div class="input-group">
+                    <label>Canal / NVR</label>
+                    <input type="text" name="channel" placeholder="Ej: NVR 1 - Ch 4">
+                </div>
+                <div class="input-group">
+                    <label>Modelo</label>
+                    <input type="text" name="model" placeholder="Ej: DS-2CD2143G0-I">
+                </div>
+            `;
+        } else if (type === 'switch') {
+            extraFields.innerHTML = `
+                <div class="input-group">
+                    <label>Número de Puertos</label>
+                    <input type="number" name="ports" placeholder="Ej: 8, 16, 24">
+                </div>
+            `;
+        } else if (type === 'nvr') {
+            extraFields.innerHTML = `
+                <div class="input-group">
+                    <label>Canales Totales</label>
+                    <input type="number" name="channels" placeholder="Ej: 16">
+                </div>
+                <div class="input-group">
+                    <label>Capacidad Disco (TB)</label>
+                    <input type="text" name="disk" placeholder="Ej: 4TB">
+                </div>
+            `;
+        }
+
+        const photoSection = document.getElementById('camera-photo-section');
+        if (type === 'camera') {
+            photoSection?.classList.remove('hidden');
+        } else {
+            photoSection?.classList.add('hidden');
+        }
+
+        overlay.classList.remove('hidden');
+        modal.classList.remove('hidden');
+
+        if (isEdit && id) {
+            const collection = type === 'camera' ? this.state.cameras : (type === 'switch' ? this.state.poeSwitches : this.state.nvrs);
+            const item = collection.find(i => i.id === id);
+            if (item) {
+                form.name.value = item.name;
+                form.ip.value = item.ip;
+                form.location.value = item.location;
+                form.piso.value = item.piso || '';
+                if (type === 'camera') {
+                    form.channel.value = item.channel || '';
+                    form.model.value = item.model || '';
+                } else if (type === 'switch') {
+                    form.ports.value = item.ports || '';
+                } else if (type === 'nvr') {
+                    form.channels.value = item.channels || '';
+                    form.disk.value = item.disk || '';
+                }
+                
+                if (type === 'camera' && item.photo) {
+                    this.currentCameraPhoto = item.photo;
+                    const preview = document.getElementById('camera-photo-preview');
+                    const img = preview.querySelector('img');
+                    img.src = item.photo;
+                    preview.classList.remove('hidden');
+                }
+            }
+        } else {
+            form.reset();
+            form['cctv-type'].value = type;
+            this.clearCameraPhoto();
+        }
+    }
+
+    handleCameraPhoto(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+            const base64 = event.target.result;
+            // Comprimir imagen para ahorrar espacio en JSON
+            this.currentCameraPhoto = await this.compressImage(base64, 800, 0.7);
+            
+            const preview = document.getElementById('camera-photo-preview');
+            const img = preview.querySelector('img');
+            img.src = this.currentCameraPhoto;
+            preview.classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
+    }
+
+    clearCameraPhoto() {
+        this.currentCameraPhoto = null;
+        const preview = document.getElementById('camera-photo-preview');
+        if (preview) {
+            preview.classList.add('hidden');
+            preview.querySelector('img').src = '';
+        }
+        const input = document.getElementById('camera-photo-input');
+        if (input) input.value = '';
+    }
+
+    async compressImage(base64, maxWidth, quality) {
+        return new Promise((resolve) => {
+            const img = new Image();
+            img.src = base64;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+
+                if (width > maxWidth) {
+                    height = Math.round((height * maxWidth) / width);
+                    width = maxWidth;
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                resolve(canvas.toDataURL('image/jpeg', quality));
+            };
+        });
+    }
+
+    handleCctvSubmit(e) {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const type = formData.get('cctv-type');
+        
+        const data = {
+            id: this.editingCctvId || Date.now().toString(),
+            name: formData.get('name'),
+            ip: formData.get('ip'),
+            location: formData.get('location'),
+            piso: formData.get('piso'),
+            centralId: this.state.currentCentralId // Vincular con la central actual
+        };
+
+        if (type === 'camera') {
+            data.channel = formData.get('channel');
+            data.model = formData.get('model');
+            data.photo = this.currentCameraPhoto;
+        } else if (type === 'switch') {
+            data.ports = formData.get('ports');
+        } else if (type === 'nvr') {
+            data.channels = formData.get('channels');
+            data.disk = formData.get('disk');
+        }
+
+        const stateKey = type === 'camera' ? 'cameras' : (type === 'switch' ? 'poeSwitches' : 'nvrs');
+        
+        if (this.editingCctvId) {
+            const index = this.state[stateKey].findIndex(i => i.id === this.editingCctvId);
+            this.state[stateKey][index] = data;
+        } else {
+            this.state[stateKey].push(data);
+        }
+
+        this.saveState();
+        this.closeModals();
+        this.renderCCTVTab();
+        alert('✅ Datos grabados correctamente.');
+    }
+
+    deleteCctv(type, id) {
+        if (!confirm('¿Está seguro de eliminar este dispositivo?')) return;
+        const stateKey = type === 'camera' ? 'cameras' : (type === 'switch' ? 'poeSwitches' : 'nvrs');
+        this.state[stateKey] = this.state[stateKey].filter(i => i.id !== id);
+        this.saveState();
+        this.renderCCTVTab();
+    }
+
+    renderCCTVTab() {
+        const camerasGrid = document.getElementById('cameras-grid');
+        const switchesGrid = document.getElementById('switches-grid');
+        const nvrsGrid = document.getElementById('nvrs-grid');
+        const isAdmin = this.state.user?.role === 'admin';
+
+        if (!camerasGrid || !switchesGrid || !nvrsGrid) return;
+
+        const renderItems = (items, grid, type) => {
+            grid.innerHTML = items.length ? '' : `<p class="empty-msg">No hay dispositivos registrados.</p>`;
+            items.forEach(item => {
+                const central = this.state.centrales.find(c => c.id === item.centralId);
+                const card = document.createElement('div');
+                card.className = 'device-card glass';
+                card.innerHTML = `
+                    ${type === 'camera' && item.photo ? `
+                        <div class="cctv-card-photo">
+                            <img src="${item.photo}" alt="${item.name}">
+                        </div>
+                    ` : ''}
+                    <div class="cctv-badge badge-${type}">${type}</div>
+                    <div class="device-main-info">
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                            <span style="font-size: 1.2rem;">${this.getDeviceIcon(type)}</span>
+                            <h4 style="margin: 0;">${item.name}</h4>
+                        </div>
+                        <div class="device-meta">
+                            <p><strong>IP:</strong> ${item.ip}</p>
+                            <p><strong>Ubicación:</strong> ${item.location} (Piso ${item.piso || '-'})</p>
+                            <p class="full-row" style="color: var(--hik-red); font-weight: 600;">
+                                🏢 Sede: ${central ? central.name : 'General'}
+                            </p>
+                            ${type === 'camera' ? `<p><strong>Canal:</strong> ${item.channel || '--'}</p><p><strong>Modelo:</strong> ${item.model || '--'}</p>` : ''}
+                            ${type === 'switch' ? `<p class="full-row"><strong>Puertos:</strong> ${item.ports || '--'}</p>` : ''}
+                            ${type === 'nvr' ? `<p><strong>Canales:</strong> ${item.channels || '--'}</p><p><strong>Disco:</strong> ${item.disk || '--'}</p>` : ''}
+                        </div>
+                    </div>
+                    <div class="device-actions admin-only">
+                        <button class="icon-btn info" title="Historial" onclick="app.openMaintenanceModal('${item.id}')">📋</button>
+                        <button class="icon-btn edit" onclick="app.openCctvModal('${type}', true, '${item.id}')">✏️</button>
+                        <button class="icon-btn danger" onclick="app.deleteCctv('${type}', '${item.id}')">🗑️</button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+            this.applyPermissions();
+        };
+
+        renderItems(this.state.cameras, camerasGrid, 'camera');
+        renderItems(this.state.poeSwitches, switchesGrid, 'switch');
+        renderItems(this.state.nvrs, nvrsGrid, 'nvr');
+    }
+
+    generateCctvReport() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        
+        doc.setFontSize(18);
+        doc.text('Reporte de Infraestructura CCTV', 14, 20);
+        doc.setFontSize(12);
+        doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 14, 30);
+
+        // Resumen
+        doc.text(`Total Cámaras: ${this.state.cameras.length} | Switches: ${this.state.poeSwitches.length} | Grabadores: ${this.state.nvrs.length}`, 14, 40);
+
+        let currentY = 50;
+
+        // Cámaras con Foto
+        if (this.state.cameras.length > 0) {
+            doc.setFontSize(14);
+            doc.setTextColor(230, 0, 18);
+            doc.text('DETALLE DE CÁMARAS', 14, currentY);
+            doc.setTextColor(0, 0, 0);
+            currentY += 10;
+
+            this.state.cameras.forEach((cam, index) => {
+                if (currentY > 250) {
+                    doc.addPage();
+                    currentY = 20;
+                }
+
+                doc.setFontSize(11);
+                doc.setFont(undefined, 'bold');
+                doc.text(`${index + 1}. ${cam.name}`, 14, currentY);
+                doc.setFont(undefined, 'normal');
+                doc.setFontSize(9);
+                doc.text(`IP: ${cam.ip} | Piso: ${cam.piso || '-'} | Ubicación: ${cam.location} | Canal: ${cam.channel || '--'} | Modelo: ${cam.model || '--'}`, 14, currentY + 5);
+                
+                if (cam.photo) {
+                    try {
+                        doc.addImage(cam.photo, 'JPEG', 14, currentY + 8, 60, 34);
+                        currentY += 45;
+                    } catch (e) {
+                        currentY += 12;
+                    }
+                } else {
+                    currentY += 12;
+                }
+            });
+        }
+
+        // Switches y NVRs en tablas simples
+        if (this.state.poeSwitches.length > 0) {
+            if (currentY > 220) { doc.addPage(); currentY = 20; }
+            currentY += 10;
+            doc.setFontSize(14);
+            doc.setTextColor(230, 0, 18);
+            doc.text('SWITCHES POE', 14, currentY);
+            doc.setTextColor(0, 0, 0);
+            
+            const switchData = this.state.poeSwitches.map(s => [s.name, s.ip, s.piso || '-', s.location, s.ports]);
+            doc.autoTable({
+                head: [['Nombre', 'IP', 'Piso', 'Ubicación', 'Puertos']],
+                body: switchData,
+                startY: currentY + 5,
+                theme: 'striped'
+            });
+            currentY = doc.lastAutoTable.finalY + 10;
+        }
+
+        if (this.state.nvrs.length > 0) {
+            if (currentY > 220) { doc.addPage(); currentY = 20; }
+            doc.setFontSize(14);
+            doc.setTextColor(230, 0, 18);
+            doc.text('GRABADORES (NVR)', 14, currentY);
+            doc.setTextColor(0, 0, 0);
+            
+            const nvrData = this.state.nvrs.map(n => [n.name, n.ip, n.piso || '-', n.location, n.channels, n.disk]);
+            doc.autoTable({
+                head: [['Nombre', 'IP', 'Piso', 'Ubicación', 'Canales', 'Disco']],
+                body: nvrData,
+                startY: currentY + 5,
+                theme: 'striped'
+            });
+        }
+
+        this._showPDF(doc, 'reporte_infraestructura_cctv.pdf');
+    }
+
+    debugState() {
+        let report = `--- DIAGNÓSTICO DE DATOS ---\n`;
+        report += `Total Centrales: ${this.state.centrales.length}\n`;
+        report += `Total Dispositivos: ${this.state.devices.length}\n`;
+        report += `Total Cámaras: ${this.state.cameras.length}\n`;
+        report += `Total Switches PoE: ${this.state.poeSwitches.length}\n`;
+        report += `Total NVRs: ${this.state.nvrs.length}\n`;
+        report += `\n--- DETALLE CÁMARAS ---\n`;
+        
+        if (this.state.cameras.length === 0) {
+            report += "No hay cámaras en el estado actual.\n";
+        } else {
+            this.state.cameras.forEach((c, idx) => {
+                const central = this.state.centrales.find(cen => cen.id === c.centralId);
+                report += `${idx+1}. Ubicación: ${c.location} | CentralID: ${c.centralId} | Central Name: ${central ? central.name : 'NO ENCONTRADA'}\n`;
+            });
+        }
+        
+        report += `\n--- CENTRAL SELECCIONADA ---\n`;
+        report += `ID: ${this.state.currentCentralId}\n`;
+        
+        alert(report);
+        console.log("Estado Completo:", this.state);
+    }
+}
 // Inicializar
 window.app = new AlarmApp();
