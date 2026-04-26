@@ -1,4 +1,4 @@
 {
-  "version": "4.5.9",
-  "notes": "v4.5.9: Ajustes críticos de estabilidad móvil (Anti-Wobble mejorado) y corrección de anchos en modales y login."
+  "version": "4.6.0",
+  "notes": "v4.6.0: Nueva función de vista previa de fotos a pantalla completa. Haz clic en cualquier foto de cámara para agrandarla."
 }

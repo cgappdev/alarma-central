@@ -783,7 +783,7 @@ class AlarmApp {
 
                 <div class="logout-section">
                     <button class="logout-btn-full" onclick="app.logout()">Cerrar Sesión</button>
-                    <p class="app-version">Versión 4.5.9-PRO-CCTV</p>
+                    <p class="app-version">Versión 4.6.0-PRO-CCTV</p>
                 </div>
             </div>
         `;
@@ -1193,6 +1193,28 @@ class AlarmApp {
         // Anti-Wobble: Force horizontal scroll to 0
         document.documentElement.scrollLeft = 0;
         document.body.scrollLeft = 0;
+    }
+
+    previewPhoto(photoUrl, name) {
+        const overlay = document.getElementById('photo-preview-overlay');
+        const img = document.getElementById('full-photo');
+        const caption = document.getElementById('photo-caption');
+        
+        if (overlay && img && caption) {
+            img.src = photoUrl;
+            caption.innerText = name;
+            overlay.classList.remove('hidden');
+            // Prevent scrolling background
+            document.body.style.overflow = 'hidden';
+        }
+    }
+
+    closePhotoPreview() {
+        const overlay = document.getElementById('photo-preview-overlay');
+        if (overlay) {
+            overlay.classList.add('hidden');
+            document.body.style.overflow = '';
+        }
     }
 
     renderCentralesList() {
@@ -2078,7 +2100,7 @@ class AlarmApp {
                 card.className = 'device-card glass';
                 card.innerHTML = `
                     ${type === 'camera' && item.photo ? `
-                        <div class="cctv-card-photo">
+                        <div class="cctv-card-photo" onclick="app.previewPhoto('${item.photo}', '${item.name}')" style="cursor: zoom-in;">
                             <img src="${item.photo}" alt="${item.name}">
                         </div>
                     ` : ''}
