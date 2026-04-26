@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=4.5.4">
+    <link rel="stylesheet" href="style.css?v=4.5.7">
     <!-- PWA -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#E60012">
@@ -203,7 +203,10 @@
             <section id="cctv-section" class="details-section hidden">
                 <div class="cctv-header glass">
                     <div class="flex-row">
-                        <h2>Infraestructura CCTV</h2>
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <button class="secondary-btn btn-sm" onclick="app.switchTab('home')">⬅ Volver</button>
+                            <h2 style="margin: 0;">Infraestructura CCTV</h2>
+                        </div>
                         <div class="cctv-actions admin-only">
                             <button class="primary-btn btn-sm" onclick="app.openCctvModal('camera')">+ Cámara</button>
                             <button class="primary-btn btn-sm" onclick="app.openCctvModal('switch')">+ Switch PoE</button>
@@ -457,7 +460,7 @@
                     <input type="text" name="ip" required placeholder="192.168.1.x">
                 </div>
                 <div class="input-group">
-                    <label>Ubicación Física</label>
+                    <label>Conexión a Rack</label>
                     <input type="text" name="location" required placeholder="Ej: Rack Principal">
                 </div>
                 <div class="input-group">
@@ -497,9 +500,9 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
     
     <!-- Configuración de Firebase -->
-    <script src="firebase-config.js?v=4.5.4"></script>
-    <script src="initial-data.js?v=4.5.4"></script>
-    <script src="app.js?v=4.5.4"></script>
+    <script src="firebase-config.js?v=4.5.7"></script>
+    <script src="initial-data.js?v=4.5.7"></script>
+    <script src="app.js?v=4.5.7"></script>
     
     <!-- PWA Service Worker Registration -->
     <script>

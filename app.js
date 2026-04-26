@@ -11,7 +11,8 @@ class AlarmApp {
             currentCentralId: null,
             centralSearch: '',
             deviceSearch: '',
-            reorderMode: false
+            reorderMode: false,
+            currentTab: 'home'
         };
         this.currentCameraPhoto = null;
         this.loadInitialData();
@@ -643,13 +644,16 @@ class AlarmApp {
         modal.classList.remove('hidden');
     }
 
-    switchTab(tab) {
+    switchTab(tab, silent = false) {
         if (!tab) return;
+        this.state.currentTab = tab;
         
-        // Reset scroll position on tab switch
-        const contentArea = document.querySelector('.content');
-        if (contentArea) contentArea.scrollTop = 0;
-        window.scrollTo(0, 0);
+        // Reset scroll position on tab switch (only if not silent)
+        if (!silent) {
+            const contentArea = document.querySelector('.content');
+            if (contentArea) contentArea.scrollTop = 0;
+            window.scrollTo(0, 0);
+        }
         
         // Update navigation UI
         document.querySelectorAll('.nav-item').forEach(item => {
@@ -779,7 +783,7 @@ class AlarmApp {
 
                 <div class="logout-section">
                     <button class="logout-btn-full" onclick="app.logout()">Cerrar Sesión</button>
-                    <p class="app-version">Versión 4.5.4-PRO-CCTV</p>
+                    <p class="app-version">Versión 4.5.7-PRO-CCTV</p>
                 </div>
             </div>
         `;
@@ -1182,7 +1186,7 @@ class AlarmApp {
     // Rendering
     render() {
         this.renderCentralesList();
-        this.renderCurrentCentral();
+        this.switchTab(this.state.currentTab || 'home', true);
         this.updateStats();
         this.applyPermissions();
     }
@@ -1238,7 +1242,6 @@ class AlarmApp {
         const details = document.getElementById('central-details');
 
         if (!central) {
-            details.classList.add('hidden');
             return;
         }
 
@@ -1304,7 +1307,7 @@ class AlarmApp {
             this.applyPermissions();
         }
 
-        details.classList.remove('hidden');
+        
         document.getElementById('current-central-name').innerText = central.name;
         document.getElementById('info-ub').innerText = central.location;
         document.getElementById('info-ip').innerText = central.ip;
@@ -1885,6 +1888,10 @@ class AlarmApp {
                     <label>Modelo</label>
                     <input type="text" name="model" placeholder="Ej: DS-2CD2143G0-I">
                 </div>
+                <div class="input-group">
+                    <label>MegaPíxeles</label>
+                    <input type="text" name="megapixels" placeholder="Ej: 2, 4, 8...">
+                </div>
             `;
         } else if (type === 'switch') {
             extraFields.innerHTML = `
@@ -1927,6 +1934,7 @@ class AlarmApp {
                 if (type === 'camera') {
                     form.channel.value = item.channel || '';
                     form.model.value = item.model || '';
+                    form.megapixels.value = item.megapixels || '';
                 } else if (type === 'switch') {
                     form.ports.value = item.ports || '';
                 } else if (type === 'nvr') {
@@ -2018,6 +2026,7 @@ class AlarmApp {
         if (type === 'camera') {
             data.channel = formData.get('channel');
             data.model = formData.get('model');
+            data.megapixels = formData.get('megapixels');
             data.photo = this.currentCameraPhoto;
         } else if (type === 'switch') {
             data.ports = formData.get('ports');
@@ -2037,7 +2046,7 @@ class AlarmApp {
 
         this.saveState();
         this.closeModals();
-        this.renderCCTVTab();
+        this.render();
         alert('✅ Datos grabados correctamente.');
     }
 
@@ -2069,19 +2078,19 @@ class AlarmApp {
                             <img src="${item.photo}" alt="${item.name}">
                         </div>
                     ` : ''}
-                    <div class="cctv-badge badge-${type}">${type}</div>
+                    <div class="cctv-badge badge-${type}">${type === 'camera' ? 'CAMARA' : type.toUpperCase()}</div>
                     <div class="device-main-info">
-                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                        <div class="cctv-card-header">
                             <span style="font-size: 1.2rem;">${this.getDeviceIcon(type)}</span>
-                            <h4 style="margin: 0;">${item.name}</h4>
+                            <h4 style="margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${item.name}</h4>
                         </div>
                         <div class="device-meta">
                             <p><strong>IP:</strong> ${item.ip}</p>
-                            <p><strong>Ubicación:</strong> ${item.location} (Piso ${item.piso || '-'})</p>
+                            <p><strong>Conexión Rack:</strong> ${item.location} (Piso ${item.piso || '-'})</p>
                             <p class="full-row" style="color: var(--hik-red); font-weight: 600;">
                                 🏢 Sede: ${central ? central.name : 'General'}
                             </p>
-                            ${type === 'camera' ? `<p><strong>Canal:</strong> ${item.channel || '--'}</p><p><strong>Modelo:</strong> ${item.model || '--'}</p>` : ''}
+                            ${type === 'camera' ? `<p><strong>Canal:</strong> ${item.channel || '--'}</p><p><strong>Modelo:</strong> ${item.model || '--'}</p><p><strong>Resolución:</strong> ${item.megapixels ? item.megapixels + ' MP' : '--'}</p>` : ''}
                             ${type === 'switch' ? `<p class="full-row"><strong>Puertos:</strong> ${item.ports || '--'}</p>` : ''}
                             ${type === 'nvr' ? `<p><strong>Canales:</strong> ${item.channels || '--'}</p><p><strong>Disco:</strong> ${item.disk || '--'}</p>` : ''}
                         </div>
@@ -2135,7 +2144,7 @@ class AlarmApp {
                 doc.text(`${index + 1}. ${cam.name}`, 14, currentY);
                 doc.setFont(undefined, 'normal');
                 doc.setFontSize(9);
-                doc.text(`IP: ${cam.ip} | Piso: ${cam.piso || '-'} | Ubicación: ${cam.location} | Canal: ${cam.channel || '--'} | Modelo: ${cam.model || '--'}`, 14, currentY + 5);
+                doc.text(`IP: ${cam.ip} | Piso: ${cam.piso || '-'} | Conexión Rack: ${cam.location} | Canal: ${cam.channel || '--'} | Modelo: ${cam.model || '--'} | Res: ${cam.megapixels ? cam.megapixels + ' MP' : '--'}`, 14, currentY + 5);
                 
                 if (cam.photo) {
                     try {
@@ -2161,7 +2170,7 @@ class AlarmApp {
             
             const switchData = this.state.poeSwitches.map(s => [s.name, s.ip, s.piso || '-', s.location, s.ports]);
             doc.autoTable({
-                head: [['Nombre', 'IP', 'Piso', 'Ubicación', 'Puertos']],
+                head: [['Nombre', 'IP', 'Piso', 'Conexión Rack', 'Puertos']],
                 body: switchData,
                 startY: currentY + 5,
                 theme: 'striped'
@@ -2178,7 +2187,7 @@ class AlarmApp {
             
             const nvrData = this.state.nvrs.map(n => [n.name, n.ip, n.piso || '-', n.location, n.channels, n.disk]);
             doc.autoTable({
-                head: [['Nombre', 'IP', 'Piso', 'Ubicación', 'Canales', 'Disco']],
+                head: [['Nombre', 'IP', 'Piso', 'Conexión Rack', 'Canales', 'Disco']],
                 body: nvrData,
                 startY: currentY + 5,
                 theme: 'striped'
