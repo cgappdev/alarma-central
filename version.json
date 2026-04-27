@@ -1,4 +1,4 @@
 {
-  "version": "4.6.3",
-  "notes": "v4.6.3: Fuentes extra-grandes y con mayor contraste para máxima legibilidad en móviles."
+  "version": "4.6.4",
+  "notes": "v4.6.4: Corrección en estilos móviles para forzar tamaño de fuente aún más grande."
 }

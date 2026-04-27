@@ -783,7 +783,7 @@ class AlarmApp {
 
                 <div class="logout-section">
                     <button class="logout-btn-full" onclick="app.logout()">Cerrar Sesión</button>
-                    <p class="app-version">Versión 4.6.3-PRO-CCTV</p>
+                    <p class="app-version">Versión 4.6.4-PRO-CCTV</p>
                 </div>
             </div>
         `;

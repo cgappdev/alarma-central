@@ -1354,7 +1354,7 @@ input[type="number"]::-webkit-outer-spin-button {
 
     .summary-item .label {
         color: #777 !important;
-        font-size: 0.6rem !important;
+        font-size: 0.85rem !important;
     }
 
     /* Modal Fixes for Mobile */
@@ -1379,10 +1379,12 @@ input[type="number"]::-webkit-outer-spin-button {
     }
 
     .modal .input-group input, 
-    .modal .input-group select {
+    .modal .input-group select,
+    .modal .input-group textarea {
         background: white !important;
         border: 1px solid #ccc !important;
         color: black !important;
+        font-size: 1.3rem !important; /* Larger text for mobile */
     }
 
     .modal .secondary-btn {
@@ -1513,8 +1515,9 @@ input[type="number"]::-webkit-outer-spin-button {
     }
 
     .nav-item span {
-        font-size: 0.65rem;
+        font-size: 0.85rem;
         letter-spacing: 0;
+        font-weight: 600;
     }
 
     .dashboard-header-main.header-box {
@@ -1767,6 +1770,35 @@ input[type="number"]::-webkit-outer-spin-button {
         align-items: center;
         border-radius: 0.75rem;
         margin: 0;
+    }
+
+    /* Meta & Titles Font Size Boost */
+    .device-main-info h4 {
+        font-size: 1.7rem !important;
+    }
+
+    .device-meta {
+        font-size: 1.4rem !important;
+        line-height: 1.6;
+    }
+
+    .device-meta p strong {
+        font-size: 1rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .cctv-badge {
+        font-size: 1rem !important;
+        padding: 5px 12px !important;
+    }
+
+    .consolidated-item .item-info strong {
+        font-size: 1.2rem !important;
+    }
+
+    .consolidated-item .item-info small {
+        font-size: 1rem !important;
     }
 }
 
