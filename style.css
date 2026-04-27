@@ -650,12 +650,12 @@ h1, h2, h3 {
 
 .device-main-info h4 { 
     margin: 0 0 0.15rem 0; 
-    font-size: 0.9rem; 
+    font-size: 1.1rem; 
     color: var(--text-main); 
     font-weight: 700;
 }
 
-.device-meta { font-size: 0.8rem; color: var(--text-muted); line-height: 1.3; display: grid; grid-template-columns: 1fr 1fr; gap: 0.15rem; }
+.device-meta { font-size: 0.95rem; color: var(--text-muted); line-height: 1.4; display: grid; grid-template-columns: 1fr 1fr; gap: 0.25rem; }
 .device-meta p { margin: 0; }
 .device-meta .full-row { grid-column: span 2; }
 
@@ -2129,7 +2129,7 @@ input[type="number"]::-webkit-outer-spin-button {
     left: 10px;
     padding: 2px 8px;
     border-radius: 4px;
-    font-size: 0.65rem;
+    font-size: 0.8rem;
     font-weight: 700;
     color: white;
     z-index: 5;
