@@ -650,12 +650,12 @@ h1, h2, h3 {
 
 .device-main-info h4 { 
     margin: 0 0 0.15rem 0; 
-    font-size: 1.1rem; 
+    font-size: 1.25rem; 
     color: var(--text-main); 
     font-weight: 700;
 }
 
-.device-meta { font-size: 0.95rem; color: var(--text-muted); line-height: 1.4; display: grid; grid-template-columns: 1fr 1fr; gap: 0.25rem; }
+.device-meta { font-size: 1.1rem; color: var(--text-muted); line-height: 1.4; display: grid; grid-template-columns: 1fr; gap: 0.35rem; }
 .device-meta p { margin: 0; }
 .device-meta .full-row { grid-column: span 2; }
 
@@ -745,7 +745,7 @@ h1, h2, h3 {
 }
 
 .input-group { margin-bottom: 1.25rem; text-align: left; }
-.input-group label { display: block; margin-bottom: 0.5rem; color: var(--text-muted); font-size: 0.9rem; }
+.input-group label { display: block; margin-bottom: 0.5rem; color: var(--text-muted); font-size: 1.1rem; }
 .input-group input, .input-group select, .input-group textarea {
     width: 100%;
     padding: 1rem 1.25rem; /* Taller for easier typing */
@@ -755,7 +755,7 @@ h1, h2, h3 {
     color: var(--text-main);
     font-family: inherit;
     transition: all 0.3s ease;
-    font-size: 1.05rem; /* Larger text for inputs */
+    font-size: 1.2rem; /* Larger text for inputs */
     box-sizing: border-box;
 }
 

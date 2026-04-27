@@ -783,7 +783,7 @@ class AlarmApp {
 
                 <div class="logout-section">
                     <button class="logout-btn-full" onclick="app.logout()">Cerrar Sesión</button>
-                    <p class="app-version">Versión 4.6.1-PRO-CCTV</p>
+                    <p class="app-version">Versión 4.6.2-PRO-CCTV</p>
                 </div>
             </div>
         `;
@@ -2165,11 +2165,11 @@ class AlarmApp {
                     currentY = 20;
                 }
 
-                doc.setFontSize(11);
+                doc.setFontSize(14);
                 doc.setFont(undefined, 'bold');
                 doc.text(`${index + 1}. ${cam.name}`, 14, currentY);
                 doc.setFont(undefined, 'normal');
-                doc.setFontSize(9);
+                doc.setFontSize(11);
                 doc.text(`IP: ${cam.ip} | Piso: ${cam.piso || '-'} | Conexión Rack: ${cam.location} | Canal: ${cam.channel || '--'} | Modelo: ${cam.model || '--'} | Res: ${cam.megapixels ? cam.megapixels + ' MP' : '--'}`, 14, currentY + 5);
                 
                 if (cam.photo) {
