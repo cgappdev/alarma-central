@@ -649,15 +649,24 @@ h1, h2, h3 {
 }
 
 .device-main-info h4 { 
-    margin: 0 0 0.15rem 0; 
-    font-size: 1.25rem; 
+    margin: 0 0 0.25rem 0; 
+    font-size: 1.4rem; 
     color: var(--text-main); 
     font-weight: 700;
 }
 
-.device-meta { font-size: 1.1rem; color: var(--text-muted); line-height: 1.4; display: grid; grid-template-columns: 1fr; gap: 0.35rem; }
+.device-meta { 
+    font-size: 1.2rem; 
+    color: var(--text-main); /* Darker for better contrast */
+    line-height: 1.5; 
+    display: grid; 
+    grid-template-columns: 1fr; 
+    gap: 0.4rem; 
+    font-weight: 500; /* Slightly thicker */
+}
 .device-meta p { margin: 0; }
-.device-meta .full-row { grid-column: span 2; }
+.device-meta p strong { font-weight: 700; color: #000; } /* Maximum contrast for labels */
+.device-meta .full-row { grid-column: span 1; }
 
 .device-actions {
     position: absolute;
