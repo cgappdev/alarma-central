@@ -2106,9 +2106,9 @@ class AlarmApp {
                     ` : ''}
                     <div class="cctv-badge badge-${type}">${type === 'camera' ? 'CAMARA' : type.toUpperCase()}</div>
                     <div class="device-main-info">
-                        <div class="cctv-card-header">
-                            <span style="font-size: 1.2rem;">${this.getDeviceIcon(type)}</span>
-                            <h4 style="margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${item.name}</h4>
+                        <div class="cctv-card-header" style="display: flex; align-items: flex-start; gap: 0.5rem; margin-bottom: 0.5rem;">
+                            <span style="font-size: 1.2rem; flex-shrink: 0; margin-top: 2px;">${this.getDeviceIcon(type)}</span>
+                            <h4 class="cctv-title" style="margin: 0; word-break: break-word;">${item.name}</h4>
                         </div>
                         <div class="device-meta">
                             <p><strong>IP:</strong> ${item.ip}</p>

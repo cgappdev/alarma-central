@@ -655,6 +655,17 @@ h1, h2, h3 {
     font-weight: 700;
 }
 
+.cctv-title {
+    font-size: 1.2rem !important; /* Smaller default for CCTV titles since they are long */
+    line-height: 1.2;
+}
+
+@media (min-width: 768px) {
+    .cctv-title {
+        font-size: 0.95rem !important; /* Further reduce font size on PC to fit full names */
+    }
+}
+
 .device-meta { 
     font-size: 1.2rem; 
     color: var(--text-main); /* Darker for better contrast */
