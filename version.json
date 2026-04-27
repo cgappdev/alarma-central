@@ -1,4 +1,4 @@
 {
-  "version": "4.6.4",
-  "notes": "v4.6.4: Corrección en estilos móviles para forzar tamaño de fuente aún más grande."
+  "version": "4.6.5",
+  "notes": "v4.6.5: Equilibrio de fuentes en móviles: reducción de título y etiquetas, ajuste de valores."
 }
