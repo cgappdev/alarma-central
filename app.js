@@ -110,6 +110,17 @@ class AlarmApp {
                 debugFirebase.innerText = "Firebase: ✅ DB Conectada";
             }
             console.log("Firebase DB Conectada");
+            
+            // --- Sincronización Maestra (Eficacia Garantizada) ---
+            if (this.needsMasterPush) {
+                console.log('🚀 Iniciando Sincronización Maestra para propagar cambios de IP...');
+                const newResetId = Date.now().toString();
+                localStorage.setItem('last-reset-id', newResetId);
+                this.syncCloud(true).then(() => {
+                    console.log('✅ Sincronización Maestra completada. Todos los dispositivos recibirán el cambio.');
+                    this.needsMasterPush = false;
+                });
+            }
 
             // --- Firebase Auth Listener ---
             firebase.auth().onAuthStateChanged((user) => {
@@ -192,9 +203,10 @@ class AlarmApp {
         this.bootstrapAdmin();
 
         // 3. SEEDING INTELIGENTE: Solo cargar de los archivos base si la app está vacía
-        const forceUpdate = localStorage.getItem('force_update_4610');
+        const forceUpdate = localStorage.getItem('force_update_4611');
         if (!forceUpdate || this.state.centrales.length === 0) {
             console.log('Forzando actualización desde datos semilla...');
+            this.needsMasterPush = true; // Marcamos que necesitamos subir esto a la nube al conectar
             
             // AUTO-BACKUP: Guardar copia del estado actual antes de sobrescribir
             const currentState = localStorage.getItem('alarma-lg-state');
@@ -207,7 +219,7 @@ class AlarmApp {
             const serverData = await this.fetchDataFromServer();
             if (serverData) {
                 this.smartMerge(serverData);
-                localStorage.setItem('force_update_4610', 'true');
+                localStorage.setItem('force_update_4611', 'true');
                 this.saveState(true);
             }
         } else {
@@ -820,7 +832,7 @@ class AlarmApp {
 
                 <div class="logout-section">
                     <button class="logout-btn-full" onclick="app.logout()">Cerrar Sesión</button>
-                    <p class="app-version">Versión 4.6.4-PRO-CCTV</p>
+                    <p class="app-version">Versión 4.6.11-MASTER-SYNC</p>
                 </div>
             </div>
         `;

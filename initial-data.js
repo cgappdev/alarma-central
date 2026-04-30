@@ -4,7 +4,7 @@ const initialData = {
     {
       "battery": "100",
       "id": "1774354088001",
-      "ip": "192.168.17.52",
+      "ip": "192.168.17.23",
       "location": "Hemodinamia",
       "name": "Hemodinamia",
       "piso": "1",
@@ -13,7 +13,7 @@ const initialData = {
     {
       "battery": "100",
       "id": "1774800071189",
-      "ip": "192.168.17.43",
+      "ip": "192.168.17.30",
       "location": "Pediatria",
       "name": "Pediatria",
       "rack": "Pediatria",
@@ -22,7 +22,7 @@ const initialData = {
     {
       "battery": "100",
       "id": "1774800689228",
-      "ip": "192.168.17.54",
+      "ip": "192.168.17.12",
       "location": "Salud Mental",
       "name": "Salud Mental",
       "rack": "Salud Mental",
@@ -31,7 +31,7 @@ const initialData = {
     {
       "battery": "100",
       "id": "1774800905220",
-      "ip": "192.168.17.20",
+      "ip": "192.168.17.63",
       "location": "Urgencias Piso 1",
       "name": "Urgencias Piso 1",
       "rack": "Urgencias Piso 1",
@@ -40,7 +40,7 @@ const initialData = {
     {
       "battery": "100",
       "id": "1774831181535",
-      "ip": "192.168.12.12",
+      "ip": "192.168.17.20",
       "location": "HPosQuirurgicos",
       "name": "HPosQuirurgicos",
       "rack": "Cuarto Sistema Monitoreo",
@@ -49,11 +49,38 @@ const initialData = {
     {
       "battery": "100",
       "id": "1774831229527",
-      "ip": "192.168.17.70",
+      "ip": "192.168.17.23",
       "location": "HQuirurgicosOrtopedia",
       "name": "HQuirurgicosOrtopedia",
       "rack": "HQuirurgicosOrtopedia",
       "piso": "-"
+    },
+    {
+      "battery": "100",
+      "id": "1774220918042",
+      "ip": "192.168.17.56",
+      "location": "Uci A-B-C Piso 2",
+      "name": "Uci A-B-C Piso 2",
+      "rack": "Uci A-B-C Piso 2",
+      "piso": "2"
+    },
+    {
+      "battery": "100",
+      "id": "1774220962018",
+      "ip": "192.168.17.32",
+      "location": "GinecoObstetriciaEspecialidades",
+      "name": "GinecoObstetriciaEspecialidades",
+      "rack": "GinecoObstetriciaEspecialidades",
+      "piso": "1"
+    },
+    {
+      "battery": "100",
+      "id": "1774224339961",
+      "ip": "192.168.17.24",
+      "location": "Uci D Piso 3",
+      "name": "Uci D Piso 3",
+      "rack": "Uci D Piso 3",
+      "piso": "3"
     }
   ],
   "devices": [
