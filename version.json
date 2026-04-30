@@ -1,4 +1,4 @@
 {
-  "version": "4.6.5",
-  "notes": "v4.6.5: Equilibrio de fuentes en móviles: reducción de título y etiquetas, ajuste de valores."
+  "version": "4.6.6",
+  "notes": "v4.6.6: Forzar actualización de caché para dispositivos móviles."
 }
