@@ -1549,4 +1549,5 @@ const initialData = {
   "cameras": [],
   "poeSwitches": [],
   "nvrs": []
-}; window.initialData = initialData;
+};
+window.initialData = initialData;

@@ -1,4 +1,4 @@
 {
-  "version": "4.6.8",
-  "notes": "v4.6.8: Corrección de carga de datos semilla. Se fuerza a los dispositivos a absorber la nueva base de datos."
+  "version": "4.6.9",
+  "notes": "v4.6.9: Corrección de carga de datos semilla. Se fuerza a los dispositivos a absorber la nueva base de datos."
 }
