@@ -192,12 +192,24 @@ class AlarmApp {
         this.bootstrapAdmin();
 
         // 3. SEEDING INTELIGENTE: Solo cargar de los archivos base si la app está vacía
-        const forceUpdate = localStorage.getItem('force_update_469');
+        const forceUpdate = localStorage.getItem('force_update_4610');
         if (!forceUpdate || this.state.centrales.length === 0) {
             console.log('Forzando actualización desde datos semilla...');
-            await this.fetchDataFromServer();
-            localStorage.setItem('force_update_469', 'true');
-            this.saveState(true);
+            
+            // AUTO-BACKUP: Guardar copia del estado actual antes de sobrescribir
+            const currentState = localStorage.getItem('alarma-lg-state');
+            if (currentState) {
+                const dateStr = new Date().toISOString().split('T')[0].replace(/-/g, '');
+                localStorage.setItem(`alarma-lg-state-backup-${dateStr}`, currentState);
+                console.log(`Auto-respaldo creado: alarma-lg-state-backup-${dateStr}`);
+            }
+
+            const serverData = await this.fetchDataFromServer();
+            if (serverData) {
+                this.smartMerge(serverData);
+                localStorage.setItem('force_update_4610', 'true');
+                this.saveState(true);
+            }
         } else {
             console.log('Cargados ' + this.state.centrales.length + ' centrales desde la memoria local.');
         }
@@ -325,20 +337,53 @@ class AlarmApp {
         return false;
     }
 
+    smartMerge(serverData) {
+        console.log('Iniciando fusión inteligente de datos...');
+        
+        const mergeArray = (localArr, serverArr) => {
+            const serverMap = new Map(serverArr.map(item => [item.id, item]));
+            const merged = [...serverArr]; // Empezamos con la base del servidor
+            
+            // Añadimos lo que existe localmente pero NO en el servidor
+            for (const localItem of localArr) {
+                if (!serverMap.has(localItem.id)) {
+                    console.log(`Smart Merge: Conservando item local huérfano ID ${localItem.id}`);
+                    merged.push(localItem);
+                }
+            }
+            return merged;
+        };
+
+        this.state.centrales = mergeArray(this.state.centrales, serverData.centrales || []);
+        this.state.devices = mergeArray(this.state.devices, serverData.devices || []);
+        this.state.cameras = mergeArray(this.state.cameras, serverData.cameras || []);
+        this.state.poeSwitches = mergeArray(this.state.poeSwitches, serverData.poeSwitches || []);
+        this.state.nvrs = mergeArray(this.state.nvrs, serverData.nvrs || []);
+        
+        // Usuarios: Merge similar, conservando IDs o usernames
+        const serverUsersMap = new Map((serverData.users || []).map(u => [u.username, u]));
+        const mergedUsers = [...(serverData.users || [])];
+        for (const localU of this.state.users) {
+            if (!serverUsersMap.has(localU.username)) {
+                mergedUsers.push(localU);
+            }
+        }
+        this.state.users = mergedUsers;
+
+        if (serverData.currentCentralId && !this.state.currentCentralId) {
+            this.state.currentCentralId = serverData.currentCentralId;
+        }
+        
+        console.log('Fusión inteligente completada.');
+    }
+
     async fetchDataFromServer() {
         console.log('Intentando cargar datos desde servidor/memoria...');
         
         // 1. Intentar usar los datos precargados vía script (Solución CORS para local)
         if (window.initialData) {
             console.log('Datos detectados en memoria (initial-data.js). Cargando...');
-            this.state.centrales = window.initialData.centrales || [];
-            this.state.devices = window.initialData.devices || [];
-            this.state.cameras = window.initialData.cameras || [];
-            this.state.poeSwitches = window.initialData.poeSwitches || [];
-            this.state.nvrs = window.initialData.nvrs || [];
-            this.state.users = window.initialData.users || [];
-            this.state.currentCentralId = window.initialData.currentCentralId || null;
-            return;
+            return window.initialData;
         }
 
         // 2. Fallback: Intentar fetch si no hay initialData (ej. producción)
@@ -346,18 +391,13 @@ class AlarmApp {
             const response = await fetch('data.json?v=' + Date.now());
             if (response.ok) {
                 const data = await response.json();
-                this.state.centrales = data.centrales || [];
-                this.state.devices = data.devices || [];
-                this.state.cameras = data.cameras || [];
-                this.state.poeSwitches = data.poeSwitches || [];
-                this.state.nvrs = data.nvrs || [];
-                this.state.users = data.users || [];
-                this.state.currentCentralId = data.currentCentralId || null;
                 console.log('Datos cargados vía fetch (data.json)');
+                return data;
             }
         } catch (e) {
             console.warn('No se pudo cargar data.json vía fetch (posible CORS).');
         }
+        return null;
     }
 
     saveState(skipCloud = false) {
