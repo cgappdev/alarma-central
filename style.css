@@ -713,6 +713,32 @@ h1, h2, h3 {
     border-color: var(--danger);
 }
 
+.device-actions .icon-btn.has-history {
+    background: #fff3e0;
+    color: #f57c00;
+    border-color: #ffb74d;
+    box-shadow: 0 0 5px rgba(255, 152, 0, 0.3);
+    position: relative;
+}
+
+.device-actions .icon-btn.has-history::after {
+    content: '!';
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    width: 14px;
+    height: 14px;
+    background-color: var(--danger);
+    color: white;
+    font-size: 10px;
+    font-weight: bold;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%;
+    border: 1px solid white;
+}
+
 /* Modals & Inputs */
 .modal {
     padding: 2.5rem;

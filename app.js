@@ -1392,7 +1392,7 @@ class AlarmApp {
                         </div>
                     </div>
                     <div class="device-actions admin-only">
-                        <button onclick="app.openMaintenanceModal('${d.id}')" class="icon-btn info" title="Historial">📋</button>
+                        <button onclick="app.openMaintenanceModal('${d.id}')" class="icon-btn info ${d.maintenanceLogs && d.maintenanceLogs.length > 0 ? 'has-history' : ''}" title="Historial">📋</button>
                         <button onclick="app.openDeviceModal(true, '${d.id}')" class="icon-btn edit">✏️</button>
                         <button onclick="app.deleteDevice('${d.id}')" class="icon-btn danger">🗑️</button>
                     </div>
@@ -2122,7 +2122,7 @@ class AlarmApp {
                         </div>
                     </div>
                     <div class="device-actions admin-only">
-                        <button class="icon-btn info" title="Historial" onclick="app.openMaintenanceModal('${item.id}')">📋</button>
+                        <button class="icon-btn info ${item.maintenanceLogs && item.maintenanceLogs.length > 0 ? 'has-history' : ''}" title="Historial" onclick="app.openMaintenanceModal('${item.id}')">📋</button>
                         <button class="icon-btn edit" onclick="app.openCctvModal('${type}', true, '${item.id}')">✏️</button>
                         <button class="icon-btn danger" onclick="app.deleteCctv('${type}', '${item.id}')">🗑️</button>
                     </div>
