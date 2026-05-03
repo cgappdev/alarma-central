@@ -1,4 +1,4 @@
 {
-  "version": "4.6.14",
-  "notes": "v4.6.14: Ajuste fino de tipografía en tarjetas móviles (nombre más pequeño, características más grandes)."
+  "version": "4.6.15",
+  "notes": "v4.6.15: Ajuste específico de tamaño y peso para la ubicación del dispositivo en móviles."
 }

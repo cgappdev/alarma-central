@@ -203,7 +203,7 @@ class AlarmApp {
         this.bootstrapAdmin();
 
         // 3. SEEDING INTELIGENTE: Solo cargar de los archivos base si la app está vacía
-        const forceUpdate = localStorage.getItem('force_update_4614');
+        const forceUpdate = localStorage.getItem('force_update_4615');
         if (!forceUpdate || this.state.centrales.length === 0) {
             console.log('Forzando actualización desde datos semilla...');
             this.needsMasterPush = true; // Marcamos que necesitamos subir esto a la nube al conectar
@@ -219,7 +219,7 @@ class AlarmApp {
             const serverData = await this.fetchDataFromServer();
             if (serverData) {
                 this.smartMerge(serverData);
-                localStorage.setItem('force_update_4614', 'true');
+                localStorage.setItem('force_update_4615', 'true');
                 this.saveState(true);
             }
         } else {
@@ -832,7 +832,7 @@ class AlarmApp {
 
                 <div class="logout-section">
                     <button class="logout-btn-full" onclick="app.logout()">Cerrar Sesión</button>
-                    <p class="app-version">Versión 4.6.14-MASTER-SYNC</p>
+                    <p class="app-version">Versión 4.6.15-MASTER-SYNC</p>
                 </div>
             </div>
         `;
@@ -1441,7 +1441,7 @@ class AlarmApp {
                     <div class="device-main-info">
                         <h4>${d.type.toUpperCase()}</h4>
                         <div class="device-meta">
-                            <p class="full-row">📍 ${d.location} (Piso ${d.piso || '-'})</p>
+                            <p class="full-row device-loc-text">📍 ${d.location} (Piso ${d.piso || '-'})</p>
                             <p class="${d.battery < 20 ? 'low-battery' : ''}">🔋 ${d.battery}%</p>
                              <p>📅 ${d.installationDate}</p>
                              <p class="full-row status-online" style="color: #10b981; font-weight: 700; font-size: 1rem; margin-top: 6px;"><span class="pulse-dot">●</span> En línea</p>

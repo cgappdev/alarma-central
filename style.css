@@ -1827,10 +1827,16 @@ input[type="number"]::-webkit-outer-spin-button {
     }
 
     .device-meta {
-        font-size: 1.15rem !important; /* Increased further */
+        font-size: 1.1rem !important; 
         line-height: 1.6;
-        gap: 0.7rem;
-        font-weight: 600; /* Bolder for readability */
+        gap: 0.5rem;
+    }
+
+    .device-loc-text {
+        font-size: 1.3rem !important; /* Specific adjustment for location */
+        font-weight: 700 !important;
+        color: #000 !important;
+        margin-bottom: 4px;
     }
 
     .device-meta p strong {
