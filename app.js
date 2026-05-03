@@ -833,6 +833,7 @@ class AlarmApp {
                 <div class="debug-section glass-mini" style="margin: 15px; padding: 15px; border-radius: 12px; background: #f9f9f9; border: 1px solid #eee;">
                     <h3 style="margin-top: 0; font-size: 0.9rem; color: #555;">🛰️ Diagnóstico de Sincronización</h3>
                     <div id="debug-firebase-status" style="font-size: 0.85rem; margin-bottom: 8px;">Estado: ⏳ Verificando...</div>
+                    <div id="debug-project-id" style="font-size: 0.8rem; color: var(--hik-red); font-weight: bold; margin-bottom: 8px;">Proyecto: ${firebase.app().options.projectId}</div>
                     <div id="debug-cloud-time" style="font-size: 0.8rem; color: #888; margin-bottom: 10px;">Última sincronización: --</div>
                     
                     <div style="display: flex; flex-direction: column; gap: 10px;">
