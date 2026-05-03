@@ -92,6 +92,7 @@ class AlarmApp {
                     const viewer = document.getElementById('cloud-json-viewer');
                     if (viewer) {
                         viewer.innerText = JSON.stringify({
+                            projectId: firebase.app().options.projectId,
                             centrales: this.state.centrales.length,
                             devices: this.state.devices.length,
                             resetId: data.resetId || "none",
