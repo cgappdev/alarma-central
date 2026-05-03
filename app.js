@@ -214,7 +214,7 @@ class AlarmApp {
         this.bootstrapAdmin();
 
         // 3. SEEDING INTELIGENTE: Solo cargar de los archivos base si la app está vacía
-        const forceUpdate = localStorage.getItem('force_update_4618');
+        const forceUpdate = localStorage.getItem('force_update_4619');
         if (!forceUpdate || this.state.centrales.length === 0) {
             console.log('Forzando actualización desde datos semilla...');
             this.needsMasterPush = true; // Marcamos que necesitamos subir esto a la nube al conectar
@@ -230,7 +230,7 @@ class AlarmApp {
             const serverData = await this.fetchDataFromServer();
             if (serverData) {
                 this.smartMerge(serverData);
-                localStorage.setItem('force_update_4618', 'true');
+                localStorage.setItem('force_update_4619', 'true');
                 this.saveState(true);
             }
         } else {
