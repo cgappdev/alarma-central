@@ -1,5 +1,6 @@
 class AlarmApp {
     constructor() {
+        console.log("%c AlarmaLG v4.6.19 Cargada ", "background: #E60012; color: #fff; font-weight: bold; padding: 5px;");
         this.state = {
             user: null, // { username, role }
             centrales: [],
