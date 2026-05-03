@@ -24,6 +24,10 @@ class AlarmApp {
         this.checkForUpdates().catch(e => console.warn('Actualización skip:', e.message));
     }
 
+    debugState() {
+        this.switchTab('me');
+    }
+
     initConnectivityMonitor() {
         window.addEventListener('firebase-connection-changed', (e) => {
             const connected = e.detail.connected;
@@ -78,12 +82,19 @@ class AlarmApp {
                         debugFirebase.innerHTML = `<span class="heartbeat"></span> Firebase: ✅ Sincronizado (${timestamp})`;
                     }
                     
+                    const statusEl = document.getElementById('debug-firebase-status');
+                    if (statusEl) statusEl.innerHTML = 'Estado: <span style="color: #10b981; font-weight: bold;">✅ Conectado y Sincronizado</span>';
+                    
+                    const timeEl = document.getElementById('debug-cloud-time');
+                    if (timeEl) timeEl.innerText = `Última sincronización: ${timestamp}`;
+
                     const viewer = document.getElementById('cloud-json-viewer');
                     if (viewer) {
                         viewer.innerText = JSON.stringify({
                             centrales: this.state.centrales.length,
                             devices: this.state.devices.length,
-                            resetId: data.resetId || "none"
+                            resetId: data.resetId || "none",
+                            version: data.version || "unknown"
                         }, null, 2);
                     }
                 } else {
@@ -203,7 +214,7 @@ class AlarmApp {
         this.bootstrapAdmin();
 
         // 3. SEEDING INTELIGENTE: Solo cargar de los archivos base si la app está vacía
-        const forceUpdate = localStorage.getItem('force_update_4616');
+        const forceUpdate = localStorage.getItem('force_update_4618');
         if (!forceUpdate || this.state.centrales.length === 0) {
             console.log('Forzando actualización desde datos semilla...');
             this.needsMasterPush = true; // Marcamos que necesitamos subir esto a la nube al conectar
@@ -219,7 +230,7 @@ class AlarmApp {
             const serverData = await this.fetchDataFromServer();
             if (serverData) {
                 this.smartMerge(serverData);
-                localStorage.setItem('force_update_4616', 'true');
+                localStorage.setItem('force_update_4618', 'true');
                 this.saveState(true);
             }
         } else {
@@ -803,6 +814,25 @@ class AlarmApp {
                         <span class="label">Gestionar Usuarios</span>
                         <span class="arrow">›</span>
                     </div>
+                </div>
+
+                <div class="debug-section glass-mini" style="margin: 15px; padding: 15px; border-radius: 12px; background: #f9f9f9; border: 1px solid #eee;">
+                    <h3 style="margin-top: 0; font-size: 0.9rem; color: #555;">🛰️ Diagnóstico de Sincronización</h3>
+                    <div id="debug-firebase-status" style="font-size: 0.85rem; margin-bottom: 8px;">Estado: ⏳ Verificando...</div>
+                    <div id="debug-cloud-time" style="font-size: 0.8rem; color: #888; margin-bottom: 10px;">Última sincronización: --</div>
+                    
+                    <div style="display: flex; gap: 10px;">
+                        <button class="secondary-btn btn-sm" onclick="app.syncCloud()" style="flex: 1; font-size: 0.75rem;">Subir Datos ⬆️</button>
+                        <button class="secondary-btn btn-sm" onclick="location.reload()" style="flex: 1; font-size: 0.75rem;">Recargar 🔄</button>
+                    </div>
+                    
+                    <div id="cloud-json-viewer" style="margin-top: 10px; font-size: 0.65rem; background: #333; color: #0f0; padding: 10px; border-radius: 6px; font-family: monospace; max-height: 100px; overflow: auto; display: none;">
+                        <!-- Aquí se verán los metadatos de la nube -->
+                    </div>
+                    <button class="secondary-btn btn-sm" onclick="document.getElementById('cloud-json-viewer').style.display = document.getElementById('cloud-json-viewer').style.display === 'none' ? 'block' : 'none'" style="width: 100%; margin-top: 5px; font-size: 0.65rem;">Ver Metadatos Nube</button>
+                </div>
+
+                <div class="me-menu">
                     <div class="me-menu-item admin-only" onclick="app.generateGeneralReport()">
                         <span class="icon">📄</span>
                         <span class="label">Reporte General (PDF)</span>
@@ -832,7 +862,7 @@ class AlarmApp {
 
                 <div class="logout-section">
                     <button class="logout-btn-full" onclick="app.logout()">Cerrar Sesión</button>
-                    <p class="app-version">Versión 4.6.16-MASTER-SYNC</p>
+                    <p class="app-version">Versión 4.6.18-DIAGNOSTICO</p>
                 </div>
             </div>
         `;
