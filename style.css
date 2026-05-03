@@ -1818,25 +1818,27 @@ input[type="number"]::-webkit-outer-spin-button {
 
     /* Meta & Titles Font Size Correction */
     .device-main-info h4 {
-        font-size: 0.9rem !important; /* Reduced further */
-        white-space: normal !important;
-        line-height: 1.2;
-        margin-bottom: 0.6rem !important;
+        font-size: 0.8rem !important;
+        font-weight: 700 !important;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
+        letter-spacing: 1px;
+        color: var(--hik-red) !important;
+        margin-bottom: 0.4rem !important;
     }
 
     .device-meta {
-        font-size: 1.1rem !important; 
-        line-height: 1.6;
-        gap: 0.5rem;
+        font-size: 0.85rem !important;
+        color: #666 !important;
+        line-height: 1.5;
+        gap: 0.3rem;
     }
 
     .device-loc-text {
-        font-size: 1.3rem !important; /* Specific adjustment for location */
-        font-weight: 700 !important;
-        color: #000 !important;
-        margin-bottom: 4px;
+        font-size: 1rem !important;
+        font-weight: 600 !important;
+        color: #222 !important;
+        margin-bottom: 2px;
+        letter-spacing: -0.2px;
     }
 
     .device-meta p strong {
