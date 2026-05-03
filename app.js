@@ -203,6 +203,20 @@ class AlarmApp {
         }
     }
 
+    async forceMasterSync() {
+        if (!confirm('🚀 ¿Forzar Sincronización Maestra?\n\nEsto enviará TODOS los datos actuales del PC a la nube y obligará a todos los móviles a actualizarse de inmediato.\n\nÚsalo si los cambios del PC no aparecen en el móvil.')) return;
+        
+        const newResetId = Date.now().toString();
+        localStorage.setItem('last-reset-id', newResetId);
+        
+        try {
+            await this.syncCloud(true);
+            alert('✅ Sincronización Maestra completada.\n\nAhora abre la app en tu móvil y los datos deberían actualizarse automáticamente.');
+        } catch (e) {
+            alert('❌ Error: ' + e.message);
+        }
+    }
+
 
     async loadInitialData() {
         console.log('Cargando datos iniciales...');
@@ -821,9 +835,12 @@ class AlarmApp {
                     <div id="debug-firebase-status" style="font-size: 0.85rem; margin-bottom: 8px;">Estado: ⏳ Verificando...</div>
                     <div id="debug-cloud-time" style="font-size: 0.8rem; color: #888; margin-bottom: 10px;">Última sincronización: --</div>
                     
-                    <div style="display: flex; gap: 10px;">
-                        <button class="secondary-btn btn-sm" onclick="app.syncCloud()" style="flex: 1; font-size: 0.75rem;">Subir Datos ⬆️</button>
-                        <button class="secondary-btn btn-sm" onclick="location.reload()" style="flex: 1; font-size: 0.75rem;">Recargar 🔄</button>
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        <div style="display: flex; gap: 10px;">
+                            <button class="primary-btn btn-sm" onclick="app.syncCloud()" style="flex: 1; font-size: 0.75rem;">Subir Datos ⬆️</button>
+                            <button class="secondary-btn btn-sm" onclick="location.reload()" style="flex: 1; font-size: 0.75rem;">Recargar 🔄</button>
+                        </div>
+                        <button class="secondary-btn btn-sm" onclick="app.forceMasterSync()" style="width: 100%; font-size: 0.75rem; background: #fee2e2; color: #dc2626; border-color: #fecaca;">🚀 Forzar Sincronización Maestra (PC -> Móvil)</button>
                     </div>
                     
                     <div id="cloud-json-viewer" style="margin-top: 10px; font-size: 0.65rem; background: #333; color: #0f0; padding: 10px; border-radius: 6px; font-family: monospace; max-height: 100px; overflow: auto; display: none;">
@@ -862,7 +879,7 @@ class AlarmApp {
 
                 <div class="logout-section">
                     <button class="logout-btn-full" onclick="app.logout()">Cerrar Sesión</button>
-                    <p class="app-version">Versión 4.6.18-DIAGNOSTICO</p>
+                    <p class="app-version">Versión 4.6.19-DIAGNOSTICO</p>
                 </div>
             </div>
         `;
