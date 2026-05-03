@@ -1,4 +1,4 @@
 {
-  "version": "4.6.13",
-  "notes": "v4.6.13: Rediseño de tarjetas de dispositivos, alineación de iconos y ajuste de fuentes para mejor lectura."
+  "version": "4.6.14",
+  "notes": "v4.6.14: Ajuste fino de tipografía en tarjetas móviles (nombre más pequeño, características más grandes)."
 }
