@@ -25,9 +25,7 @@ class AlarmApp {
         this.checkForUpdates().catch(e => console.warn('Actualización skip:', e.message));
     }
 
-    debugState() {
-        this.switchTab('me');
-    }
+
 
     initConnectivityMonitor() {
         window.addEventListener('firebase-connection-changed', (e) => {
@@ -2327,6 +2325,7 @@ class AlarmApp {
 
     debugState() {
         let report = `--- DIAGNÓSTICO DE DATOS ---\n`;
+        report += `Proyecto Firebase: ${firebase.app().options.projectId}\n`;
         report += `Total Centrales: ${this.state.centrales.length}\n`;
         report += `Total Dispositivos: ${this.state.devices.length}\n`;
         report += `Total Cámaras: ${this.state.cameras.length}\n`;
