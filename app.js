@@ -203,7 +203,7 @@ class AlarmApp {
         this.bootstrapAdmin();
 
         // 3. SEEDING INTELIGENTE: Solo cargar de los archivos base si la app está vacía
-        const forceUpdate = localStorage.getItem('force_update_4612');
+        const forceUpdate = localStorage.getItem('force_update_4613');
         if (!forceUpdate || this.state.centrales.length === 0) {
             console.log('Forzando actualización desde datos semilla...');
             this.needsMasterPush = true; // Marcamos que necesitamos subir esto a la nube al conectar
@@ -219,7 +219,7 @@ class AlarmApp {
             const serverData = await this.fetchDataFromServer();
             if (serverData) {
                 this.smartMerge(serverData);
-                localStorage.setItem('force_update_4612', 'true');
+                localStorage.setItem('force_update_4613', 'true');
                 this.saveState(true);
             }
         } else {
@@ -832,7 +832,7 @@ class AlarmApp {
 
                 <div class="logout-section">
                     <button class="logout-btn-full" onclick="app.logout()">Cerrar Sesión</button>
-                    <p class="app-version">Versión 4.6.12-MASTER-SYNC</p>
+                    <p class="app-version">Versión 4.6.13-MASTER-SYNC</p>
                 </div>
             </div>
         `;
@@ -1430,20 +1430,22 @@ class AlarmApp {
                 card.style.animationDelay = `${index * 0.05}s`;
                 card.innerHTML = `
                     <div class="drag-handle admin-only ${this.state.reorderMode ? '' : 'hidden'}">⋮⋮</div>
-                    <div class="device-icon-wrapper">${this.getDeviceIcon(d.type)}</div>
+                    <div class="device-header-row">
+                        <div class="device-icon-wrapper">${this.getDeviceIcon(d.type)}</div>
+                        <div class="device-actions admin-only">
+                            <button onclick="app.openMaintenanceModal('${d.id}')" class="icon-btn info ${d.maintenanceLogs && d.maintenanceLogs.length > 0 ? 'has-history' : ''}" title="Historial">📋</button>
+                            <button onclick="app.openDeviceModal(true, '${d.id}')" class="icon-btn edit">✏️</button>
+                            <button onclick="app.deleteDevice('${d.id}')" class="icon-btn danger">🗑️</button>
+                        </div>
+                    </div>
                     <div class="device-main-info">
                         <h4>${d.type.toUpperCase()}</h4>
                         <div class="device-meta">
                             <p class="full-row">📍 ${d.location} (Piso ${d.piso || '-'})</p>
                             <p class="${d.battery < 20 ? 'low-battery' : ''}">🔋 ${d.battery}%</p>
                              <p>📅 ${d.installationDate}</p>
-                             <p class="full-row status-online" style="color: #10b981; font-weight: 600; font-size: 0.7rem; margin-top: 4px;"><span class="pulse-dot">●</span> En línea</p>
+                             <p class="full-row status-online" style="color: #10b981; font-weight: 600; font-size: 0.8rem; margin-top: 4px;"><span class="pulse-dot">●</span> En línea</p>
                         </div>
-                    </div>
-                    <div class="device-actions admin-only">
-                        <button onclick="app.openMaintenanceModal('${d.id}')" class="icon-btn info ${d.maintenanceLogs && d.maintenanceLogs.length > 0 ? 'has-history' : ''}" title="Historial">📋</button>
-                        <button onclick="app.openDeviceModal(true, '${d.id}')" class="icon-btn edit">✏️</button>
-                        <button onclick="app.deleteDevice('${d.id}')" class="icon-btn danger">🗑️</button>
                     </div>
                 `;
                 grid.appendChild(card);
@@ -2154,11 +2156,18 @@ class AlarmApp {
                         </div>
                     ` : ''}
                     <div class="cctv-badge badge-${type}">${type === 'camera' ? 'CAMARA' : type.toUpperCase()}</div>
-                    <div class="device-main-info">
-                        <div class="cctv-card-header" style="display: flex; align-items: flex-start; gap: 0.5rem; margin-bottom: 0.5rem;">
+                    <div class="device-header-row">
+                        <div class="cctv-card-header" style="display: flex; align-items: flex-start; gap: 0.5rem; margin-bottom: 0;">
                             <span style="font-size: 1.2rem; flex-shrink: 0; margin-top: 2px;">${this.getDeviceIcon(type)}</span>
                             <h4 class="cctv-title" style="margin: 0; word-break: break-word;">${item.name}</h4>
                         </div>
+                        <div class="device-actions admin-only">
+                            <button class="icon-btn info ${item.maintenanceLogs && item.maintenanceLogs.length > 0 ? 'has-history' : ''}" title="Historial" onclick="app.openMaintenanceModal('${item.id}')">📋</button>
+                            <button class="icon-btn edit" onclick="app.openCctvModal('${type}', true, '${item.id}')">✏️</button>
+                            <button class="icon-btn danger" onclick="app.deleteCctv('${type}', '${item.id}')">🗑️</button>
+                        </div>
+                    </div>
+                    <div class="device-main-info">
                         <div class="device-meta">
                             <p><strong>IP:</strong> ${item.ip}</p>
                             <p><strong>Conexión Rack:</strong> ${item.location} (Piso ${item.piso || '-'})</p>
@@ -2169,11 +2178,6 @@ class AlarmApp {
                             ${type === 'switch' ? `<p class="full-row"><strong>Puertos:</strong> ${item.ports || '--'}</p>` : ''}
                             ${type === 'nvr' ? `<p><strong>Canales:</strong> ${item.channels || '--'}</p><p><strong>Disco:</strong> ${item.disk || '--'}</p>` : ''}
                         </div>
-                    </div>
-                    <div class="device-actions admin-only">
-                        <button class="icon-btn info ${item.maintenanceLogs && item.maintenanceLogs.length > 0 ? 'has-history' : ''}" title="Historial" onclick="app.openMaintenanceModal('${item.id}')">📋</button>
-                        <button class="icon-btn edit" onclick="app.openCctvModal('${type}', true, '${item.id}')">✏️</button>
-                        <button class="icon-btn danger" onclick="app.deleteCctv('${type}', '${item.id}')">🗑️</button>
                     </div>
                 `;
                 grid.appendChild(card);
