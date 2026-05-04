@@ -13,7 +13,10 @@ class AlarmApp {
             centralSearch: '',
             deviceSearch: '',
             reorderMode: false,
-            currentTab: 'home'
+            currentTab: 'home',
+            firebaseStatus: '⏳ Verificando...',
+            firebaseConn: '📡 Pendiente...',
+            lastSync: '--'
         };
         this.currentCameraPhoto = null;
         this.loadInitialData();
@@ -36,11 +39,20 @@ class AlarmApp {
                 cloudIcon.classList.toggle('offline', !connected);
                 cloudIcon.title = connected ? 'Nube Conectada 🟢' : 'Modo fuera de línea 🔴';
             }
-            const connEl = document.getElementById('debug-firebase-conn');
-            if (connEl) {
-                connEl.innerHTML = connected ? 'Conexión: <span style="color: #10b981;">🟢 Online</span>' : 'Conexión: <span style="color: #ef4444;">🔴 Offline</span>';
-            }
+            this.state.firebaseConn = connected ? 'Conexión: <span style="color: #10b981;">🟢 Online</span>' : 'Conexión: <span style="color: #ef4444;">🔴 Offline</span>';
+            this.updateDebugStatus();
         });
+    }
+
+    updateDebugStatus() {
+        const statusEl = document.getElementById('debug-firebase-status');
+        if (statusEl) statusEl.innerHTML = this.state.firebaseStatus;
+        
+        const connEl = document.getElementById('debug-firebase-conn');
+        if (connEl) connEl.innerHTML = this.state.firebaseConn;
+
+        const timeEl = document.getElementById('debug-sync-time');
+        if (timeEl) timeEl.innerText = `Última sincronización: ${this.state.lastSync}`;
     }
 
     initFirebase() {
@@ -51,10 +63,15 @@ class AlarmApp {
             // Listener para cambios en la nube
             this.cloudRef.on('value', (snapshot) => {
                 const data = snapshot.val();
+                const timestamp = new Date().toLocaleTimeString();
+                this.state.lastSync = timestamp;
+
                 if (data) {
                     const remoteResetId = data.resetId || null;
                     const localResetId = localStorage.getItem('last-reset-id');
                     
+                    this.state.firebaseStatus = 'Estado: <span style="color: #10b981; font-weight: bold;">✅ Conectado y Sincronizado</span>';
+
                     if (remoteResetId && remoteResetId !== localResetId) {
                         console.log('¡Sello de Reinicio Maestro detectado!');
                         this.state.centrales = data.centrales || [];
@@ -77,20 +94,7 @@ class AlarmApp {
                     this.state.nvrs = data.nvrs || [];
                     this.state.users = data.users || [];
                     this.saveState(true); 
-                    this.render();
                     
-                    const timestamp = new Date().toLocaleTimeString();
-                    const debugFirebase = document.getElementById('debug-firebase');
-                    if (debugFirebase) {
-                        debugFirebase.innerHTML = `<span class="heartbeat"></span> Firebase: ✅ Sincronizado (${timestamp})`;
-                    }
-                    
-                    const statusEl = document.getElementById('debug-firebase-status');
-                    if (statusEl) statusEl.innerHTML = 'Estado: <span style="color: #10b981; font-weight: bold;">✅ Conectado y Sincronizado</span>';
-                    
-                    const timeEl = document.getElementById('debug-cloud-time');
-                    if (timeEl) timeEl.innerText = `Última sincronización: ${timestamp}`;
-
                     const viewer = document.getElementById('cloud-json-viewer');
                     if (viewer) {
                         viewer.innerText = JSON.stringify({
@@ -101,19 +105,17 @@ class AlarmApp {
                             version: data.version || "unknown"
                         }, null, 2);
                     }
+                    
+                    this.render();
                 } else {
                     console.log('Firebase vacío.');
-                    const debugFirebase = document.getElementById('debug-firebase');
-                    if (debugFirebase) {
-                        debugFirebase.innerHTML = `Firebase: ☁️ Vacío`;
-                    }
-                    const viewer = document.getElementById('cloud-json-viewer');
-                    if (viewer) viewer.innerText = "NUBE VACÍA (Esperando datos del PC)";
+                    this.state.firebaseStatus = 'Estado: <span style="color: #f59e0b;">☁️ Nube Vacía</span>';
+                    this.render();
                 }
             }, (error) => {
                 console.error('ERROR Firebase:', error.message);
-                const statusEl = document.getElementById('debug-firebase-status');
-                if (statusEl) statusEl.innerHTML = `Estado: <span style="color: #ef4444; font-weight: bold;">❌ Error: ${error.message}</span>`;
+                this.state.firebaseStatus = `Estado: <span style="color: #ef4444; font-weight: bold;">❌ Error: ${error.message}</span>`;
+                this.updateDebugStatus();
             });
             this.isCloudEnabled = true;
             const debugFirebase = document.getElementById('debug-firebase');
@@ -832,10 +834,11 @@ class AlarmApp {
 
                 <div class="debug-section glass-mini" style="margin: 15px; padding: 15px; border-radius: 12px; background: #f9f9f9; border: 1px solid #eee;">
                     <h3 style="margin-top: 0; font-size: 0.9rem; color: #555;">🛰️ Diagnóstico de Sincronización</h3>
-                    <div id="debug-firebase-status" style="font-size: 0.85rem; margin-bottom: 8px;">Estado: ⏳ Verificando...</div>
-                    <div id="debug-firebase-conn" style="font-size: 0.8rem; color: #888; margin-bottom: 8px;">Conexión: 📡 Pendiente...</div>
+                    <div id="debug-firebase-status" style="font-size: 0.85rem; margin-bottom: 8px;">${this.state.firebaseStatus}</div>
+                    <div id="debug-firebase-conn" style="font-size: 0.8rem; color: #888; margin-bottom: 8px;">${this.state.firebaseConn}</div>
                     <div id="debug-project-id" style="font-size: 0.8rem; color: var(--hik-red); font-weight: bold; margin-bottom: 8px;">Proyecto: ${firebase.app().options.projectId}</div>
-                    <div id="debug-db-url" style="font-size: 0.65rem; color: #aaa; margin-bottom: 10px; word-break: break-all;">URL: ${firebase.app().options.databaseURL}</div>
+                    <div id="debug-db-url" style="font-size: 0.65rem; color: #aaa; margin-bottom: 8px; word-break: break-all;">URL: ${firebase.app().options.databaseURL}</div>
+                    <div id="debug-sync-time" style="font-size: 0.75rem; color: #888; margin-bottom: 10px;">Última sincronización: ${this.state.lastSync}</div>
                     
                     <div style="display: flex; flex-direction: column; gap: 10px;">
                         <div style="display: flex; gap: 10px;">
