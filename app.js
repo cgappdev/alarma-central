@@ -36,6 +36,10 @@ class AlarmApp {
                 cloudIcon.classList.toggle('offline', !connected);
                 cloudIcon.title = connected ? 'Nube Conectada 🟢' : 'Modo fuera de línea 🔴';
             }
+            const connEl = document.getElementById('debug-firebase-conn');
+            if (connEl) {
+                connEl.innerHTML = connected ? 'Conexión: <span style="color: #10b981;">🟢 Online</span>' : 'Conexión: <span style="color: #ef4444;">🔴 Offline</span>';
+            }
         });
     }
 
@@ -829,8 +833,9 @@ class AlarmApp {
                 <div class="debug-section glass-mini" style="margin: 15px; padding: 15px; border-radius: 12px; background: #f9f9f9; border: 1px solid #eee;">
                     <h3 style="margin-top: 0; font-size: 0.9rem; color: #555;">🛰️ Diagnóstico de Sincronización</h3>
                     <div id="debug-firebase-status" style="font-size: 0.85rem; margin-bottom: 8px;">Estado: ⏳ Verificando...</div>
+                    <div id="debug-firebase-conn" style="font-size: 0.8rem; color: #888; margin-bottom: 8px;">Conexión: 📡 Pendiente...</div>
                     <div id="debug-project-id" style="font-size: 0.8rem; color: var(--hik-red); font-weight: bold; margin-bottom: 8px;">Proyecto: ${firebase.app().options.projectId}</div>
-                    <div id="debug-cloud-time" style="font-size: 0.8rem; color: #888; margin-bottom: 10px;">Última sincronización: --</div>
+                    <div id="debug-db-url" style="font-size: 0.65rem; color: #aaa; margin-bottom: 10px; word-break: break-all;">URL: ${firebase.app().options.databaseURL}</div>
                     
                     <div style="display: flex; flex-direction: column; gap: 10px;">
                         <div style="display: flex; gap: 10px;">
