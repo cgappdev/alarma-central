@@ -205,6 +205,19 @@ class AlarmApp {
         }
     }
 
+    async testFirebaseWrite() {
+        if (!this.isCloudEnabled) return alert('Firebase no está habilitado.');
+        try {
+            await this.db.ref('test_connection').set({
+                time: Date.now(),
+                user: this.state.user ? this.state.user.username : 'anon'
+            });
+            alert('✅ ÉXITO: Tienes permisos de ESCRITURA en este proyecto.');
+        } catch (e) {
+            alert('❌ ERROR DE PERMISOS: ' + e.message + '\n\nEsto significa que las REGLAS de Firebase están bloqueadas.');
+        }
+    }
+
     async forceMasterSync() {
         if (!confirm('🚀 ¿Forzar Sincronización Maestra?\n\nEsto enviará TODOS los datos actuales del PC a la nube y obligará a todos los móviles a actualizarse de inmediato.\n\nÚsalo si los cambios del PC no aparecen en el móvil.')) return;
         
@@ -851,6 +864,7 @@ class AlarmApp {
                     <div id="cloud-json-viewer" style="margin-top: 10px; font-size: 0.65rem; background: #333; color: #0f0; padding: 10px; border-radius: 6px; font-family: monospace; max-height: 100px; overflow: auto; display: none;">
                         <!-- Aquí se verán los metadatos de la nube -->
                     </div>
+                    <button class="secondary-btn btn-sm" onclick="app.testFirebaseWrite()" style="width: 100%; margin-top: 5px; font-size: 0.75rem; background: #e0f2fe; color: #0369a1; border-color: #bae6fd;">🧪 Probar Permisos (Escritura)</button>
                     <button class="secondary-btn btn-sm" onclick="document.getElementById('cloud-json-viewer').style.display = document.getElementById('cloud-json-viewer').style.display === 'none' ? 'block' : 'none'" style="width: 100%; margin-top: 5px; font-size: 0.65rem;">Ver Metadatos Nube</button>
                 </div>
 
