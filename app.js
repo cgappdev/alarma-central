@@ -108,12 +108,8 @@ class AlarmApp {
                 }
             }, (error) => {
                 console.error('ERROR Firebase:', error.message);
-                const debugFirebase = document.getElementById('debug-firebase');
-                if (debugFirebase) {
-                    debugFirebase.innerText = "Firebase: ❌ Error";
-                }
-                const viewer = document.getElementById('cloud-json-viewer');
-                if (viewer) viewer.innerText = "ERROR: " + error.message;
+                const statusEl = document.getElementById('debug-firebase-status');
+                if (statusEl) statusEl.innerHTML = `Estado: <span style="color: #ef4444; font-weight: bold;">❌ Error: ${error.message}</span>`;
             });
             this.isCloudEnabled = true;
             const debugFirebase = document.getElementById('debug-firebase');
