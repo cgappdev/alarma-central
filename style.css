@@ -2393,12 +2393,21 @@ input[type="number"]::-webkit-outer-spin-button {
 .pdf-viewer-header {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    padding: 10px 20px;
-    height: 60px;
-    border-bottom: 1px solid var(--hik-border);
     background: #ffffff !important;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    z-index: 50001; /* Above the overlay content */
+}
+
+#close-pdf-btn {
+    min-width: 100px;
+    height: 44px; /* Standard mobile touch target */
+    background: #e11d48; /* Red for high visibility */
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 700;
+    box-shadow: 0 2px 4px rgba(225, 29, 72, 0.3);
 }
 
 .pdf-viewer-header .secondary-btn {

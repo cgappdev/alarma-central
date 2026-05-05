@@ -26,6 +26,7 @@ class AlarmApp {
         this.loadInitialData();
         this.initEventListeners();
         this.initFirebase();
+        this.initPDFListeners();
         this.initConnectivityMonitor();
         
         // No bloqueamos el inicio por el chequeo de versión

@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=4.6.23">
+    <link rel="stylesheet" href="style.css?v=4.6.24">
     <!-- PWA -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#E60012">
@@ -48,7 +48,7 @@
             <div style="margin-top: 20px;">
                 <a href="#" onclick="app.emergencyLogin(); return false;" style="font-size: 0.75rem; color: #888; text-decoration: underline;">¿Problemas para entrar? Acceso de emergencia local</a>
             </div>
-            <div style="text-align: center; margin-top: 15px; font-size: 0.85rem; color: #888;">v4.6.23</div>
+            <div style="text-align: center; margin-top: 15px; font-size: 0.85rem; color: #888;">v4.6.24</div>
         </div>
     </div>
 
@@ -74,7 +74,7 @@
             </div>
             <div class="sidebar-footer">
                 <button id="logout-btn-sidebar" class="secondary-btn">Cerrar Sesión</button>
-                <div style="text-align: center; margin-top: 10px; font-size: 0.8rem; color: #888;">v4.6.23</div>
+                <div style="text-align: center; margin-top: 10px; font-size: 0.8rem; color: #888;">v4.6.24</div>
             </div>
         </aside>
 
@@ -83,7 +83,7 @@
                 <div class="mobile-logo">
                     <button id="mobile-back-btn" class="secondary-btn btn-sm hidden" onclick="app.goBack()" style="margin-right: 10px; padding: 4px 10px; font-size: 1.1rem; vertical-align: middle;">⬅</button>
                     <span id="mobile-logo-icon" style="color: var(--accent-yellow); margin-right: 5px;">📁</span>
-                    <span id="mobile-logo-text">AlarmaLG <span style="font-size: 0.7rem; color: #888; margin-left: 5px; font-weight: normal;">v4.6.23</span></span>
+                    <span id="mobile-logo-text">AlarmaLG <span style="font-size: 0.7rem; color: #888; margin-left: 5px; font-weight: normal;">v4.6.24</span></span>
                 </div>
                 <div class="mobile-actions">
                     <span class="mobile-action-icon" style="color: var(--accent-yellow);" onclick="app.openCentralSelector()">
@@ -541,7 +541,7 @@
     <div id="pdf-viewer-overlay" class="pdf-viewer-overlay hidden">
         <div class="pdf-viewer-header glass">
             <div class="pdf-viewer-title">
-                <button class="secondary-btn btn-sm" onclick="app.closePDFViewer()">⬅ Volver</button>
+                <button id="close-pdf-btn" class="secondary-btn btn-sm">⬅ Volver</button>
                 <span id="pdf-viewer-filename">Reporte</span>
             </div>
             <div class="pdf-viewer-actions">
