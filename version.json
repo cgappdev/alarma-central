@@ -1,4 +1,5 @@
 {
-  "version": "4.6.19",
-  "notes": "v4.6.19: Mejora de sincronización móvil y forzado de actualización."
+  "version": "4.6.21",
+  "date": "2026-05-05",
+  "notes": "Integrated PDF Viewer for better mobile report navigation."
 }

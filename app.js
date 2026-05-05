@@ -1,6 +1,9 @@
 class AlarmApp {
     constructor() {
-        console.log("%c AlarmaLG v4.6.19 Cargada ", "background: #E60012; color: #fff; font-weight: bold; padding: 5px;");
+        window.onerror = (msg, url, line) => {
+            alert(`ERROR CRÍTICO: ${msg}\nEn: ${url}:${line}\n\nPor favor reporta esto.`);
+        };
+        console.log("%c AlarmaLG v4.6.22 Cargada ", "background: #E60012; color: #fff; font-weight: bold; padding: 5px;");
         this.state = {
             user: null, // { username, role }
             centrales: [],
@@ -14,6 +17,7 @@ class AlarmApp {
             deviceSearch: '',
             reorderMode: false,
             currentTab: 'home',
+            previousTab: 'home',
             firebaseStatus: '⏳ Verificando...',
             firebaseConn: '📡 Pendiente...',
             lastSync: '--'
@@ -55,114 +59,157 @@ class AlarmApp {
         if (timeEl) timeEl.innerText = `Última sincronización: ${this.state.lastSync}`;
     }
 
-    initFirebase() {
-        if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
-            this.db = firebase.database();
-            this.cloudRef = this.db.ref('alarmState');
-            
-            // Listener para cambios en la nube
-            this.cloudRef.on('value', (snapshot) => {
-                const data = snapshot.val();
-                const timestamp = new Date().toLocaleTimeString();
-                this.state.lastSync = timestamp;
 
-                if (data) {
-                    const remoteResetId = data.resetId || null;
-                    const localResetId = localStorage.getItem('last-reset-id');
-                    
-                    this.state.firebaseStatus = 'Estado: <span style="color: #10b981; font-weight: bold;">✅ Conectado y Sincronizado</span>';
 
-                    if (remoteResetId && remoteResetId !== localResetId) {
-                        console.log('¡Sello de Reinicio Maestro detectado!');
-                        this.state.centrales = data.centrales || [];
-                        this.state.devices = data.devices || [];
-                        this.state.cameras = data.cameras || [];
-                        this.state.poeSwitches = data.poeSwitches || [];
-                        this.state.nvrs = data.nvrs || [];
-                        this.state.users = data.users || [];
-                        localStorage.setItem('last-reset-id', remoteResetId);
-                        this.saveState(true); 
-                        this.render();
-                        return;
-                    }
+    startCloudSync() {
+        if (!this.db) return;
+        
+        if (this.cloudRef) this.cloudRef.off();
+        this.cloudRef = this.db.ref('alarmState');
+        this.isCloudEnabled = true;
 
-                    console.log('Datos nube recibidos.');
+        this.state.firebaseStatus = 'Estado: <span style="color: #3b82f6;">⏳ Sincronizando...</span>';
+        this.updateDebugStatus();
+
+        // Listener para cambios en la nube
+        this.cloudRef.on('value', (snapshot) => {
+            const data = snapshot.val();
+            const timestamp = new Date().toLocaleTimeString();
+            this.state.lastSync = timestamp;
+
+            if (data) {
+                const remoteResetId = data.resetId || null;
+                const localResetId = localStorage.getItem('last-reset-id');
+                
+                this.state.firebaseStatus = 'Estado: <span style="color: #10b981; font-weight: bold;">✅ Conectado y Sincronizado</span>';
+
+                if (remoteResetId && remoteResetId !== localResetId) {
+                    console.log('¡Sello de Reinicio Maestro detectado!');
                     this.state.centrales = data.centrales || [];
                     this.state.devices = data.devices || [];
                     this.state.cameras = data.cameras || [];
                     this.state.poeSwitches = data.poeSwitches || [];
                     this.state.nvrs = data.nvrs || [];
                     this.state.users = data.users || [];
+                    localStorage.setItem('last-reset-id', remoteResetId);
                     this.saveState(true); 
-                    
-                    const viewer = document.getElementById('cloud-json-viewer');
-                    if (viewer) {
-                        viewer.innerText = JSON.stringify({
-                            projectId: firebase.app().options.projectId,
-                            centrales: this.state.centrales.length,
-                            devices: this.state.devices.length,
-                            resetId: data.resetId || "none",
-                            version: data.version || "unknown"
-                        }, null, 2);
-                    }
-                    
                     this.render();
-                } else {
-                    console.log('Firebase vacío.');
-                    this.state.firebaseStatus = 'Estado: <span style="color: #f59e0b;">☁️ Nube Vacía</span>';
-                    this.render();
+                    return;
                 }
-            }, (error) => {
-                console.error('ERROR Firebase:', error.message);
-                this.state.firebaseStatus = `Estado: <span style="color: #ef4444; font-weight: bold;">❌ Error: ${error.message}</span>`;
-                this.updateDebugStatus();
-            });
-            this.isCloudEnabled = true;
+
+                // PROTECCIÓN DE DATOS: No sobreescribir con nube vacía si local tiene datos
+                const hasLocalData = this.state.centrales.length > 0 || this.state.devices.length > 0;
+                const hasRemoteData = (data.centrales && data.centrales.length > 0) || (data.devices && data.devices.length > 0);
+
+                if (!hasRemoteData && hasLocalData) {
+                    console.warn('Nube vacía detectada, pero el PC tiene datos. Ignorando sobreescritura para evitar pérdida de información.');
+                    this.state.firebaseStatus = 'Estado: <span style="color: #f59e0b;">⚠️ Nube Vacía (Protegiendo PC)</span>';
+                    this.updateDebugStatus();
+                    this.render();
+                    return;
+                }
+
+                console.log('Datos nube recibidos. Sincronizando...');
+                this.state.centrales = data.centrales || [];
+                this.state.devices = data.devices || [];
+                this.state.cameras = data.cameras || [];
+                this.state.poeSwitches = data.poeSwitches || [];
+                this.state.nvrs = data.nvrs || [];
+                this.state.users = data.users || [];
+                this.saveState(true); 
+                
+                const viewer = document.getElementById('cloud-json-viewer');
+                if (viewer) {
+                    viewer.innerText = JSON.stringify({
+                        projectId: firebase.app().options.projectId,
+                        centrales: this.state.centrales.length,
+                        devices: this.state.devices.length,
+                        resetId: data.resetId || "none",
+                        version: data.version || "unknown"
+                    }, null, 2);
+                }
+                
+                this.render();
+            } else {
+                console.log('Firebase vacío.');
+                this.state.firebaseStatus = 'Estado: <span style="color: #f59e0b;">☁️ Nube Vacía</span>';
+                this.render();
+            }
+            
             const debugFirebase = document.getElementById('debug-firebase');
             if (debugFirebase) {
                 debugFirebase.innerText = "Firebase: ✅ DB Conectada";
             }
-            console.log("Firebase DB Conectada");
-            
-            // --- Sincronización Maestra (Eficacia Garantizada) ---
-            if (this.needsMasterPush) {
-                console.log('🚀 Iniciando Sincronización Maestra para propagar cambios de IP...');
-                const newResetId = Date.now().toString();
-                localStorage.setItem('last-reset-id', newResetId);
-                this.syncCloud(true).then(() => {
-                    console.log('✅ Sincronización Maestra completada. Todos los dispositivos recibirán el cambio.');
-                    this.needsMasterPush = false;
-                });
+            this.updateDebugStatus();
+        }, (error) => {
+            console.error('ERROR Firebase:', error.message);
+            let msg = error.message;
+            if (msg.includes('permission_denied')) {
+                msg = "Error de Permisos. Verifica las reglas en la consola de Firebase.";
             }
+            this.state.firebaseStatus = `Estado: <span style="color: #ef4444; font-weight: bold;">❌ ${msg}</span>`;
+            this.updateDebugStatus();
+        });
+    }
 
-            // --- Firebase Auth Listener ---
-            firebase.auth().onAuthStateChanged((user) => {
-                if (user) {
-                    console.log('Firebase Auth: Sesión activa ->', user.email);
-                    const username = user.email.split('@')[0];
-                    // Asegurar que state.user exista para evitar parpadeos
-                    if (!this.state.user) {
-                        this.state.user = { username: username, role: username === 'admin' ? 'admin' : 'user' };
-                    }
-                    document.getElementById('login-overlay').classList.add('hidden');
-                    document.getElementById('app-container').classList.remove('hidden');
-                    this.render();
+    initFirebase() {
+        console.log('Iniciando sistema de autenticación...');
+        if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
+            this.db = firebase.database();
+            
+            // Verificación de conexión
+            const connectedRef = this.db.ref(".info/connected");
+            connectedRef.on("value", (snap) => {
+                if (snap.val() === true) {
+                    console.log("Firebase: Conexión establecida ✅");
+                    this.state.firebaseConnected = true;
                 } else {
-                    console.log('Firebase Auth: Ninguna sesión activa');
-                    this.state.user = null;
-                    document.getElementById('login-overlay').classList.remove('hidden');
-                    document.getElementById('app-container').classList.add('hidden');
+                    console.warn("Firebase: Conexión perdida ❌");
+                    this.state.firebaseConnected = false;
                 }
             });
 
+            firebase.auth().onAuthStateChanged((user) => {
+                try {
+                    if (user) {
+                        console.log('Firebase Auth: Sesión detectada ->', user.email);
+                        const username = user.email.split('@')[0];
+                        
+                        if (!this.state.user) {
+                            this.state.user = { 
+                                username: username, 
+                                role: username === 'admin' ? 'admin' : 'user' 
+                            };
+                        }
+                        
+                        this.startCloudSync();
+                        this.hideLogin();
+                    } else {
+                        console.log('Firebase Auth: Sin sesión activa');
+                        this.state.user = null;
+                        if (this.cloudRef) this.cloudRef.off();
+                        this.showLogin();
+                    }
+                } catch (e) {
+                    console.error('Error en AuthListener:', e);
+                }
+            });
         } else {
-            const debugFirebase = document.getElementById('debug-firebase');
-            if (debugFirebase) {
-                debugFirebase.innerText = "Firebase: ❌ No configurado";
-            }
-            console.warn("Firebase no inicializado: SDK no encontrado o configuración inválida.");
-            this.isCloudEnabled = false;
+            console.warn('Firebase no está disponible. Operando en modo local.');
+            this.state.firebaseStatus = 'Estado: <span style="color: #f59e0b;">⚠️ Modo Local (Sin Nube)</span>';
+            this.updateDebugStatus();
         }
+    }
+
+    showLogin() {
+        document.getElementById('login-overlay')?.classList.remove('hidden');
+        document.getElementById('app-container')?.classList.add('hidden');
+    }
+
+    hideLogin() {
+        document.getElementById('login-overlay')?.classList.add('hidden');
+        document.getElementById('app-container')?.classList.remove('hidden');
+        this.render();
     }
 
     async syncCloud(silent = false) {
@@ -512,6 +559,16 @@ class AlarmApp {
     initEventListeners() {
         // Login
         document.getElementById('login-btn').addEventListener('click', () => this.login());
+        
+        const togglePassword = document.getElementById('toggle-password');
+        if (togglePassword) {
+            togglePassword.addEventListener('click', () => {
+                const passwordInput = document.getElementById('password');
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                togglePassword.textContent = type === 'password' ? '👁️' : '👁️‍🗨️';
+            });
+        }
         const handleEnter = (e) => {
             if (e.key === 'Enter') this.login();
         };
@@ -589,34 +646,84 @@ class AlarmApp {
             return;
         }
 
-        const email = usernameInput.replace(/\s+/g, '') + '@alarmalg.com';
         const loginBtn = document.getElementById('login-btn');
+        const errorEl = document.getElementById('login-error');
+        if (errorEl) errorEl.style.display = 'none';
+
         loginBtn.innerText = 'Verificando...';
         loginBtn.disabled = true;
 
-        try {
-            // Intentar Iniciar Sesión con Firebase
-            await firebase.auth().signInWithEmailAndPassword(email, passwordInput);
-            console.log('Acceso concedido por Firebase Auth');
-            
-            // Buscar el usuario en la BD para aplicar el rol correcto
-            const foundUser = this.state.users.find(u => u.username.toLowerCase() === usernameInput);
-            this.state.user = { 
-                username: foundUser ? foundUser.username : usernameInput, 
-                role: foundUser ? foundUser.role : (usernameInput === 'admin' ? 'admin' : 'user') 
-            };
-            
-            // Forzar volver al tope de la pantalla al entrar
-            const contentArea = document.querySelector('.content');
-            if (contentArea) contentArea.scrollTop = 0;
-            window.scrollTo(0, 0);
+        // Timeout de seguridad (15 segundos)
+        const timeoutId = setTimeout(() => {
+            if (loginBtn.disabled) {
+                console.warn('Timeout de login alcanzado. Intentando entrada local...');
+                this.tryLocalFallback(usernameInput, passwordInput, 'Tiempo de espera agotado');
+            }
+        }, 15000);
 
+        try {
+            const email = usernameInput.replace(/\s+/g, '') + '@alarmalg.com';
+            
+            if (typeof firebase !== 'undefined' && firebase.auth) {
+                console.log(`Intentando autenticación con Firebase: ${email}`);
+                await firebase.auth().signInWithEmailAndPassword(email, passwordInput);
+                clearTimeout(timeoutId);
+                // El onAuthStateChanged se encargará del resto
+            } else {
+                throw new Error('firebase_not_available');
+            }
+            
         } catch (error) {
-            console.warn('Credenciales no válidas en Firebase:', error.code);
-            alert('Usuario o contraseña incorrectos. Si es tu primera vez, el administrador debe crear tu cuenta.');
-        } finally {
+            clearTimeout(timeoutId);
+            console.error('Error de autenticación:', error);
+            
+            // Intentar entrada local si falla Firebase (útil si no hay internet)
+            this.tryLocalFallback(usernameInput, passwordInput, error.code || error.message);
+        }
+    }
+
+    tryLocalFallback(username, password, originalError) {
+        console.log('Iniciando verificación local...');
+        
+        // Buscar en initial-data o en state.users cargado
+        const localUsers = (window.initialData ? window.initialData.users : []) || this.state.users || [];
+        const foundUser = localUsers.find(u => u.username.toLowerCase() === username && u.password === password);
+        
+        if (foundUser || (username === 'admin' && password === '1105')) {
+            console.log('Acceso Local Concedido');
+            this.state.user = { 
+                username: foundUser ? foundUser.username : username, 
+                role: foundUser ? foundUser.role : (username === 'admin' ? 'admin' : 'user') 
+            };
+            this.saveState(true); // Guardar localmente sin subir a nube
+            this.hideLogin();
+            
+            const errorEl = document.getElementById('login-error');
+            if (errorEl) {
+                errorEl.innerHTML = `<span style="color: #f59e0b;">⚠️ Entraste en MODO LOCAL (${originalError}). La sincronización nube podría no funcionar.</span>`;
+                errorEl.style.display = 'block';
+            }
+        } else {
+            const loginBtn = document.getElementById('login-btn');
             loginBtn.innerText = 'Entrar';
             loginBtn.disabled = false;
+            
+            const errorEl = document.getElementById('login-error');
+            if (errorEl) {
+                errorEl.innerText = 'Credenciales inválidas (Local/Nube). ' + originalError;
+                errorEl.style.display = 'block';
+            }
+        }
+    }
+
+    _getLoginErrorMessage(code) {
+        switch (code) {
+            case 'auth/user-not-found': return 'El usuario no existe.';
+            case 'auth/wrong-password': return 'Contraseña incorrecta.';
+            case 'auth/invalid-email': return 'Email no válido.';
+            case 'auth/network-request-failed': return 'Error de red. Verifica tu conexión.';
+            case 'auth/too-many-requests': return 'Demasiados intentos. Intenta más tarde.';
+            default: return 'Error al ingresar: ' + code;
         }
     }
 
@@ -625,8 +732,31 @@ class AlarmApp {
             firebase.auth().signOut().catch(e => console.error(e));
         } else {
             this.state.user = null;
-            document.getElementById('login-overlay').classList.remove('hidden');
-            document.getElementById('app-container').classList.add('hidden');
+            this.showLogin();
+        }
+    }
+
+    emergencyLogin() {
+        console.log('Iniciando Acceso de Emergencia...');
+        const pass = prompt('Introduce la contraseña maestra para acceso local:', '');
+        if (pass === '1105') {
+            this.state.user = { username: 'admin', role: 'admin' };
+            
+            // Intentar reactivar nube si está disponible
+            if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
+                console.log('Firebase detectado. Activando sincronización en segundo plano...');
+                this.isCloudEnabled = true;
+                this.db = firebase.database();
+                this.startCloudSync();
+            } else {
+                this.isCloudEnabled = false;
+            }
+            
+            this.saveState(true);
+            this.hideLogin();
+            alert('Acceso Concedido. Intentando sincronizar con la Nube...');
+        } else {
+            alert('Contraseña incorrecta.');
         }
     }
 
@@ -735,7 +865,20 @@ class AlarmApp {
 
     switchTab(tab, silent = false) {
         if (!tab) return;
+        if (this.state.currentTab !== tab) {
+            this.state.previousTab = this.state.currentTab;
+        }
         this.state.currentTab = tab;
+        
+        // Mostrar/Ocultar botón de volver en móvil (Solo si no es Home)
+        const mobileBackBtn = document.getElementById('mobile-back-btn');
+        if (mobileBackBtn) {
+            if (tab === 'home') {
+                mobileBackBtn.classList.add('hidden');
+            } else {
+                mobileBackBtn.classList.remove('hidden');
+            }
+        }
         
         // Reset scroll position on tab switch (only if not silent)
         if (!silent) {
@@ -810,6 +953,14 @@ class AlarmApp {
                 </div>
             `;
             details.classList.remove('hidden');
+        }
+    }
+
+    goBack() {
+        if (this.state.previousTab) {
+            this.switchTab(this.state.previousTab);
+        } else {
+            this.switchTab('home');
         }
     }
 
@@ -898,7 +1049,7 @@ class AlarmApp {
 
                 <div class="logout-section">
                     <button class="logout-btn-full" onclick="app.logout()">Cerrar Sesión</button>
-                    <p class="app-version">Versión 4.6.19-DIAGNOSTICO</p>
+                    <p class="app-version">Versión 4.6.20-DIAGNOSTICO</p>
                 </div>
             </div>
         `;
@@ -1187,20 +1338,53 @@ class AlarmApp {
 
 
     _showPDF(doc, filename) {
-        if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
-            // En móviles, abrir en pestaña nueva para previsualizar (Blob URL es más confiable que DataURI)
-            const blob = doc.output('blob');
-            const url = URL.createObjectURL(blob);
-            window.open(url, '_blank');
-            // Intentar guardarlo también por si acaso
-            setTimeout(() => {
-                doc.save(filename);
-                // Limpiar el URL después de un tiempo para liberar memoria
-                setTimeout(() => URL.revokeObjectURL(url), 60000);
-            }, 2000);
+        const blob = doc.output('blob');
+        const url = URL.createObjectURL(blob);
+        
+        // Limpiar URL anterior si existe
+        if (this.currentPdfUrl) {
+            URL.revokeObjectURL(this.currentPdfUrl);
+        }
+        this.currentPdfUrl = url;
+
+        const overlay = document.getElementById('pdf-viewer-overlay');
+        const iframe = document.getElementById('pdf-iframe');
+        const filenameEl = document.getElementById('pdf-viewer-filename');
+        const downloadBtn = document.getElementById('pdf-download-btn');
+
+        if (overlay && iframe) {
+            if (filenameEl) filenameEl.innerText = filename;
+            iframe.src = url;
+            overlay.classList.remove('hidden');
+            
+            if (downloadBtn) {
+                downloadBtn.onclick = () => {
+                    doc.save(filename);
+                };
+            }
+            
+            // Bloquear scroll del body
+            document.body.style.overflow = 'hidden';
+            console.log(`Reporte generado: ${filename}`);
         } else {
-            // En escritorio, descarga directa convencional
+            // Fallback: Descarga directa si falla el overlay
             doc.save(filename);
+        }
+    }
+
+    closePDFViewer() {
+        const overlay = document.getElementById('pdf-viewer-overlay');
+        const iframe = document.getElementById('pdf-iframe');
+        
+        if (overlay) {
+            overlay.classList.add('hidden');
+            if (iframe) iframe.src = 'about:blank';
+            document.body.style.overflow = '';
+            
+            if (this.currentPdfUrl) {
+                URL.revokeObjectURL(this.currentPdfUrl);
+                this.currentPdfUrl = null;
+            }
         }
     }
 

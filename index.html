@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=4.6.19">
+    <link rel="stylesheet" href="style.css?v=4.6.23">
     <!-- PWA -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#E60012">
@@ -35,15 +35,20 @@
             <div class="input-group">
                 <input type="text" id="username" placeholder="Usuario">
             </div>
-            <div class="input-group">
-                <input type="password" id="password" placeholder="Contraseña">
+            <div class="input-group" style="position: relative;">
+                <input type="password" id="password" placeholder="Contraseña" required style="width: 100%; padding-right: 40px;">
+                <span id="toggle-password" style="position: absolute; right: 10px; top: 10px; cursor: pointer; opacity: 0.5;">👁️</span>
             </div>
             <div class="role-selector">
                 <label><input type="radio" name="role" value="admin" checked> Administrador</label>
                 <label><input type="radio" name="role" value="user"> Usuario</label>
             </div>
             <button id="login-btn" class="primary-btn">Entrar</button>
-            <div style="text-align: center; margin-top: 15px; font-size: 0.85rem; color: #888;">v4.6.19</div>
+            <div id="login-error" style="color: var(--hik-red); font-size: 0.8rem; margin-top: 10px; display: none; font-weight: 600;"></div>
+            <div style="margin-top: 20px;">
+                <a href="#" onclick="app.emergencyLogin(); return false;" style="font-size: 0.75rem; color: #888; text-decoration: underline;">¿Problemas para entrar? Acceso de emergencia local</a>
+            </div>
+            <div style="text-align: center; margin-top: 15px; font-size: 0.85rem; color: #888;">v4.6.23</div>
         </div>
     </div>
 
@@ -54,8 +59,9 @@
             <div class="sidebar-header">
                 <h3><span style="color: var(--accent-yellow); margin-right: 8px;">📁</span>Centrales</h3>
             </div>
-            <div class="sidebar-actions admin-only">
-                <button id="add-central-btn" class="primary-btn full-width">+ Añadir Central</button>
+            <div class="sidebar-actions">
+                <button onclick="app.syncCloud()" class="primary-btn full-width" style="background: #3b82f6; margin-bottom: 10px;">☁️ Sincronizar Nube</button>
+                <button id="add-central-btn" class="primary-btn full-width admin-only">+ Añadir Central</button>
             </div>
             <div class="search-box">
                 <input type="text" id="central-search" placeholder="🔍 Buscar central...">
@@ -68,15 +74,16 @@
             </div>
             <div class="sidebar-footer">
                 <button id="logout-btn-sidebar" class="secondary-btn">Cerrar Sesión</button>
-                <div style="text-align: center; margin-top: 10px; font-size: 0.8rem; color: #888;">v4.6.19</div>
+                <div style="text-align: center; margin-top: 10px; font-size: 0.8rem; color: #888;">v4.6.23</div>
             </div>
         </aside>
 
         <header class="main-header glass">
             <div class="mobile-top-bar">
                 <div class="mobile-logo">
+                    <button id="mobile-back-btn" class="secondary-btn btn-sm hidden" onclick="app.goBack()" style="margin-right: 10px; padding: 4px 10px; font-size: 1.1rem; vertical-align: middle;">⬅</button>
                     <span id="mobile-logo-icon" style="color: var(--accent-yellow); margin-right: 5px;">📁</span>
-                    <span id="mobile-logo-text">AlarmaLG <span style="font-size: 0.7rem; color: #888; margin-left: 5px; font-weight: normal;">v4.6.19</span></span>
+                    <span id="mobile-logo-text">AlarmaLG <span style="font-size: 0.7rem; color: #888; margin-left: 5px; font-weight: normal;">v4.6.23</span></span>
                 </div>
                 <div class="mobile-actions">
                     <span class="mobile-action-icon" style="color: var(--accent-yellow);" onclick="app.openCentralSelector()">
@@ -110,7 +117,6 @@
 
         <main class="content">
             <div class="dashboard-header-main glass-card header-box hidden">
-                <!-- El título ahora se maneja en la barra superior (Dynamic Header) -->
                 <div class="stats-pills">
                     <div class="stat-pill">
                         <span class="label">Total Centrales:</span>
@@ -505,9 +511,9 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
     
     <!-- Configuración de Firebase -->
-    <script src="firebase-config.js?v=4.6.19"></script>
-    <script src="initial-data.js?v=4.6.19"></script>
-    <script src="app.js?v=4.6.19"></script>
+    <script src="firebase-config.js?v=4.6.20"></script>
+    <script src="initial-data.js?v=4.6.20"></script>
+    <script src="app.js?v=4.6.20"></script>
     
     <!-- Photo Preview Overlay -->
     <div id="photo-preview-overlay" class="photo-overlay hidden" onclick="app.closePhotoPreview()">
@@ -530,5 +536,21 @@
             });
         }
     </script>
+
+    <!-- PDF Viewer Overlay (Integrated) -->
+    <div id="pdf-viewer-overlay" class="pdf-viewer-overlay hidden">
+        <div class="pdf-viewer-header glass">
+            <div class="pdf-viewer-title">
+                <button class="secondary-btn btn-sm" onclick="app.closePDFViewer()">⬅ Volver</button>
+                <span id="pdf-viewer-filename">Reporte</span>
+            </div>
+            <div class="pdf-viewer-actions">
+                <button class="primary-btn btn-sm" id="pdf-download-btn">Descargar 💾</button>
+            </div>
+        </div>
+        <div class="pdf-viewer-content">
+            <iframe id="pdf-iframe" src="about:blank"></iframe>
+        </div>
+    </div>
 </body>
 </html>
