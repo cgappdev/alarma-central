@@ -2479,6 +2479,9 @@ input[type="number"]::-webkit-outer-spin-button {
     padding: 1.25rem;
     border-radius: 1.25rem;
     background: white;
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
 }
 
 .cctv-search-container {
@@ -2501,7 +2504,12 @@ input[type="number"]::-webkit-outer-spin-button {
 
 .cctv-stats-summary .summary-item {
     flex: 1;
-    min-width: 100px;
+    min-width: 120px;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -2511,9 +2519,114 @@ input[type="number"]::-webkit-outer-spin-button {
     box-shadow: 0 10px 20px rgba(230, 0, 18, 0.1);
 }
 
-
 .cctv-stats-summary .count {
+    font-size: 1.5rem;
+    font-weight: 700;
     color: var(--hik-red);
+}
+
+.cctv-stats-summary .label {
+    font-size: 0.85rem;
+    color: #666;
+    margin-top: 0.25rem;
+}
+
+/* Fix CCTV Cards */
+.device-card.glass {
+    padding: 1.25rem;
+}
+
+.cctv-badge {
+    padding: 4px 10px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    border-radius: 4px;
+    margin-bottom: 0.75rem;
+    display: inline-block;
+}
+
+.badge-camera { background: rgba(230, 0, 18, 0.1); color: var(--hik-red); }
+.badge-switch { background: rgba(52, 152, 219, 0.1); color: #3498db; }
+.badge-nvr { background: rgba(155, 89, 182, 0.1); color: #9b59b2; }
+
+.device-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+    text-align: left; /* Asegurar alineación izquierda */
+}
+
+.device-meta p {
+    font-size: 0.95rem;
+    margin: 0;
+    line-height: 1.5;
+    display: block;
+    width: 100%;
+    text-align: left;
+}
+
+.device-meta .device-loc-text {
+    text-align: justify; /* Ubicación justificada como solicitaste */
+    hyphens: auto;
+}
+
+.device-meta strong {
+    color: #444;
+    display: inline-block;
+    min-width: 110px; /* Ancho consistente para etiquetas */
+    font-weight: 700;
+}
+
+.footer-action-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+    background: #f8fafc;
+    color: #475569;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.footer-action-btn:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+}
+
+.footer-action-btn.delete:hover {
+    background: #fef2f2;
+    color: #dc2626;
+    border-color: #fecaca;
+}
+
+.footer-action-btn.edit:hover {
+    background: #eff6ff;
+    color: #2563eb;
+    border-color: #bfdbfe;
+}
+
+.footer-action-btn span {
+    font-size: 1rem;
+}
+
+.cctv-title {
+    font-size: 1.15rem;
+    color: var(--hik-red);
+    line-height: 1.3;
+    display: block;
+    word-break: normal;
+    overflow-wrap: break-word;
+}
+
+#cameras-grid, #switches-grid, #nvrs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
 }
 
 @media (max-width: 768px) {
@@ -2522,6 +2635,9 @@ input[type="number"]::-webkit-outer-spin-button {
     }
     .cctv-search-container {
         margin: 0 10px 20px;
+    }
+    .device-meta p {
+        font-size: 1rem; /* Bigger on mobile */
     }
 }
 

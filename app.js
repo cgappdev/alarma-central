@@ -99,8 +99,10 @@ class AlarmApp {
                 }
 
                 // PROTECCIÓN DE DATOS: No sobreescribir con nube vacía si local tiene datos
-                const hasLocalData = this.state.centrales.length > 0 || this.state.devices.length > 0;
-                const hasRemoteData = (data.centrales && data.centrales.length > 0) || (data.devices && data.devices.length > 0);
+                const hasLocalData = this.state.centrales.length > 0 || this.state.devices.length > 0 || this.state.cameras.length > 0;
+                const hasRemoteData = (data.centrales && data.centrales.length > 0) || 
+                                    (data.devices && data.devices.length > 0) || 
+                                    (data.cameras && data.cameras.length > 0);
 
                 if (!hasRemoteData && hasLocalData) {
                     console.warn('Nube vacía detectada, pero el PC tiene datos. Ignorando sobreescritura para evitar pérdida de información.');
@@ -111,12 +113,37 @@ class AlarmApp {
                 }
 
                 console.log('Datos nube recibidos. Sincronizando...');
+                
+                // Fusionar centrales y dispositivos
                 this.state.centrales = data.centrales || [];
                 this.state.devices = data.devices || [];
-                this.state.cameras = data.cameras || [];
-                this.state.poeSwitches = data.poeSwitches || [];
-                this.state.nvrs = data.nvrs || [];
                 this.state.users = data.users || [];
+
+                // Fusión inteligente para CCTV (No borrar si local tiene datos y nube no)
+                if (data.cameras && data.cameras.length > 0) {
+                    this.state.cameras = data.cameras;
+                } else if (this.state.cameras.length > 0) {
+                    console.log('Conservando cámaras locales (Nube no tiene datos)');
+                } else {
+                    this.state.cameras = [];
+                }
+
+                if (data.poeSwitches && data.poeSwitches.length > 0) {
+                    this.state.poeSwitches = data.poeSwitches;
+                } else if (this.state.poeSwitches.length > 0) {
+                    console.log('Conservando switches locales (Nube no tiene datos)');
+                } else {
+                    this.state.poeSwitches = [];
+                }
+
+                if (data.nvrs && data.nvrs.length > 0) {
+                    this.state.nvrs = data.nvrs;
+                } else if (this.state.nvrs.length > 0) {
+                    console.log('Conservando grabadores locales (Nube no tiene datos)');
+                } else {
+                    this.state.nvrs = [];
+                }
+
                 this.saveState(true); 
                 
                 const viewer = document.getElementById('cloud-json-viewer');
@@ -290,13 +317,14 @@ class AlarmApp {
         // 2. Asegurar siempre usuarios básicos (admin/user) de inmediato
         this.bootstrapAdmin();
 
-        // 3. SEEDING INTELIGENTE: Solo cargar de los archivos base si la app está vacía
-        const forceUpdate = localStorage.getItem('force_update_4619');
-        if (!forceUpdate || this.state.centrales.length === 0) {
-            console.log('Forzando actualización desde datos semilla...');
-            this.needsMasterPush = true; // Marcamos que necesitamos subir esto a la nube al conectar
+        // 3. SEEDING INTELIGENTE: Solo cargar de los archivos base si la app está vacía o es una versión con cambios estructurales
+        const forceUpdate = localStorage.getItem('force_update_4625');
+        const isCctvEmpty = this.state.cameras.length === 0 && this.state.poeSwitches.length === 0 && this.state.nvrs.length === 0;
+
+        if (!forceUpdate || this.state.centrales.length === 0 || isCctvEmpty) {
+            console.log('Forzando actualización desde datos semilla (v4.6.25)...');
+            this.needsMasterPush = true;
             
-            // AUTO-BACKUP: Guardar copia del estado actual antes de sobrescribir
             const currentState = localStorage.getItem('alarma-lg-state');
             if (currentState) {
                 const dateStr = new Date().toISOString().split('T')[0].replace(/-/g, '');
@@ -307,7 +335,7 @@ class AlarmApp {
             const serverData = await this.fetchDataFromServer();
             if (serverData) {
                 this.smartMerge(serverData);
-                localStorage.setItem('force_update_4619', 'true');
+                localStorage.setItem('force_update_4625', 'true');
                 this.saveState(true);
             }
         } else {
@@ -315,6 +343,13 @@ class AlarmApp {
         }
 
         this.render();
+
+        // 4. Restaurar pestaña previa
+        const lastTab = localStorage.getItem('last-tab');
+        if (lastTab && lastTab !== 'home') {
+            console.log('Restaurando pestaña:', lastTab);
+            this.switchTab(lastTab, true);
+        }
     }
 
     bootstrapAdmin() {
@@ -529,6 +564,9 @@ class AlarmApp {
         const resetState = {
             centrales: [],
             devices: [],
+            cameras: [],
+            poeSwitches: [],
+            nvrs: [],
             users: [{
                 id: 'admin_initial',
                 username: 'admin',
@@ -878,6 +916,7 @@ class AlarmApp {
             this.state.previousTab = this.state.currentTab;
         }
         this.state.currentTab = tab;
+        localStorage.setItem('last-tab', tab);
         
         // Mostrar/Ocultar botón de volver en móvil (Solo si no es Home)
         const mobileBackBtn = document.getElementById('mobile-back-btn');
@@ -2428,21 +2467,18 @@ class AlarmApp {
                         </div>
                     ` : ''}
                     <div class="cctv-badge badge-${type}">${type === 'camera' ? 'CAMARA' : type.toUpperCase()}</div>
-                    <div class="device-header-row">
-                        <div class="cctv-card-header" style="display: flex; align-items: flex-start; gap: 0.5rem; margin-bottom: 0;">
-                            <span style="font-size: 1.2rem; flex-shrink: 0; margin-top: 2px;">${this.getDeviceIcon(type)}</span>
-                            <h4 class="cctv-title" style="margin: 0; word-break: break-word;">${item.name}</h4>
-                        </div>
-                        <div class="device-actions admin-only">
-                            <button class="icon-btn info ${item.maintenanceLogs && item.maintenanceLogs.length > 0 ? 'has-history' : ''}" title="Historial" onclick="app.openMaintenanceModal('${item.id}')">📋</button>
-                            <button class="icon-btn edit" onclick="app.openCctvModal('${type}', true, '${item.id}')">✏️</button>
-                            <button class="icon-btn danger" onclick="app.deleteCctv('${type}', '${item.id}')">🗑️</button>
+                    
+                    <div class="cctv-main-header" style="margin-bottom: 1rem;">
+                        <div style="display: flex; align-items: center; gap: 0.8rem; width: 100%;">
+                            <span style="font-size: 1.5rem; flex-shrink: 0;">${this.getDeviceIcon(type)}</span>
+                            <h4 class="cctv-title" style="margin: 0; font-weight: 700; white-space: normal; overflow-wrap: break-word; word-wrap: break-word; min-width: 0; flex-grow: 1;">${item.name}</h4>
                         </div>
                     </div>
+
                     <div class="device-main-info">
                         <div class="device-meta">
                             <p><strong>IP:</strong> ${item.ip}</p>
-                            <p><strong>Conexión Rack:</strong> ${item.location} (Piso ${item.piso || '-'})</p>
+                            <p class="device-loc-text"><strong>Conexión Rack:</strong> ${item.location} (Piso ${item.piso || '-'})</p>
                             <p class="full-row" style="color: var(--hik-red); font-weight: 600;">
                                 🏢 Sede: ${central ? central.name : 'General'}
                             </p>
@@ -2450,6 +2486,18 @@ class AlarmApp {
                             ${type === 'switch' ? `<p class="full-row"><strong>Puertos:</strong> ${item.ports || '--'}</p>` : ''}
                             ${type === 'nvr' ? `<p><strong>Canales:</strong> ${item.channels || '--'}</p><p><strong>Disco:</strong> ${item.disk || '--'}</p>` : ''}
                         </div>
+                    </div>
+
+                    <div class="device-actions-footer admin-only" style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid rgba(0,0,0,0.05); flex-wrap: wrap;">
+                        <button class="footer-action-btn history" onclick="app.openMaintenanceModal('${item.id}')">
+                            <span>📋</span> Historial
+                        </button>
+                        <button class="footer-action-btn edit" onclick="app.openCctvModal('${type}', true, '${item.id}')">
+                            <span>✏️</span> Editar
+                        </button>
+                        <button class="footer-action-btn delete" onclick="app.deleteCctv('${type}', '${item.id}')">
+                            <span>🗑️</span> Borrar
+                        </button>
                     </div>
                 `;
                 grid.appendChild(card);
