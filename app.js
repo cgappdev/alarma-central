@@ -3,7 +3,7 @@ class AlarmApp {
         window.onerror = (msg, url, line) => {
             alert(`ERROR CRÍTICO: ${msg}\nEn: ${url}:${line}\n\nPor favor reporta esto.`);
         };
-        console.log("%c AlarmaLG v4.6.22 Cargada ", "background: #E60012; color: #fff; font-weight: bold; padding: 5px;");
+        console.log("%c AlarmaLG v4.6.25 Cargada ", "background: #E60012; color: #fff; font-weight: bold; padding: 5px;");
         this.state = {
             user: null, // { username, role }
             centrales: [],
@@ -636,6 +636,14 @@ class AlarmApp {
         });
     }
 
+    initPDFListeners() {
+        const closeBtn = document.getElementById('close-pdf-btn');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => this.closePDFViewer());
+        }
+    }
+
+
 
     async login() {
         const usernameInput = document.getElementById('username').value.trim().toLowerCase();
@@ -1050,7 +1058,7 @@ class AlarmApp {
 
                 <div class="logout-section">
                     <button class="logout-btn-full" onclick="app.logout()">Cerrar Sesión</button>
-                    <p class="app-version">Versión 4.6.20-DIAGNOSTICO</p>
+                    <p class="app-version">Versión 4.6.25</p>
                 </div>
             </div>
         `;
@@ -2387,16 +2395,29 @@ class AlarmApp {
     }
 
     renderCCTVTab() {
+        this.renderCctvStats();
         const camerasGrid = document.getElementById('cameras-grid');
         const switchesGrid = document.getElementById('switches-grid');
         const nvrsGrid = document.getElementById('nvrs-grid');
         const isAdmin = this.state.user?.role === 'admin';
+        const query = (this.state.cctvSearch || '').toLowerCase();
 
         if (!camerasGrid || !switchesGrid || !nvrsGrid) return;
 
+        const filterItems = (items) => {
+            if (!query) return items;
+            return items.filter(i => 
+                i.name.toLowerCase().includes(query) || 
+                i.ip.toLowerCase().includes(query) || 
+                i.location.toLowerCase().includes(query) ||
+                (i.piso && i.piso.toLowerCase().includes(query))
+            );
+        };
+
         const renderItems = (items, grid, type) => {
-            grid.innerHTML = items.length ? '' : `<p class="empty-msg">No hay dispositivos registrados.</p>`;
-            items.forEach(item => {
+            const filtered = filterItems(items);
+            grid.innerHTML = filtered.length ? '' : `<p class="empty-msg">${query ? 'No se encontraron resultados' : 'No hay dispositivos registrados'}.</p>`;
+            filtered.forEach(item => {
                 const central = this.state.centrales.find(c => c.id === item.centralId);
                 const card = document.createElement('div');
                 card.className = 'device-card glass';
@@ -2440,6 +2461,38 @@ class AlarmApp {
         renderItems(this.state.poeSwitches, switchesGrid, 'switch');
         renderItems(this.state.nvrs, nvrsGrid, 'nvr');
     }
+
+    handleCctvSearch() {
+        const input = document.getElementById('cctv-search-input');
+        if (input) {
+            this.state.cctvSearch = input.value;
+            this.renderCCTVTab();
+        }
+    }
+
+    renderCctvStats() {
+        const grid = document.getElementById('cctv-stats-grid');
+        if (!grid) return;
+
+        const stats = [
+            { id: 'camera', name: 'Cámaras', count: this.state.cameras.length },
+            { id: 'switch', name: 'Switches', count: this.state.poeSwitches.length },
+            { id: 'nvr', name: 'Grabadores', count: this.state.nvrs.length }
+        ];
+
+        grid.innerHTML = '';
+        stats.forEach(s => {
+            const item = document.createElement('div');
+            item.className = 'summary-item';
+            item.innerHTML = `
+                <span class="icon">${this.getDeviceIcon(s.id)}</span>
+                <span class="count">${s.count}</span>
+                <span class="label">${s.name}</span>
+            `;
+            grid.appendChild(item);
+        });
+    }
+
 
     generateCctvReport() {
         const { jsPDF } = window.jspdf;

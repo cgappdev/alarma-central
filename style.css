@@ -2472,3 +2472,56 @@ input[type="number"]::-webkit-outer-spin-button {
         font-size: 0.8rem;
     }
 }
+
+/* CCTV Section Enhancements */
+.cctv-stats-summary {
+    margin: 0 0 1.5rem;
+    padding: 1.25rem;
+    border-radius: 1.25rem;
+    background: white;
+}
+
+.cctv-search-container {
+    margin-bottom: 2rem;
+    padding: 1rem;
+    border-radius: 1rem;
+    background: white;
+}
+
+.cctv-search-container .search-box {
+    width: 100%;
+    max-width: none;
+}
+
+.cctv-search-container input {
+    width: 100%;
+    padding: 0.8rem 1rem 0.8rem 2.5rem;
+    font-size: 1rem;
+}
+
+.cctv-stats-summary .summary-item {
+    flex: 1;
+    min-width: 100px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.cctv-stats-summary .summary-item:hover {
+    border-color: var(--hik-red);
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 10px 20px rgba(230, 0, 18, 0.1);
+}
+
+
+.cctv-stats-summary .count {
+    color: var(--hik-red);
+}
+
+@media (max-width: 768px) {
+    .cctv-stats-summary {
+        margin: 0 10px 15px;
+    }
+    .cctv-search-container {
+        margin: 0 10px 20px;
+    }
+}
+
