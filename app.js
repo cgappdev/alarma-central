@@ -31,6 +31,13 @@ class AlarmApp {
         
         // No bloqueamos el inicio por el chequeo de versión
         this.checkForUpdates().catch(e => console.warn('Actualización skip:', e.message));
+
+        // Listener para el botón "Atrás" del sistema/navegador (Cierra el PDF si está abierto)
+        window.addEventListener('popstate', (e) => {
+            if (document.getElementById('pdf-viewer-overlay') && !document.getElementById('pdf-viewer-overlay').classList.contains('hidden')) {
+                this.closePDFViewer(true);
+            }
+        });
     }
 
 
@@ -1413,6 +1420,10 @@ class AlarmApp {
             
             // Bloquear scroll del body
             document.body.style.overflow = 'hidden';
+            
+            // Navegación móvil: pushState para que el botón "Atrás" del sistema cierre el PDF
+            history.pushState({ pdfOpen: true }, "");
+            
             console.log(`Reporte generado: ${filename}`);
         } else {
             // Fallback: Descarga directa si falla el overlay
@@ -1420,10 +1431,16 @@ class AlarmApp {
         }
     }
 
-    closePDFViewer() {
+    closePDFViewer(isFromPopState = false) {
         const overlay = document.getElementById('pdf-viewer-overlay');
         const iframe = document.getElementById('pdf-iframe');
         
+        // Debug visual para móvil (eliminar después de probar)
+        if (!isFromPopState) {
+            console.log("Evento de cierre capturado");
+            alert("Cerrando visor..."); 
+        }
+
         if (overlay) {
             overlay.classList.add('hidden');
             if (iframe) iframe.src = 'about:blank';
@@ -1432,6 +1449,11 @@ class AlarmApp {
             if (this.currentPdfUrl) {
                 URL.revokeObjectURL(this.currentPdfUrl);
                 this.currentPdfUrl = null;
+            }
+
+            // Si cerramos manualmente (botón Volver), sacamos el estado del historial
+            if (!isFromPopState && history.state && history.state.pdfOpen) {
+                history.back();
             }
         }
     }
@@ -2466,7 +2488,10 @@ class AlarmApp {
                             <img src="${item.photo}" alt="${item.name}">
                         </div>
                     ` : ''}
-                    <div class="cctv-badge badge-${type}">${type === 'camera' ? 'CAMARA' : type.toUpperCase()}</div>
+                    <div class="cctv-badge badge-${type}">
+                        <span class="status-indicator status-online"></span>
+                        ${type === 'camera' ? 'CÁMARA' : type.toUpperCase()}
+                    </div>
                     
                     <div class="cctv-main-header" style="margin-bottom: 1rem;">
                         <div style="display: flex; align-items: center; gap: 0.8rem; width: 100%;">
@@ -2478,13 +2503,25 @@ class AlarmApp {
                     <div class="device-main-info">
                         <div class="device-meta">
                             <p><strong>IP:</strong> ${item.ip}</p>
-                            <p class="device-loc-text"><strong>Conexión Rack:</strong> ${item.location} (Piso ${item.piso || '-'})</p>
+                            <p class="device-loc-text"><strong>Rack/Conexión:</strong> ${item.location} (Piso ${item.piso || '-'})</p>
                             <p class="full-row" style="color: var(--hik-red); font-weight: 600;">
                                 🏢 Sede: ${central ? central.name : 'General'}
                             </p>
-                            ${type === 'camera' ? `<p><strong>Canal:</strong> ${item.channel || '--'}</p><p><strong>Modelo:</strong> ${item.model || '--'}</p><p><strong>Resolución:</strong> ${item.megapixels ? item.megapixels + ' MP' : '--'}</p>` : ''}
-                            ${type === 'switch' ? `<p class="full-row"><strong>Puertos:</strong> ${item.ports || '--'}</p>` : ''}
-                            ${type === 'nvr' ? `<p><strong>Canales:</strong> ${item.channels || '--'}</p><p><strong>Disco:</strong> ${item.disk || '--'}</p>` : ''}
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 5px;">
+                                ${type === 'camera' ? `
+                                    <p><strong>Canal:</strong> ${item.channel || '--'}</p>
+                                    <p><strong>Resolución:</strong> ${item.megapixels ? item.megapixels + ' MP' : '--'}</p>
+                                    <p class="full-row"><strong>Modelo:</strong> ${item.model || '--'}</p>
+                                ` : ''}
+                                ${type === 'switch' ? `
+                                    <p class="full-row"><strong>Puertos:</strong> ${item.ports || '--'}</p>
+                                    <p class="full-row"><strong>Uso:</strong> <span style="color: #10b981;">Online ✅</span></p>
+                                ` : ''}
+                                ${type === 'nvr' ? `
+                                    <p><strong>Canales:</strong> ${item.channels || '--'}</p>
+                                    <p><strong>Disco:</strong> ${item.disk || '--'}</p>
+                                ` : ''}
+                            </div>
                         </div>
                     </div>
 
@@ -2522,10 +2559,28 @@ class AlarmApp {
         const grid = document.getElementById('cctv-stats-grid');
         if (!grid) return;
 
+        // Cálculos avanzados
+        let totalTB = 0;
+        this.state.nvrs.forEach(n => {
+            const disk = n.disk ? n.disk.toUpperCase() : '';
+            if (disk.includes('TB')) {
+                totalTB += parseFloat(disk);
+            }
+        });
+
+        let totalMP = 0;
+        this.state.cameras.forEach(c => {
+            if (c.megapixels) totalMP += parseFloat(c.megapixels);
+        });
+
+        const totalPorts = this.state.poeSwitches.reduce((acc, s) => acc + (parseInt(s.ports) || 0), 0);
+        const usedPorts = this.state.cameras.length; // Simulación: cada cámara usa 1 puerto
+        const portPercent = totalPorts > 0 ? Math.round((usedPorts / totalPorts) * 100) : 0;
+
         const stats = [
-            { id: 'camera', name: 'Cámaras', count: this.state.cameras.length },
-            { id: 'switch', name: 'Switches', count: this.state.poeSwitches.length },
-            { id: 'nvr', name: 'Grabadores', count: this.state.nvrs.length }
+            { id: 'camera', name: 'Cámaras', count: this.state.cameras.length, icon: '📹', sub: `${totalMP} MP Totales` },
+            { id: 'nvr', name: 'Almacenamiento', count: `${totalTB} TB`, icon: '💾', sub: `${this.state.nvrs.length} Grabadores` },
+            { id: 'switch', name: 'Red PoE', count: `${portPercent}%`, icon: '🔌', sub: `${usedPorts}/${totalPorts} Puertos` }
         ];
 
         grid.innerHTML = '';
@@ -2533,9 +2588,10 @@ class AlarmApp {
             const item = document.createElement('div');
             item.className = 'summary-item';
             item.innerHTML = `
-                <span class="icon">${this.getDeviceIcon(s.id)}</span>
-                <span class="count">${s.count}</span>
-                <span class="label">${s.name}</span>
+                <div class="icon-box">${s.icon}</div>
+                <div class="count">${s.count}</div>
+                <div class="label">${s.name}</div>
+                <div class="sub-label">${s.sub}</div>
             `;
             grid.appendChild(item);
         });

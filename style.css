@@ -2384,20 +2384,27 @@ input[type="number"]::-webkit-outer-spin-button {
     height: 100vh;
     height: 100dvh;
     background: #f4f5f9;
-    z-index: 50000; /* Ultra-priority over everything */
+    z-index: 99999; /* Ultra-priority over everything */
     display: flex;
     flex-direction: column;
     animation: fadeIn 0.3s ease;
+    pointer-events: auto;
 }
 
 .pdf-viewer-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px 15px;
+    padding: 0 15px;
     background: #ffffff !important;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    z-index: 50001; /* Above the overlay content */
+    z-index: 2147483647 !important; /* Maximum possible z-index */
+    pointer-events: auto !important;
 }
 
 #close-pdf-btn {
@@ -2410,6 +2417,12 @@ input[type="number"]::-webkit-outer-spin-button {
     font-size: 1rem;
     font-weight: 700;
     box-shadow: 0 2px 4px rgba(225, 29, 72, 0.3);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-tap-highlight-color: rgba(0,0,0,0);
+    touch-action: manipulation;
 }
 
 .pdf-viewer-header .secondary-btn {
@@ -2447,9 +2460,12 @@ input[type="number"]::-webkit-outer-spin-button {
 .pdf-viewer-content {
     flex-grow: 1;
     width: 100%;
+    margin-top: 60px; /* Security space for the fixed header */
+    height: calc(100% - 60px);
     background: #525659; /* Adobe/Chrome PDF viewer dark background */
     overflow: hidden;
     position: relative;
+    z-index: 1;
 }
 
 #pdf-iframe {
@@ -2504,33 +2520,62 @@ input[type="number"]::-webkit-outer-spin-button {
     font-size: 1rem;
 }
 
+.cctv-stats-summary {
+    margin: 0 0 2rem;
+    padding: 1.5rem;
+    border-radius: 1.5rem;
+    background: #f8fafc;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.25rem;
+    border: 1px solid #e2e8f0;
+}
+
 .cctv-stats-summary .summary-item {
-    flex: 1;
-    min-width: 120px;
-    padding: 1rem;
+    background: white;
+    padding: 1.25rem;
+    border-radius: 1rem;
     display: flex;
     flex-direction: column;
     align-items: center;
     text-align: center;
+    border: 1px solid #edf2f7;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
 }
 
 .cctv-stats-summary .summary-item:hover {
     border-color: var(--hik-red);
-    transform: translateY(-4px) scale(1.02);
-    box-shadow: 0 10px 20px rgba(230, 0, 18, 0.1);
+    transform: translateY(-4px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.cctv-stats-summary .icon-box {
+    font-size: 1.75rem;
+    margin-bottom: 0.5rem;
+    opacity: 0.8;
 }
 
 .cctv-stats-summary .count {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: var(--hik-red);
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: #1e293b;
+    line-height: 1.2;
 }
 
 .cctv-stats-summary .label {
-    font-size: 0.85rem;
-    color: #666;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
     margin-top: 0.25rem;
+}
+
+.cctv-stats-summary .sub-label {
+    font-size: 0.7rem;
+    color: #94a3b8;
+    margin-top: 0.2rem;
 }
 
 /* Fix CCTV Cards */
@@ -2544,7 +2589,28 @@ input[type="number"]::-webkit-outer-spin-button {
     font-weight: 700;
     border-radius: 4px;
     margin-bottom: 0.75rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.status-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
     display: inline-block;
+}
+
+.status-online {
+    background: #10b981;
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+    animation: pulse-green 2s infinite;
+}
+
+@keyframes pulse-green {
+    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+    70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
 }
 
 .badge-camera { background: rgba(230, 0, 18, 0.1); color: var(--hik-red); }
