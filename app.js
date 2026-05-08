@@ -3,7 +3,7 @@ class AlarmApp {
         window.onerror = (msg, url, line) => {
             alert(`ERROR CRÍTICO: ${msg}\nEn: ${url}:${line}\n\nPor favor reporta esto.`);
         };
-        console.log("%c AlarmaLG v4.6.25 Cargada ", "background: #E60012; color: #fff; font-weight: bold; padding: 5px;");
+        console.log("%c AlarmaLG v4.6.26 Cargada ", "background: #E60012; color: #fff; font-weight: bold; padding: 5px;");
         this.state = {
             user: null, // { username, role }
             centrales: [],
@@ -329,7 +329,7 @@ class AlarmApp {
         const isCctvEmpty = this.state.cameras.length === 0 && this.state.poeSwitches.length === 0 && this.state.nvrs.length === 0;
 
         if (!forceUpdate || this.state.centrales.length === 0 || isCctvEmpty) {
-            console.log('Forzando actualización desde datos semilla (v4.6.25)...');
+            console.log('Forzando actualización desde datos semilla (v4.6.26)...');
             this.needsMasterPush = true;
             
             const currentState = localStorage.getItem('alarma-lg-state');
@@ -1104,7 +1104,7 @@ class AlarmApp {
 
                 <div class="logout-section">
                     <button class="logout-btn-full" onclick="app.logout()">Cerrar Sesión</button>
-                    <p class="app-version">Versión 4.6.25</p>
+                    <p class="app-version">Versión 4.6.26</p>
                 </div>
             </div>
         `;
@@ -1435,12 +1435,6 @@ class AlarmApp {
         const overlay = document.getElementById('pdf-viewer-overlay');
         const iframe = document.getElementById('pdf-iframe');
         
-        // Debug visual para móvil (eliminar después de probar)
-        if (!isFromPopState) {
-            console.log("Evento de cierre capturado");
-            alert("Cerrando visor..."); 
-        }
-
         if (overlay) {
             overlay.classList.add('hidden');
             if (iframe) iframe.src = 'about:blank';
@@ -1463,11 +1457,30 @@ class AlarmApp {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
         
-        doc.setFontSize(18);
-        doc.text('Reporte General de Centrales de Alarma', 14, 20);
-        doc.setFontSize(12);
-        doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 14, 30);
+        // Header con Color Corporativo
+        doc.setFillColor(230, 0, 18); // Hikvision Red
+        doc.rect(0, 0, 210, 40, 'F');
+        
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(22);
+        doc.setFont(undefined, 'bold');
+        doc.text('AlarmaLG - Reporte General', 14, 25);
+        
+        doc.setFontSize(10);
+        doc.setFont(undefined, 'normal');
+        doc.text(`Generado el: ${new Date().toLocaleString()}`, 14, 33);
 
+        // Resumen Estadístico
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(14);
+        doc.setFont(undefined, 'bold');
+        doc.text('RESUMEN DE INFRAESTRUCTURA', 14, 55);
+        
+        doc.setFontSize(11);
+        doc.setFont(undefined, 'normal');
+        doc.text(`Total de Centrales: ${this.state.centrales.length}`, 14, 62);
+        doc.text(`Total de Dispositivos: ${this.state.devices.length}`, 14, 68);
+        
         const tableData = this.state.centrales.map(c => [
             c.name, c.location, c.piso || '-', c.ip, c.rack, `${c.battery}%`
         ]);
@@ -1475,7 +1488,10 @@ class AlarmApp {
         doc.autoTable({
             head: [['Nombre', 'Ubicación', 'Piso', 'IP', 'Rack', 'Batería']],
             body: tableData,
-            startY: 40
+            startY: 75,
+            headStyles: { fillColor: [230, 0, 18], textColor: [255, 255, 255], fontStyle: 'bold' },
+            alternateRowStyles: { fillColor: [245, 245, 245] },
+            margin: { top: 75 }
         });
 
         this._showPDF(doc, 'reporte_general_centrales.pdf');
@@ -1485,19 +1501,33 @@ class AlarmApp {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
         
-        doc.setFontSize(18);
-        doc.text('Reporte de Direcciones IP de Centrales', 14, 20);
-        doc.setFontSize(12);
-        doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 14, 30);
+        // Header
+        doc.setFillColor(51, 51, 51); // Dark Gray
+        doc.rect(0, 0, 210, 40, 'F');
+        
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(22);
+        doc.setFont(undefined, 'bold');
+        doc.text('Inventario de Direcciones IP', 14, 25);
+        
+        doc.setFontSize(10);
+        doc.setFont(undefined, 'normal');
+        doc.text(`Documento Técnico de Infraestructura - ${new Date().toLocaleDateString()}`, 14, 33);
 
+        doc.setTextColor(0, 0, 0);
         const tableData = this.state.centrales.map(c => [
             c.name, c.location, c.piso || '-', c.ip, c.rack
         ]);
 
         doc.autoTable({
-            head: [['Nombre de la Central', 'Ubicación', 'Piso', 'Dirección IP', 'Rack / Observaciones']],
+            head: [['Nombre de la Central', 'Ubicación', 'Piso', 'Dirección IP', 'Rack / Conexión']],
             body: tableData,
-            startY: 40
+            startY: 50,
+            headStyles: { fillColor: [51, 51, 51], textColor: [255, 255, 255] },
+            styles: { fontSize: 10 },
+            columnStyles: {
+                3: { fontStyle: 'bold', textColor: [230, 0, 18] } // IP en rojo para destacar
+            }
         });
 
         this._showPDF(doc, 'reporte_ips_centrales.pdf');
@@ -1517,27 +1547,45 @@ class AlarmApp {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
 
-        doc.setFontSize(18);
-        doc.text(`Reporte Central: ${central.name}`, 14, 20);
-        doc.setFontSize(12);
+        // Header Corporativo
+        doc.setFillColor(230, 0, 18);
+        doc.rect(0, 0, 210, 45, 'F');
+        
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(20);
+        doc.setFont(undefined, 'bold');
+        doc.text(`Reporte: ${central.name}`, 14, 22);
+        
+        doc.setFontSize(11);
+        doc.setFont(undefined, 'normal');
         doc.text(`Ubicación: ${central.location} | Piso: ${central.piso || '-'} | IP: ${central.ip}`, 14, 30);
-        doc.text(`Rack: ${central.rack} | Batería: ${central.battery}%`, 14, 38);
+        doc.text(`Rack: ${central.rack} | Batería Central: ${central.battery}%`, 14, 37);
 
         // Resumen de Totales por tipo
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(14);
+        doc.setFont(undefined, 'bold');
+        doc.text('TOTALES POR CATEGORÍA', 14, 60);
+
         const counts = {};
         devices.forEach(d => {
             counts[d.type] = (counts[d.type] || 0) + 1;
         });
-        const summaryText = Object.entries(counts)
-            .map(([type, count]) => `${type.toUpperCase()}: ${count}`)
-            .join('  |  ');
+        
+        let startX = 14;
+        let startY = 68;
+        Object.entries(counts).forEach(([type, count]) => {
+            doc.setFontSize(10);
+            doc.setFont(undefined, 'bold');
+            doc.text(`${type.toUpperCase()}:`, startX, startY);
+            doc.setFont(undefined, 'normal');
+            doc.text(`${count}`, startX + 35, startY);
+            startY += 6;
+        });
 
-        doc.setFontSize(11);
-        doc.text('Resumen de Totales:', 14, 50);
-        doc.text(summaryText || 'Sin dispositivos registrados', 14, 56);
-
-        doc.setFontSize(12);
-        doc.text('Detalle de Dispositivos Instalados:', 14, 68);
+        doc.setFontSize(14);
+        doc.setFont(undefined, 'bold');
+        doc.text('LISTADO DETALLADO DE DISPOSITIVOS', 14, startY + 10);
 
         const tableData = devices.map(d => [
             d.type.toUpperCase(), d.location, d.piso || '-', `${d.battery}%`, d.installationDate
@@ -1546,7 +1594,11 @@ class AlarmApp {
         doc.autoTable({
             head: [['Tipo', 'Ubicación', 'Piso', 'Batería', 'F. Instalación']],
             body: tableData,
-            startY: 73
+            startY: startY + 15,
+            headStyles: { fillColor: [230, 0, 18] },
+            columnStyles: {
+                3: { fontStyle: 'bold' }
+            }
         });
 
         this._showPDF(doc, `reporte_${central.name}.pdf`);
