@@ -212,6 +212,11 @@ class TherapyApp {
 
     // Offline indicator
     this.offlineIndicator = document.getElementById('offline-indicator');
+
+    // Backup elements
+    this.btnExportBackup = document.getElementById('btn-export-backup');
+    this.btnImportBackup = document.getElementById('btn-import-backup');
+    this.importBackupFile = document.getElementById('import-backup-file');
   }
 
   initRangeBadge(inputId, badgeId, suffix) {
@@ -329,6 +334,17 @@ class TherapyApp {
     // Listen to network status
     window.addEventListener('online', () => this.checkOnlineStatus());
     window.addEventListener('offline', () => this.checkOnlineStatus());
+
+    // Backup events
+    if (this.btnExportBackup) {
+      this.btnExportBackup.addEventListener('click', () => this.exportData());
+    }
+    if (this.btnImportBackup) {
+      this.btnImportBackup.addEventListener('click', () => this.importBackupFile.click());
+    }
+    if (this.importBackupFile) {
+      this.importBackupFile.addEventListener('change', (e) => this.handleImport(e));
+    }
   }
 
   checkOnlineStatus() {
@@ -1144,6 +1160,49 @@ Redacta directamente la nota SOAP estructurada sin comentarios introductorios ni
       btn.disabled = false;
       btn.innerHTML = originalContent;
     }
+  }
+
+  exportData() {
+    const data = JSON.stringify({
+      patients: this.patients,
+      sessions: this.sessions
+    }, null, 2);
+    const blob = new Blob([data], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `respaldo_terapias_${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  handleImport(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const data = JSON.parse(event.target.result);
+        if (!data.patients || !data.sessions) {
+          throw new Error('El archivo no contiene la estructura requerida (patients/sessions).');
+        }
+        this.patients = data.patients;
+        this.sessions = data.sessions;
+        this.saveToStorage();
+        this.navigate(this.currentView || 'dashboard');
+        this.updateStats();
+        this.renderPatientsList();
+        this.renderDatePicker();
+        this.renderAgendaForSelectedDay();
+        this.populatePatientDropdowns();
+        alert('🚀 Restauración de Terapias Exitosa: Pacientes y Sesiones recuperados.');
+      } catch (err) {
+        console.error('Error al importar:', err);
+        alert('❌ El archivo no es un respaldo válido: ' + err.message);
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
   }
 }
 

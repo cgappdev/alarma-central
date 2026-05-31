@@ -55,8 +55,18 @@
           <span class="material-symbols-rounded">auto_awesome</span>
           <span class="toggle-text">Configurar IA</span>
         </button>
+
+        <button class="theme-toggle" id="btn-export-backup" aria-label="Exportar Respaldo" style="margin-bottom: 0.5rem;">
+          <span class="material-symbols-rounded">download</span>
+          <span class="toggle-text">Exportar Respaldo</span>
+        </button>
+
+        <button class="theme-toggle" id="btn-import-backup" aria-label="Importar Respaldo" style="margin-bottom: 0.5rem;">
+          <span class="material-symbols-rounded">upload</span>
+          <span class="toggle-text">Importar Respaldo</span>
+        </button>
         
-        <button class="theme-toggle" id="theme-toggle-btn" aria-label="Cambiar tema">
+        <button class="theme-toggle" id="theme-toggle-btn" aria-label="Cambiar tema" style="margin-bottom: 0.5rem;">
           <span class="material-symbols-rounded dark-icon">dark_mode</span>
           <span class="material-symbols-rounded light-icon">light_mode</span>
           <span class="toggle-text">Tema Oscuro</span>
@@ -473,6 +483,7 @@
     </div>
   </div>
 
+  <input type="file" id="import-backup-file" accept=".json" style="display: none;">
   <script src="app.js"></script>
 </body>
 </html>

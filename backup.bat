@@ -43,7 +43,7 @@ set "FOUND=0"
 :: Mover JSONs y PDFs
 echo [+] Procesando archivos de respaldo...
 
-robocopy "%DOWNLOADS%" "%DEST%" respaldo_alarmas_*.json /MOV /R:1 /W:1 /NFL /NDL /NJH /NJS >nul
+robocopy "%DOWNLOADS%" "%DEST%" respaldo_alarmas_*.json respaldo_terapias_*.json /MOV /R:1 /W:1 /NFL /NDL /NJH /NJS >nul
 if %ERRORLEVEL% LEQ 7 if %ERRORLEVEL% GEQ 1 (
     set FOUND=1
     echo [+] Datos JSON movidos.
