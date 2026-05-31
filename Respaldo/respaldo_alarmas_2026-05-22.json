@@ -1,6 +1,6 @@
 {
   "user": {
-    "username": "admin",
+    "username": "admin_pro",
     "role": "admin"
   },
   "centrales": [
@@ -3072,6 +3072,286 @@
       "location": "ConsultorioValoMate 1",
       "piso": "3",
       "type": "humo"
+    },
+    {
+      "battery": "100",
+      "centralId": "1774224339961",
+      "displayOrder": 12,
+      "id": "1779482347801",
+      "installationDate": "2025-12-17",
+      "location": "ConsultorioMoniFetal",
+      "piso": "3",
+      "type": "humo"
+    },
+    {
+      "battery": "100",
+      "centralId": "1774224339961",
+      "displayOrder": 13,
+      "id": "1779482811040",
+      "installationDate": "2025-12-17",
+      "location": "ConsultorioValoMate2",
+      "piso": "3",
+      "type": "humo"
+    },
+    {
+      "battery": "100",
+      "centralId": "1774224339961",
+      "displayOrder": 14,
+      "id": "1779482884280",
+      "installationDate": "2025-12-17",
+      "location": "CoordinaciónGine Obstetricia",
+      "piso": "3",
+      "type": "humo"
+    },
+    {
+      "battery": "100",
+      "centralId": "1774224339961",
+      "displayOrder": 15,
+      "id": "1779482919240",
+      "installationDate": "2025-12-17",
+      "location": "ConsultorioTriaje",
+      "piso": "3",
+      "type": "humo"
+    },
+    {
+      "battery": "100",
+      "centralId": "1774224339961",
+      "displayOrder": 16,
+      "id": "1779483011296",
+      "installationDate": "2025-12-17",
+      "location": "UciNeonatalCuidadosIntermedios",
+      "piso": "3",
+      "type": "humo"
+    },
+    {
+      "battery": "100",
+      "centralId": "1774224339961",
+      "displayOrder": 17,
+      "id": "1779483059248",
+      "installationDate": "2025-12-17",
+      "location": "UnidadCuidadosBasicosNeionatal",
+      "piso": "3",
+      "type": "humo"
+    },
+    {
+      "battery": "100",
+      "centralId": "1774224339961",
+      "displayOrder": 18,
+      "id": "1779483088464",
+      "installationDate": "2025-12-17",
+      "location": "OficinaCoordinación",
+      "piso": "3",
+      "type": "humo"
+    },
+    {
+      "battery": "100",
+      "centralId": "1774224339961",
+      "displayOrder": 19,
+      "id": "1779483130656",
+      "installationDate": "2025-12-17",
+      "location": "TerapiaRespiratoriaEquipos",
+      "piso": "3",
+      "type": "humo"
+    },
+    {
+      "battery": "100",
+      "centralId": "1774224339961",
+      "displayOrder": 20,
+      "id": "1779483168856",
+      "installationDate": "2025-12-17",
+      "location": "EstaciónEnfermeria",
+      "piso": "3",
+      "type": "humo"
+    },
+    {
+      "battery": "100",
+      "centralId": "1774224339961",
+      "displayOrder": 21,
+      "id": "1779483367279",
+      "installationDate": "2025-12-17",
+      "location": "TerapiaRespiratoria",
+      "piso": "3",
+      "type": "humo"
+    },
+    {
+      "battery": "100",
+      "centralId": "1774224339961",
+      "displayOrder": 22,
+      "id": "1779483399383",
+      "installationDate": "2025-12-17",
+      "location": "DescansoMédico",
+      "piso": "3",
+      "type": "humo"
+    },
+    {
+      "battery": "100",
+      "centralId": "1774224339961",
+      "displayOrder": 23,
+      "id": "1779483435383",
+      "installationDate": "2025-12-17",
+      "location": "DescansoEnfermería",
+      "piso": "3",
+      "type": "humo"
+    },
+    {
+      "battery": "100",
+      "centralId": "1774224339961",
+      "displayOrder": 24,
+      "id": "1779483482223",
+      "installationDate": "2025-12-17",
+      "location": "Uci 6",
+      "piso": "3",
+      "type": "humo"
+    },
+    {
+      "battery": "100",
+      "centralId": "1774224339961",
+      "displayOrder": 25,
+      "id": "1779483502313",
+      "installationDate": "2025-12-17",
+      "location": "Uci 1",
+      "piso": "3",
+      "type": "humo"
+    },
+    {
+      "battery": "100",
+      "centralId": "1774224339961",
+      "displayOrder": 26,
+      "id": "1779483529407",
+      "installationDate": "2025-12-17",
+      "location": "Uci 2",
+      "piso": "3",
+      "type": "humo"
+    },
+    {
+      "battery": "100",
+      "centralId": "1774224339961",
+      "displayOrder": 27,
+      "id": "1779483551991",
+      "installationDate": "2025-12-17",
+      "location": "Uci 3",
+      "piso": "3",
+      "type": "humo"
+    },
+    {
+      "battery": "100",
+      "centralId": "1774224339961",
+      "displayOrder": 28,
+      "id": "1779483600791",
+      "installationDate": "2025-12-17",
+      "location": "Uci 4",
+      "piso": "3",
+      "type": "humo"
+    },
+    {
+      "battery": "100",
+      "centralId": "1774224339961",
+      "displayOrder": 29,
+      "id": "1779483619639",
+      "installationDate": "2025-12-17",
+      "location": "Uci 5",
+      "piso": "3",
+      "type": "humo"
+    },
+    {
+      "battery": "100",
+      "centralId": "1774224339961",
+      "displayOrder": 30,
+      "id": "1779483646800",
+      "installationDate": "2025-12-17",
+      "location": "Uci 5",
+      "piso": "3",
+      "type": "humo"
+    },
+    {
+      "battery": "100",
+      "centralId": "1774224339961",
+      "displayOrder": 31,
+      "id": "1779483674247",
+      "installationDate": "2025-12-17",
+      "location": "Uci 7",
+      "piso": "3",
+      "type": "humo"
+    },
+    {
+      "battery": "100",
+      "centralId": "1774224339961",
+      "displayOrder": 32,
+      "id": "1779483705431",
+      "installationDate": "2025-12-17",
+      "location": "Uci 8",
+      "piso": "3",
+      "type": "humo"
+    },
+    {
+      "battery": "100",
+      "centralId": "1777929355649",
+      "displayOrder": 0,
+      "id": "1779484009390",
+      "installationDate": "2025-12-17",
+      "location": "Central",
+      "piso": "2",
+      "type": "sirena"
+    },
+    {
+      "battery": "100",
+      "centralId": "1777929355649",
+      "displayOrder": 1,
+      "id": "1779484042638",
+      "installationDate": "2025-12-17",
+      "location": "RadioTerapia",
+      "piso": "2",
+      "type": "sirena"
+    },
+    {
+      "battery": "100",
+      "centralId": "1777929355649",
+      "displayOrder": 2,
+      "id": "1779484092078",
+      "installationDate": "2025-12-17",
+      "location": "QuimioTerapiaAscensor",
+      "piso": "2",
+      "type": "sirena"
+    },
+    {
+      "battery": "100",
+      "centralId": "1777929355649",
+      "displayOrder": 3,
+      "id": "1779484124710",
+      "installationDate": "2025-12-17",
+      "location": "Shut",
+      "piso": "1",
+      "type": "sirena"
+    },
+    {
+      "battery": "100",
+      "centralId": "1777929355649",
+      "displayOrder": 4,
+      "id": "1779484156782",
+      "installationDate": "2025-12-17",
+      "location": "RepetidorShut",
+      "piso": "1",
+      "type": "repetidor"
+    },
+    {
+      "battery": "100",
+      "centralId": "1777929355649",
+      "displayOrder": 5,
+      "id": "1779484209870",
+      "installationDate": "2025-12-17",
+      "location": "Vigilancia",
+      "piso": "1",
+      "type": "teclado"
+    },
+    {
+      "battery": "100",
+      "centralId": "1777929355649",
+      "displayOrder": 6,
+      "id": "1779484265366",
+      "installationDate": "2025-12-17",
+      "location": "Por definir",
+      "piso": "2",
+      "type": "panico"
     }
   ],
   "cameras": [
@@ -3158,22 +3438,16 @@
       "password": "h1m4g04",
       "role": "user",
       "username": "hilda"
-    },
-    {
-      "id": "secretary_initial",
-      "password": "1234",
-      "role": "secretary",
-      "username": "secre"
     }
   ],
-  "currentCentralId": "1774831181535",
+  "currentCentralId": "1777929355649",
   "centralSearch": "",
   "deviceSearch": "",
   "reorderMode": false,
   "currentTab": "home",
   "previousTab": "home",
-  "firebaseStatus": "⏳ Verificando...",
+  "firebaseStatus": "Estado: <span style=\"color: #10b981; font-weight: bold;\">✅ Conectado y Sincronizado</span>",
   "firebaseConn": "Conexión: <span style=\"color: #10b981;\">🟢 Online</span>",
-  "lastSync": "--",
+  "lastSync": "16:11:05",
   "firebaseConnected": true
 }

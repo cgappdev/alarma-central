@@ -20,7 +20,12 @@ class AlarmApp {
             previousTab: 'home',
             firebaseStatus: '⏳ Verificando...',
             firebaseConn: '📡 Pendiente...',
-            lastSync: '--'
+            lastSync: '--',
+            citas: [],
+            autorizaciones: [],
+            calendarYear: new Date().getFullYear(),
+            calendarMonth: new Date().getMonth(),
+            selectedDate: null
         };
         this.currentCameraPhoto = null;
         this.loadInitialData();
@@ -38,6 +43,15 @@ class AlarmApp {
                 this.closePDFViewer(true);
             }
         });
+    }
+
+    formatDateDMY(dateStr) {
+        if (!dateStr) return '';
+        const parts = dateStr.split('-');
+        if (parts.length === 3) {
+            return `${parts[2]}-${parts[1]}-${parts[0]}`;
+        }
+        return dateStr;
     }
 
 
@@ -99,6 +113,8 @@ class AlarmApp {
                     this.state.poeSwitches = data.poeSwitches || [];
                     this.state.nvrs = data.nvrs || [];
                     this.state.users = data.users || [];
+                    this.state.citas = data.citas || [];
+                    this.state.autorizaciones = data.autorizaciones || [];
                     localStorage.setItem('last-reset-id', remoteResetId);
                     this.saveState(true); 
                     this.render();
@@ -125,6 +141,8 @@ class AlarmApp {
                 this.state.centrales = data.centrales || [];
                 this.state.devices = data.devices || [];
                 this.state.users = data.users || [];
+                this.state.citas = data.citas || [];
+                this.state.autorizaciones = data.autorizaciones || [];
 
                 // Fusión inteligente para CCTV (No borrar si local tiene datos y nube no)
                 if (data.cameras && data.cameras.length > 0) {
@@ -211,9 +229,10 @@ class AlarmApp {
                         const username = user.email.split('@')[0];
                         
                         if (!this.state.user) {
+                            const foundUser = this.state.users.find(u => u.username.toLowerCase() === username.toLowerCase());
                             this.state.user = { 
                                 username: username, 
-                                role: username === 'admin' ? 'admin' : 'user' 
+                                role: foundUser ? foundUser.role : (username === 'admin' ? 'admin' : 'user') 
                             };
                         }
                         
@@ -261,7 +280,9 @@ class AlarmApp {
             nvrs: this.state.nvrs,
             users: this.state.users,
             currentCentralId: this.state.currentCentralId,
-            resetId: localStorage.getItem('last-reset-id') || null
+            resetId: localStorage.getItem('last-reset-id') || null,
+            citas: this.state.citas || [],
+            autorizaciones: this.state.autorizaciones || []
         };
 
         try {
@@ -323,6 +344,89 @@ class AlarmApp {
         
         // 2. Asegurar siempre usuarios básicos (admin/user) de inmediato
         this.bootstrapAdmin();
+
+        // Cargar citas de prueba si el estado está vacío
+        if (!this.state.citas || this.state.citas.length === 0) {
+            const todayStr = new Date().toISOString().split('T')[0];
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const tomorrowStr = tomorrow.toISOString().split('T')[0];
+
+            this.state.citas = [
+                {
+                    id: "cita_1",
+                    patient: "Juan Pérez",
+                    therapist: "Dra. Laura Gómez",
+                    date: todayStr,
+                    time: "09:00",
+                    status: "asistio",
+                    soap: {
+                        subjective: "Refiere disminución del dolor de 7/10 a 3/10 en el hombro derecho al realizar flexión.",
+                        objective: "Flexión activa de hombro aumentó a 130 grados. Ligera crepitación sin resistencia.",
+                        assessment: "Excelente respuesta a la movilización articular y al fortalecimiento de manguito rotador.",
+                        plan: "Continuar con ejercicios de fortalecimiento y estiramiento en casa. Siguiente control en 3 días."
+                    }
+                },
+                {
+                    id: "cita_2",
+                    patient: "María Rodríguez",
+                    therapist: "Dr. Carlos Ruiz",
+                    date: todayStr,
+                    time: "11:30",
+                    status: "en-progreso",
+                    soap: {
+                        subjective: "Reporta cansancio leve al caminar tramos medianos, pero mejor capacidad pulmonar.",
+                        objective: "Saturación de oxígeno 97% en reposo. Espiometría muestra volumen corriente mejorado.",
+                        assessment: "Patrón respiratorio restrictivo con mejoría moderada y buena tolerancia al esfuerzo.",
+                        plan: "Aumentar ejercicios aeróbicos ligeros y continuar terapia de higiene bronquial."
+                    }
+                },
+                {
+                    id: "cita_3",
+                    patient: "Pedro Martínez",
+                    therapist: "Dra. Laura Gómez",
+                    date: todayStr,
+                    time: "15:00",
+                    status: "pendiente",
+                    notes: "Evaluación inicial de terapia física post-cirugía de rodilla."
+                },
+                {
+                    id: "cita_4",
+                    patient: "Ana López",
+                    therapist: "Dr. Carlos Ruiz",
+                    date: tomorrowStr,
+                    time: "10:00",
+                    status: "pendiente",
+                    notes: "Control de rutina."
+                }
+            ];
+            this.saveState(true);
+        }
+
+        // Cargar autorizaciones de prueba si el estado está vacío
+        if (!this.state.autorizaciones || this.state.autorizaciones.length === 0) {
+            this.state.autorizaciones = [
+                {
+                    id: "auth_1",
+                    code: "AUT-10001",
+                    patient: "Juan Pérez",
+                    therapist: "Dra. Laura Gómez",
+                    totalSessions: 10,
+                    expirationDate: "2026-12-31",
+                    notes: "Terapia física post-fractura."
+                },
+                {
+                    id: "auth_2",
+                    code: "AUT-20002",
+                    patient: "María Rodríguez",
+                    therapist: "Dr. Carlos Ruiz",
+                    totalSessions: 8,
+                    expirationDate: "2026-10-15",
+                    notes: "Terapia respiratoria crónica."
+                }
+            ];
+            this.saveState(true);
+        }
 
         // 3. SEEDING INTELIGENTE: Solo cargar de los archivos base si la app está vacía o es una versión con cambios estructurales
         const forceUpdate = localStorage.getItem('force_update_4625');
@@ -468,6 +572,8 @@ class AlarmApp {
                 this.state.poeSwitches = parsed.poeSwitches || [];
                 this.state.nvrs = parsed.nvrs || [];
                 this.state.users = parsed.users || [];
+                this.state.citas = parsed.citas || [];
+                this.state.autorizaciones = parsed.autorizaciones || [];
                 if (parsed.currentCentralId && this.state.centrales.find(c => c.id === parsed.currentCentralId)) {
                     this.state.currentCentralId = parsed.currentCentralId;
                 }
@@ -496,6 +602,8 @@ class AlarmApp {
             return merged;
         };
 
+        this.state.citas = mergeArray(this.state.citas || [], serverData.citas || []);
+        this.state.autorizaciones = mergeArray(this.state.autorizaciones || [], serverData.autorizaciones || []);
         this.state.centrales = mergeArray(this.state.centrales, serverData.centrales || []);
         this.state.devices = mergeArray(this.state.devices, serverData.devices || []);
         this.state.cameras = mergeArray(this.state.cameras, serverData.cameras || []);
@@ -550,7 +658,9 @@ class AlarmApp {
             poeSwitches: this.state.poeSwitches,
             nvrs: this.state.nvrs,
             users: this.state.users,
-            currentCentralId: this.state.currentCentralId
+            currentCentralId: this.state.currentCentralId,
+            citas: this.state.citas || [],
+            autorizaciones: this.state.autorizaciones || []
         };
         
         localStorage.setItem('alarma-lg-state', JSON.stringify(dataToSave));
@@ -581,6 +691,8 @@ class AlarmApp {
                 role: 'admin'
             }],
             currentCentralId: null,
+            citas: [],
+            autorizaciones: [],
             resetId: resetId // Sello Maestro
         };
 
@@ -655,6 +767,22 @@ class AlarmApp {
         // Modals
         document.querySelectorAll('.modal-close').forEach(btn => {
             btn.addEventListener('click', () => this.closeModals());
+        });
+
+        document.getElementById('cita-form')?.addEventListener('submit', (e) => this.handleCitaSubmit(e));
+        document.getElementById('cita-delete-btn')?.addEventListener('click', () => {
+            if (this.editingCitaId && confirm('¿Eliminar esta cita?')) {
+                this.deleteCita(this.editingCitaId);
+                this.closeModals();
+            }
+        });
+
+        document.getElementById('autorizacion-form')?.addEventListener('submit', (e) => this.handleAutorizacionSubmit(e));
+        document.getElementById('autorizacion-delete-btn')?.addEventListener('click', () => {
+            if (this.editingAutorizacionId && confirm('¿Eliminar esta autorización?')) {
+                this.deleteAutorizacion(this.editingAutorizacionId);
+                this.closeModals();
+            }
         });
 
         // Import
@@ -739,8 +867,16 @@ class AlarmApp {
     tryLocalFallback(username, password, originalError) {
         console.log('Iniciando verificación local...');
         
-        // Buscar en initial-data o en state.users cargado
-        const localUsers = (window.initialData ? window.initialData.users : []) || this.state.users || [];
+        // Buscar primero en los usuarios creados en el estado de la app, y luego en el initialData
+        const stateUsers = this.state.users || [];
+        const initialUsers = (window.initialData ? window.initialData.users : []) || [];
+        // Combinar prefiriendo usuarios del estado (BD local persistida) sobre los iniciales
+        const localUsers = [...stateUsers];
+        initialUsers.forEach(iu => {
+            if (!localUsers.some(lu => lu.username.toLowerCase() === iu.username.toLowerCase())) {
+                localUsers.push(iu);
+            }
+        });
         const foundUser = localUsers.find(u => u.username.toLowerCase() === username && u.password === password);
         
         if (foundUser || (username === 'admin' && password === '1105')) {
@@ -888,10 +1024,15 @@ class AlarmApp {
         document.getElementById('normativas-modal')?.classList.add('hidden');
         document.getElementById('maintenance-modal')?.classList.add('hidden');
         document.getElementById('cctv-modal')?.classList.add('hidden');
+        document.getElementById('cita-modal')?.classList.add('hidden');
+        document.getElementById('autorizacion-modal')?.classList.add('hidden');
+        document.getElementById('share-schedule-modal')?.classList.add('hidden');
         this.clearCameraPhoto();
         this.editingDeviceId = null;
         this.editingUserId = null;
         this.editingCctvId = null;
+        this.editingCitaId = null;
+        this.editingAutorizacionId = null;
     }
 
     // Mobile specific methods
@@ -952,6 +1093,8 @@ class AlarmApp {
 
         const details = document.getElementById('central-details');
         const cctvSection = document.getElementById('cctv-section');
+        const terapiasSection = document.getElementById('terapias-section');
+        const autorizacionesSection = document.getElementById('autorizaciones-section');
         const dashboardHeader = document.querySelector('.dashboard-header-main');
         const logoText = document.getElementById('mobile-logo-text');
         const logoIcon = document.getElementById('mobile-logo-icon');
@@ -971,6 +1114,8 @@ class AlarmApp {
         // Hide all sections first
         details.classList.add('hidden');
         cctvSection?.classList.add('hidden');
+        terapiasSection?.classList.add('hidden');
+        autorizacionesSection?.classList.add('hidden');
 
         if (tab === 'home') {
             if (this.state.currentCentralId) {
@@ -999,15 +1144,12 @@ class AlarmApp {
         } else if (tab === 'cctv') {
             cctvSection?.classList.remove('hidden');
             this.renderCCTVTab();
-        } else if (tab === 'messages') {
-            details.innerHTML = `
-                <div class="empty-tab">
-                    <div class="empty-icon">💬</div>
-                    <h2>Mensajes</h2>
-                    <p>No tienes mensajes nuevos en este momento.</p>
-                </div>
-            `;
-            details.classList.remove('hidden');
+        } else if (tab === 'terapias') {
+            terapiasSection?.classList.remove('hidden');
+            this.renderCalendar();
+        } else if (tab === 'autorizaciones') {
+            autorizacionesSection?.classList.remove('hidden');
+            this.renderAutorizaciones();
         }
     }
 
@@ -2736,6 +2878,130 @@ class AlarmApp {
         this._showPDF(doc, 'reporte_infraestructura_cctv.pdf');
     }
 
+    generateTherapyReport() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('l', 'mm', 'a4'); // Landscape format for tables with detailed text
+        
+        doc.setFontSize(18);
+        doc.text('Reporte General de Citas y Terapias', 14, 20);
+        doc.setFontSize(11);
+        doc.text(`Generado: ${new Date().toLocaleString()}`, 14, 28);
+
+        const appointments = this.state.citas || [];
+        
+        // Stats calculations
+        const stats = {
+            total: appointments.length,
+            asistio: appointments.filter(c => c.status === 'asistio' || c.status === 'asistió').length,
+            pendiente: appointments.filter(c => c.status === 'pendiente').length,
+            noAsistio: appointments.filter(c => c.status === 'no-asistio' || c.status === 'no-asistió').length,
+            enProgreso: appointments.filter(c => c.status === 'en-progreso').length,
+            cancelada: appointments.filter(c => c.status === 'cancelada').length
+        };
+
+        doc.setFontSize(10);
+        doc.text(`Total Citas: ${stats.total}  |  Asistió: ${stats.asistio}  |  Pendiente: ${stats.pendiente}  |  No Asistió: ${stats.noAsistio}  |  En Progreso: ${stats.enProgreso}  |  Cancelada: ${stats.cancelada}`, 14, 35);
+
+        // Sort appointments: date descending, time ascending
+        const sortedAppts = [...appointments].sort((a, b) => {
+            const dateComp = b.date.localeCompare(a.date);
+            if (dateComp !== 0) return dateComp;
+            return a.time.localeCompare(b.time);
+        });
+
+        const tableBody = sortedAppts.map(cita => {
+            let notesText = '--';
+            if (cita.soap && (cita.soap.subjective || cita.soap.objective || cita.soap.assessment || cita.soap.plan)) {
+                notesText = '';
+                if (cita.soap.subjective) notesText += `S: ${cita.soap.subjective}\n`;
+                if (cita.soap.objective) notesText += `O: ${cita.soap.objective}\n`;
+                if (cita.soap.assessment) notesText += `A: ${cita.soap.assessment}\n`;
+                if (cita.soap.plan) notesText += `P: ${cita.soap.plan}`;
+            } else if (cita.notes) {
+                notesText = cita.notes;
+            }
+
+            let statusLabel = (cita.status || '').toUpperCase();
+            if (statusLabel === 'ASISTIO') statusLabel = 'ASISTIÓ';
+            if (statusLabel === 'NO-ASISTIO') statusLabel = 'NO ASISTIÓ';
+
+            return [
+                this.formatDateDMY(cita.date),
+                cita.time,
+                cita.patient,
+                cita.therapist,
+                statusLabel,
+                notesText.trim()
+            ];
+        });
+
+        doc.autoTable({
+            head: [['Fecha', 'Hora', 'Paciente', 'Terapeuta', 'Estado', 'Notas / Evolución SOAP']],
+            body: tableBody,
+            startY: 40,
+            theme: 'striped',
+            styles: { fontSize: 9, cellPadding: 3 },
+            columnStyles: {
+                0: { cellWidth: 22 },
+                1: { cellWidth: 15 },
+                2: { cellWidth: 40 },
+                3: { cellWidth: 40 },
+                4: { cellWidth: 25 },
+                5: { cellWidth: 'auto' }
+            },
+            headStyles: { fillHtml: true, fillColor: [230, 0, 18] } // Clean red header color to match branding
+        });
+
+        this._showPDF(doc, 'reporte_citas_terapias.pdf');
+    }
+
+    generateAutorizacionesReport() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        
+        doc.setFontSize(18);
+        doc.text('Reporte de Autorizaciones Médicas', 14, 20);
+        doc.setFontSize(11);
+        doc.text(`Generado: ${new Date().toLocaleString()}`, 14, 28);
+
+        const autorizaciones = this.state.autorizaciones || [];
+        const appointments = this.state.citas || [];
+
+        const tableBody = autorizaciones.map(auth => {
+            const used = appointments.filter(c => c.authorizationId === auth.id && (c.status === 'asistio' || c.status === 'en-progreso')).length;
+            const pct = Math.round((used / auth.totalSessions) * 100);
+
+            const todayStr = new Date().toISOString().split('T')[0];
+            const isExpired = auth.expirationDate < todayStr;
+            const isExhausted = used >= auth.totalSessions;
+            
+            let statusLabel = 'ACTIVA';
+            if (isExpired) statusLabel = 'VENCIDA';
+            else if (isExhausted) statusLabel = 'AGOTADA';
+
+            return [
+                auth.code,
+                auth.patient,
+                auth.therapist,
+                `${used} / ${auth.totalSessions} (${pct}%)`,
+                this.formatDateDMY(auth.expirationDate),
+                statusLabel,
+                auth.notes || '--'
+            ];
+        });
+
+        doc.autoTable({
+            head: [['Código', 'Paciente', 'Terapeuta', 'Sesiones', 'Vence', 'Estado', 'Notas']],
+            body: tableBody,
+            startY: 35,
+            theme: 'striped',
+            styles: { fontSize: 9, cellPadding: 3 },
+            headStyles: { fillColor: [59, 130, 246] } // Blue header for authorizations
+        });
+
+        this._showPDF(doc, 'reporte_autorizaciones.pdf');
+    }
+
     debugState() {
         let report = `--- DIAGNÓSTICO DE DATOS ---\n`;
         report += `Proyecto Firebase: ${firebase.app().options.projectId}\n`;
@@ -2760,6 +3026,753 @@ class AlarmApp {
         
         alert(report);
         console.log("Estado Completo:", this.state);
+    }
+
+    // --- Lógica del Calendario de Terapias ---
+    prevMonth() {
+        this.state.calendarMonth--;
+        if (this.state.calendarMonth < 0) {
+            this.state.calendarMonth = 11;
+            this.state.calendarYear--;
+        }
+        this.renderCalendar();
+    }
+
+    nextMonth() {
+        this.state.calendarMonth++;
+        if (this.state.calendarMonth > 11) {
+            this.state.calendarMonth = 0;
+            this.state.calendarYear++;
+        }
+        this.renderCalendar();
+    }
+
+    renderCalendar() {
+        const titleEl = document.getElementById('calendar-month-title');
+        const cellsContainer = document.getElementById('calendar-cells');
+        if (!titleEl || !cellsContainer) return;
+
+        const months = [
+            "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+            "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+        ];
+        titleEl.innerText = `${months[this.state.calendarMonth]} ${this.state.calendarYear}`;
+
+        cellsContainer.innerHTML = '';
+
+        const year = this.state.calendarYear;
+        const month = this.state.calendarMonth;
+
+        const firstDayIndex = new Date(year, month, 1).getDay();
+        const prevLastDay = new Date(year, month, 0).getDate();
+        const lastDay = new Date(year, month + 1, 0).getDate();
+
+        // Rellenar días del mes anterior
+        for (let i = firstDayIndex; i > 0; i--) {
+            const dayNum = prevLastDay - i + 1;
+            const cell = document.createElement('div');
+            cell.className = 'calendar-cell other-month';
+            cell.innerHTML = `<span class="calendar-day-num">${dayNum}</span>`;
+            cellsContainer.appendChild(cell);
+        }
+
+        // Rellenar días del mes actual
+        const today = new Date();
+        const isCurrentMonth = today.getFullYear() === year && today.getMonth() === month;
+
+        for (let day = 1; day <= lastDay; day++) {
+            const cell = document.createElement('div');
+            cell.className = 'calendar-cell';
+            
+            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            
+            if (isCurrentMonth && today.getDate() === day) {
+                cell.classList.add('today');
+            }
+
+            // Filtrar citas del día
+            const dayCitas = (this.state.citas || []).filter(c => c.date === dateStr);
+
+            let apptsHtml = '';
+            dayCitas.forEach(cita => {
+                const statusClass = cita.status.toLowerCase().replace('ó', 'o').replace('á', 'a');
+                apptsHtml += `
+                    <div class="calendar-appt-badge ${statusClass}" title="${cita.time} - ${cita.patient} (${cita.therapist})">
+                        ${cita.time} - ${cita.patient}
+                    </div>
+                `;
+            });
+
+            cell.innerHTML = `
+                <span class="calendar-day-num">${day}</span>
+                <div class="calendar-day-appointments">
+                    ${apptsHtml}
+                </div>
+            `;
+
+            cell.addEventListener('click', () => this.selectDay(dateStr));
+            cellsContainer.appendChild(cell);
+        }
+
+        // Rellenar días del mes siguiente
+        const totalCells = cellsContainer.children.length;
+        const remainingCells = 42 - totalCells;
+        for (let i = 1; i <= remainingCells; i++) {
+            const cell = document.createElement('div');
+            cell.className = 'calendar-cell other-month';
+            cell.innerHTML = `<span class="calendar-day-num">${i}</span>`;
+            cellsContainer.appendChild(cell);
+        }
+
+        if (this.state.selectedDate) {
+            this.renderDayAppointments(this.state.selectedDate);
+        }
+    }
+
+    selectDay(dateStr) {
+        this.state.selectedDate = dateStr;
+        
+        const panel = document.getElementById('day-appointments-panel');
+        if (panel) {
+            panel.classList.remove('hidden');
+        }
+
+        const dateObj = new Date(dateStr + 'T00:00:00');
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        const formattedDate = dateObj.toLocaleDateString('es-ES', options);
+        
+        const titleEl = document.getElementById('selected-day-title');
+        if (titleEl) {
+            titleEl.innerText = `Citas: ${formattedDate}`;
+        }
+
+        this.renderDayAppointments(dateStr);
+    }
+
+    closeDayPanel() {
+        const panel = document.getElementById('day-appointments-panel');
+        if (panel) {
+            panel.classList.add('hidden');
+        }
+        this.state.selectedDate = null;
+    }
+
+    renderDayAppointments(dateStr) {
+        const listEl = document.getElementById('selected-day-list');
+        if (!listEl) return;
+
+        const dayCitas = (this.state.citas || []).filter(c => c.date === dateStr);
+
+        if (dayCitas.length === 0) {
+            listEl.innerHTML = `
+                <div style="text-align: center; padding: 20px; color: #888; width: 100%;">
+                    No hay citas programadas para este día.
+                </div>
+            `;
+            return;
+        }
+
+        dayCitas.sort((a, b) => a.time.localeCompare(b.time));
+
+        listEl.innerHTML = '';
+        dayCitas.forEach(cita => {
+            const card = document.createElement('div');
+            const statusClass = cita.status.toLowerCase().replace('ó', 'o').replace('á', 'a');
+            card.className = `device-card cita-card ${statusClass}`;
+            card.style.display = 'flex';
+            card.style.flexDirection = 'column';
+            card.style.padding = '15px';
+            card.style.borderRadius = '1rem';
+            card.style.background = 'white';
+            card.style.boxShadow = 'var(--shadow)';
+            card.style.border = '1px solid var(--hik-border)';
+            card.style.position = 'relative';
+
+            let soapHtml = '';
+            if (cita.soap && (cita.soap.subjective || cita.soap.objective || cita.soap.assessment || cita.soap.plan)) {
+                soapHtml = `
+                    <div class="soap-details">
+                        ${cita.soap.subjective ? `<div class="soap-block"><strong>Subjetivo (S):</strong><p>${cita.soap.subjective}</p></div>` : ''}
+                        ${cita.soap.objective ? `<div class="soap-block"><strong>Objetivo (O):</strong><p>${cita.soap.objective}</p></div>` : ''}
+                        ${cita.soap.assessment ? `<div class="soap-block"><strong>Análisis (A):</strong><p>${cita.soap.assessment}</p></div>` : ''}
+                        ${cita.soap.plan ? `<div class="soap-block"><strong>Plan (P):</strong><p>${cita.soap.plan}</p></div>` : ''}
+                    </div>
+                `;
+            } else if (cita.notes) {
+                soapHtml = `
+                    <div class="soap-details">
+                        <div class="soap-block">
+                            <strong>Notas Generales:</strong>
+                            <p>${cita.notes}</p>
+                        </div>
+                    </div>
+                `;
+            }
+
+            const isAdmin = this.state.user?.role === 'admin';
+            const actionButtons = isAdmin ? `
+                <div style="position: absolute; right: 10px; top: 10px;">
+                    <button class="icon-btn" onclick="app.openCitaModal(true, '${cita.id}')" style="margin-right: 5px;">✏️</button>
+                    <button class="icon-btn danger" onclick="if(confirm('¿Eliminar cita?')) { app.deleteCita('${cita.id}'); }">🗑️</button>
+                </div>
+            ` : '';
+
+            card.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%; margin-bottom: 8px;">
+                    <div>
+                        <span class="badge ${statusClass}" style="font-weight: 600; font-size: 0.75rem;">
+                            ${cita.status.toUpperCase()}
+                        </span>
+                        <h4 style="margin: 5px 0 2px 0; font-size: 1.1rem; font-weight: 700; color: var(--hik-text);">
+                            ${cita.patient}
+                        </h4>
+                        <div style="font-size: 0.85rem; color: var(--hik-text-muted);">
+                            👨‍⚕️ Terapeuta: <strong>${cita.therapist}</strong>
+                        </div>
+                        <div style="font-size: 0.85rem; color: var(--hik-text-muted); margin-top: 4px;">
+                            ⏰ Hora: <strong>${cita.time}</strong>
+                        </div>
+                    </div>
+                    ${actionButtons}
+                </div>
+
+                ${soapHtml}
+
+                <div class="quick-assistance-row">
+                    <button class="quick-assist-btn present" onclick="app.changeCitaStatus('${cita.id}', 'asistio')">Asistió ✔️</button>
+                    <button class="quick-assist-btn absent" onclick="app.changeCitaStatus('${cita.id}', 'no-asistio')">No Asistió ❌</button>
+                    <button class="quick-assist-btn progress" onclick="app.changeCitaStatus('${cita.id}', 'en-progreso')">En Progreso 🔄</button>
+                </div>
+                
+                <button class="primary-btn btn-sm" onclick="app.sharePatientSchedule('${cita.patient}')" style="background: #25D366; color: white; border-color: #25D366; width: 100%; margin-top: 10px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 6px; border-radius: 8px; cursor: pointer;">
+                    <span>💬</span> Enviar Citas (PDF)
+                </button>
+            `;
+            listEl.appendChild(card);
+        });
+    }
+
+    changeCitaStatus(id, newStatus) {
+        const cita = this.state.citas.find(c => c.id === id);
+        if (cita) {
+            cita.status = newStatus;
+            this.saveState();
+            this.renderCalendar();
+        }
+    }
+
+    openCitaModal(isEdit = false, citaId = null) {
+        const overlay = document.getElementById('modal-overlay');
+        const modal = document.getElementById('cita-modal');
+        const form = document.getElementById('cita-form');
+        const title = modal.querySelector('h2');
+        const deleteBtn = document.getElementById('cita-delete-btn');
+
+        title.innerText = isEdit ? 'Editar Cita' : 'Nueva Cita';
+        this.editingCitaId = citaId;
+
+        overlay.classList.remove('hidden');
+        modal.classList.remove('hidden');
+
+        // Poblar selector de autorizaciones
+        const authSelect = form.authorizationId;
+        if (authSelect) {
+            authSelect.innerHTML = '<option value="">-- Sin Autorización --</option>';
+            const authList = this.state.autorizaciones || [];
+            authList.forEach(auth => {
+                const appointments = this.state.citas || [];
+                const used = appointments.filter(c => c.authorizationId === auth.id && (c.status === 'asistio' || c.status === 'en-progreso')).length;
+                const isExpired = auth.expirationDate < new Date().toISOString().split('T')[0];
+                const isExhausted = used >= parseInt(auth.totalSessions);
+                
+                let label = `${auth.code} - ${auth.patient} (${used}/${auth.totalSessions})`;
+                if (isExpired) label += ' [VENCIDA]';
+                if (isExhausted) label += ' [AGOTADA]';
+                
+                const opt = document.createElement('option');
+                opt.value = auth.id;
+                opt.innerText = label;
+                
+                if (isEdit) {
+                    const currentCita = this.state.citas.find(c => c.id === citaId);
+                    if (currentCita && currentCita.authorizationId === auth.id) {
+                        opt.selected = true;
+                    }
+                }
+                
+                authSelect.appendChild(opt);
+            });
+        }
+
+        // Alternar visualización del bloque SOAP según estado
+        const toggleSoapFields = () => {
+            const status = form.status.value;
+            const soapContainer = document.getElementById('soap-fields-container');
+            const legacyNotesGroup = document.getElementById('legacy-notes-group');
+            if (status === 'asistio' || status === 'en-progreso') {
+                soapContainer?.classList.remove('hidden');
+                legacyNotesGroup?.classList.add('hidden');
+            } else {
+                soapContainer?.classList.add('hidden');
+                legacyNotesGroup?.classList.remove('hidden');
+            }
+        };
+
+        form.status.onchange = toggleSoapFields;
+
+        if (isEdit && citaId) {
+            const cita = this.state.citas.find(c => c.id === citaId);
+            form.patient.value = cita.patient;
+            form.therapist.value = cita.therapist;
+            form.date.value = cita.date;
+            form.time.value = cita.time;
+            form.status.value = cita.status;
+            form.notes.value = cita.notes || '';
+            
+            // Campos SOAP individuales
+            form.soap_subjective.value = cita.soap?.subjective || '';
+            form.soap_objective.value = cita.soap?.objective || '';
+            form.soap_assessment.value = cita.soap?.assessment || '';
+            form.soap_plan.value = cita.soap?.plan || '';
+            
+            toggleSoapFields();
+            if (deleteBtn) deleteBtn.classList.remove('hidden');
+        } else {
+            form.reset();
+            if (this.state.selectedDate) {
+                form.date.value = this.state.selectedDate;
+            } else {
+                form.date.value = new Date().toISOString().split('T')[0];
+            }
+            form.status.value = 'pendiente';
+            toggleSoapFields();
+            if (deleteBtn) deleteBtn.classList.add('hidden');
+        }
+    }
+
+    handleCitaSubmit(e) {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const status = formData.get('status');
+        const citaData = {
+            id: this.editingCitaId || Date.now().toString(),
+            authorizationId: formData.get('authorizationId') || null,
+            patient: formData.get('patient'),
+            therapist: formData.get('therapist'),
+            date: formData.get('date'),
+            time: formData.get('time'),
+            status: status,
+            notes: formData.get('notes'),
+            soap: (status === 'asistio' || status === 'en-progreso') ? {
+                subjective: formData.get('soap_subjective'),
+                objective: formData.get('soap_objective'),
+                assessment: formData.get('soap_assessment'),
+                plan: formData.get('soap_plan')
+            } : null
+        };
+
+        // Validaciones de Autorización
+        const authId = citaData.authorizationId;
+        if (authId && (status === 'asistio' || status === 'en-progreso')) {
+            const auth = this.state.autorizaciones.find(a => a.id === authId);
+            if (auth) {
+                const existingCount = (this.state.citas || []).filter(c => 
+                    c.authorizationId === authId && 
+                    c.id !== citaData.id && 
+                    (c.status === 'asistio' || c.status === 'en-progreso')
+                ).length;
+                
+                if (existingCount >= parseInt(auth.totalSessions)) {
+                    if (!confirm(`⚠️ Alerta: Esta autorización ya alcanzó o superará el límite de sesiones (${existingCount}/${auth.totalSessions}). ¿Desea guardarla de todos modos?`)) {
+                        return;
+                    }
+                }
+                
+                const citaDate = citaData.date;
+                if (auth.expirationDate && citaDate > auth.expirationDate) {
+                    const citaDateFormatted = this.formatDateDMY(citaDate);
+                    const authExpDateFormatted = this.formatDateDMY(auth.expirationDate);
+                    if (!confirm(`⚠️ Alerta: La fecha de la cita (${citaDateFormatted}) es posterior al vencimiento de la autorización (${authExpDateFormatted}). ¿Desea guardarla de todos modos?`)) {
+                        return;
+                    }
+                }
+            }
+        }
+
+        if (this.editingCitaId) {
+            const index = this.state.citas.findIndex(c => c.id === this.editingCitaId);
+            if (index !== -1) {
+                this.state.citas[index] = citaData;
+            }
+        } else {
+            if (!this.state.citas) this.state.citas = [];
+            this.state.citas.push(citaData);
+        }
+
+        this.saveState();
+        this.closeModals();
+        this.renderCalendar();
+    }
+
+    deleteCita(id) {
+        this.state.citas = this.state.citas.filter(c => c.id !== id);
+        this.saveState();
+        this.renderCalendar();
+    }
+
+    handleCitaAuthChange(authId) {
+        const form = document.getElementById('cita-form');
+        if (!form) return;
+        if (authId) {
+            const auth = this.state.autorizaciones.find(a => a.id === authId);
+            if (auth) {
+                form.patient.value = auth.patient;
+                form.therapist.value = auth.therapist;
+            }
+        } else {
+            form.patient.value = '';
+            form.therapist.value = '';
+        }
+    }
+
+    // --- Lógica de Autorizaciones ---
+    openAutorizacionModal(isEdit = false, authId = null) {
+        const overlay = document.getElementById('modal-overlay');
+        const modal = document.getElementById('autorizacion-modal');
+        const form = document.getElementById('autorizacion-form');
+        const title = document.getElementById('autorizacion-modal-title');
+        const deleteBtn = document.getElementById('autorizacion-delete-btn');
+
+        title.innerText = isEdit ? 'Editar Autorización' : 'Nueva Autorización';
+        this.editingAutorizacionId = authId;
+
+        overlay.classList.remove('hidden');
+        modal.classList.remove('hidden');
+
+        if (isEdit && authId) {
+            const auth = this.state.autorizaciones.find(a => a.id === authId);
+            if (auth) {
+                form.code.value = auth.code;
+                form.patient.value = auth.patient;
+                form.therapist.value = auth.therapist;
+                form.totalSessions.value = auth.totalSessions;
+                form.expirationDate.value = auth.expirationDate;
+                form.notes.value = auth.notes || '';
+            }
+            if (deleteBtn) deleteBtn.classList.remove('hidden');
+        } else {
+            form.reset();
+            form.expirationDate.value = new Date(new Date().getFullYear(), 11, 31).toISOString().split('T')[0];
+            if (deleteBtn) deleteBtn.classList.add('hidden');
+        }
+    }
+
+    handleAutorizacionSubmit(e) {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const authData = {
+            id: this.editingAutorizacionId || 'auth_' + Date.now().toString(),
+            code: formData.get('code'),
+            patient: formData.get('patient'),
+            therapist: formData.get('therapist'),
+            totalSessions: parseInt(formData.get('totalSessions')),
+            expirationDate: formData.get('expirationDate'),
+            notes: formData.get('notes')
+        };
+
+        if (!this.state.autorizaciones) this.state.autorizaciones = [];
+
+        if (this.editingAutorizacionId) {
+            const index = this.state.autorizaciones.findIndex(a => a.id === this.editingAutorizacionId);
+            if (index !== -1) {
+                this.state.autorizaciones[index] = authData;
+            }
+        } else {
+            this.state.autorizaciones.push(authData);
+        }
+
+        this.saveState();
+        this.closeModals();
+        this.renderAutorizaciones();
+    }
+
+    deleteAutorizacion(id) {
+        this.state.autorizaciones = this.state.autorizaciones.filter(a => a.id !== id);
+        if (this.state.citas) {
+            this.state.citas.forEach(cita => {
+                if (cita.authorizationId === id) {
+                    cita.authorizationId = null;
+                }
+            });
+        }
+        this.saveState();
+        this.renderAutorizaciones();
+    }
+
+    renderAutorizaciones() {
+        const grid = document.getElementById('autorizaciones-grid');
+        if (!grid) return;
+
+        const filterQuery = (document.getElementById('auth-search')?.value || '').toLowerCase();
+        
+        let filtered = this.state.autorizaciones || [];
+        if (filterQuery) {
+            filtered = filtered.filter(a => 
+                a.code.toLowerCase().includes(filterQuery) || 
+                a.patient.toLowerCase().includes(filterQuery) || 
+                a.therapist.toLowerCase().includes(filterQuery)
+            );
+        }
+
+        if (filtered.length === 0) {
+            grid.innerHTML = `
+                <div style="text-align: center; padding: 40px; color: #888; grid-column: 1 / -1; width: 100%;">
+                    No se encontraron autorizaciones registradas.
+                </div>
+            `;
+            return;
+        }
+
+        grid.innerHTML = '';
+        filtered.forEach(auth => {
+            const appointments = this.state.citas || [];
+            const used = appointments.filter(c => c.authorizationId === auth.id && (c.status === 'asistio' || c.status === 'en-progreso')).length;
+            
+            const todayStr = new Date().toISOString().split('T')[0];
+            const isExpired = auth.expirationDate < todayStr;
+            const isExhausted = used >= auth.totalSessions;
+            
+            let status = 'activa';
+            let statusLabel = 'Activa';
+            if (isExpired) {
+                status = 'vencida';
+                statusLabel = 'Vencida';
+            } else if (isExhausted) {
+                status = 'agotada';
+                statusLabel = 'Agotada';
+            }
+
+            const card = document.createElement('div');
+            card.className = `device-card auth-card ${status}`;
+            card.style.display = 'flex';
+            card.style.flexDirection = 'column';
+            card.style.padding = '20px';
+            card.style.borderRadius = '1.5rem';
+            card.style.background = 'white';
+            card.style.boxShadow = 'var(--shadow)';
+            card.style.position = 'relative';
+
+            const pct = Math.min(100, Math.round((used / auth.totalSessions) * 100));
+            let progClass = '';
+            if (pct >= 90) progClass = 'danger';
+            else if (pct >= 70) progClass = 'warning';
+
+            const isAdmin = this.state.user?.role === 'admin';
+            const actionButtons = isAdmin ? `
+                <div style="position: absolute; right: 15px; top: 15px;">
+                    <button class="icon-btn" onclick="app.openAutorizacionModal(true, '${auth.id}')" style="margin-right: 5px;">✏️</button>
+                    <button class="icon-btn danger" onclick="if(confirm('¿Eliminar autorización?')) { app.deleteAutorizacion('${auth.id}'); }">🗑️</button>
+                </div>
+            ` : '';
+
+            card.innerHTML = `
+                <div style="margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                    <span class="badge ${status}" style="font-weight: bold; font-size: 0.75rem;">
+                        ${statusLabel.toUpperCase()}
+                    </span>
+                    ${actionButtons}
+                </div>
+                
+                <h4 style="margin: 0 0 8px 0; font-size: 1.25rem; font-weight: 700; color: var(--hik-text);">
+                    ${auth.code}
+                </h4>
+                
+                <div style="font-size: 0.9rem; color: var(--hik-text); margin-bottom: 5px;">
+                    👤 Paciente: <strong>${auth.patient}</strong>
+                </div>
+                
+                <div style="font-size: 0.9rem; color: var(--hik-text); margin-bottom: 5px;">
+                    👨‍⚕️ Terapeuta: <strong>${auth.therapist}</strong>
+                </div>
+                
+                <div style="font-size: 0.85rem; color: var(--hik-text-muted); margin-bottom: 15px;">
+                    📅 Vence: <strong>${this.formatDateDMY(auth.expirationDate)}</strong>
+                </div>
+
+                ${auth.notes ? `
+                <div style="font-size: 0.8rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px; margin-bottom: 15px; color: #475569;">
+                    <strong>Notas:</strong> ${auth.notes}
+                </div>
+                ` : ''}
+
+                <div class="session-progress-container">
+                    <div class="session-progress-label">
+                        <span>Progreso de Sesiones:</span>
+                        <span>${used} / ${auth.totalSessions}</span>
+                    </div>
+                    <div class="session-progress-bar">
+                        <div class="session-progress-fill ${progClass}" style="width: ${pct}%"></div>
+                    </div>
+                </div>
+
+                <button class="primary-btn btn-sm" onclick="app.sharePatientSchedule('${auth.patient}')" style="background: #25D366; color: white; border-color: #25D366; width: 100%; margin-top: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 6px; border-radius: 8px; cursor: pointer;">
+                    <span>💬</span> Enviar Citas (PDF)
+                </button>
+            `;
+            grid.appendChild(card);
+    openShareScheduleModal() {
+        const overlay = document.getElementById('modal-overlay');
+        const modal = document.getElementById('share-schedule-modal');
+        const select = document.getElementById('share-schedule-patient');
+        if (!overlay || !modal || !select) return;
+
+        // Get unique patients
+        const patientsSet = new Set();
+        (this.state.citas || []).forEach(c => {
+            if (c.patient) patientsSet.add(c.patient.trim());
+        });
+        (this.state.autorizaciones || []).forEach(a => {
+            if (a.patient) patientsSet.add(a.patient.trim());
+        });
+
+        const sortedPatients = Array.from(patientsSet).sort((a, b) => a.localeCompare(b));
+
+        select.innerHTML = '<option value="">-- Seleccione un paciente --</option>';
+        sortedPatients.forEach(patient => {
+            const opt = document.createElement('option');
+            opt.value = patient;
+            opt.innerText = patient;
+            select.appendChild(opt);
+        });
+
+        overlay.classList.remove('hidden');
+        modal.classList.remove('hidden');
+    }
+
+    closeShareScheduleModal() {
+        this.closeModals();
+    }
+
+    handleShareScheduleSubmit() {
+        const select = document.getElementById('share-schedule-patient');
+        const patientName = select?.value;
+        if (!patientName) {
+            alert('Por favor seleccione un paciente.');
+            return;
+        }
+        this.closeShareScheduleModal();
+        this.sharePatientSchedule(patientName);
+    }
+
+    async sharePatientSchedule(patientName) {
+        if (!patientName) return;
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+
+        // Filter and sort appointments
+        const patientCitas = (this.state.citas || []).filter(c => 
+            c.patient && c.patient.toLowerCase().trim() === patientName.toLowerCase().trim()
+        );
+
+        if (patientCitas.length === 0) {
+            alert(`No se encontraron citas programadas para el paciente: ${patientName}`);
+            return;
+        }
+
+        const sortedAppts = [...patientCitas].sort((a, b) => {
+            const dateComp = a.date.localeCompare(b.date);
+            if (dateComp !== 0) return dateComp;
+            return a.time.localeCompare(b.time);
+        });
+
+        // PDF Styling & Header
+        doc.setFontSize(18);
+        doc.setFont(undefined, 'bold');
+        doc.setTextColor(230, 0, 18); // Accent red
+        doc.text('Cronograma de Citas de Terapia', 14, 20);
+
+        doc.setFontSize(11);
+        doc.setFont(undefined, 'normal');
+        doc.setTextColor(0, 0, 0);
+        doc.text(`Paciente: ${patientName}`, 14, 28);
+        doc.text(`Generado: ${new Date().toLocaleString()}`, 14, 34);
+
+        // Stats
+        const stats = {
+            total: sortedAppts.length,
+            pendiente: sortedAppts.filter(c => c.status === 'pendiente').length,
+            asistio: sortedAppts.filter(c => c.status === 'asistio' || c.status === 'asistió').length,
+            noAsistio: sortedAppts.filter(c => c.status === 'no-asistio' || c.status === 'no-asistió').length,
+            enProgreso: sortedAppts.filter(c => c.status === 'en-progreso').length,
+            cancelada: sortedAppts.filter(c => c.status === 'cancelada').length
+        };
+        doc.text(`Total Citas: ${stats.total}  |  Pendientes: ${stats.pendiente}  |  Asistidas: ${stats.asistio}  |  Canceladas: ${stats.cancelada}`, 14, 42);
+
+        const tableBody = sortedAppts.map(cita => {
+            let notesText = '--';
+            if (cita.soap && (cita.soap.subjective || cita.soap.objective || cita.soap.assessment || cita.soap.plan)) {
+                notesText = '';
+                if (cita.soap.subjective) notesText += `S: ${cita.soap.subjective}\n`;
+                if (cita.soap.objective) notesText += `O: ${cita.soap.objective}\n`;
+                if (cita.soap.assessment) notesText += `A: ${cita.soap.assessment}\n`;
+                if (cita.soap.plan) notesText += `P: ${cita.soap.plan}`;
+            } else if (cita.notes) {
+                notesText = cita.notes;
+            }
+
+            let statusLabel = (cita.status || '').toUpperCase();
+            if (statusLabel === 'ASISTIO') statusLabel = 'ASISTIÓ';
+            if (statusLabel === 'NO-ASISTIO') statusLabel = 'NO ASISTIÓ';
+
+            return [
+                this.formatDateDMY(cita.date),
+                cita.time,
+                cita.therapist,
+                statusLabel,
+                notesText.trim()
+            ];
+        });
+
+        doc.autoTable({
+            head: [['Fecha', 'Hora', 'Terapeuta', 'Estado', 'Notas / Evolución']],
+            body: tableBody,
+            startY: 48,
+            theme: 'striped',
+            styles: { fontSize: 9, cellPadding: 3 },
+            headStyles: { fillColor: [230, 0, 18] } // Red header
+        });
+
+        const filename = `programacion_citas_${patientName.replace(/\s+/g, '_')}.pdf`;
+
+        // Check if Web Share API with files is supported
+        const pdfBlob = doc.output('blob');
+        const pdfFile = new File([pdfBlob], filename, { type: 'application/pdf' });
+
+        if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
+            try {
+                await navigator.share({
+                    files: [pdfFile],
+                    title: `Citas de ${patientName}`,
+                    text: `Hola ${patientName}, adjunto el cronograma completo de tus citas de terapia.`
+                });
+            } catch (err) {
+                if (err.name !== 'AbortError') {
+                    console.error('Error al compartir:', err);
+                    doc.save(filename);
+                    this._fallbackWhatsApp(patientName);
+                }
+            }
+        } else {
+            // Fallback: download PDF and open WhatsApp Web/App
+            doc.save(filename);
+            this._fallbackWhatsApp(patientName);
+        }
+    }
+
+    _fallbackWhatsApp(patientName) {
+        const text = `Hola ${patientName}, te comparto el cronograma de tus citas de terapia. Ya se ha descargado el archivo PDF en tu dispositivo para que puedas abrirlo o adjuntarlo.`;
+        const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+        window.open(url, '_blank');
     }
 }
 // Inicializar

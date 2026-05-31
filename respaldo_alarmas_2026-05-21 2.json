@@ -3158,22 +3158,16 @@
       "password": "h1m4g04",
       "role": "user",
       "username": "hilda"
-    },
-    {
-      "id": "secretary_initial",
-      "password": "1234",
-      "role": "secretary",
-      "username": "secre"
     }
   ],
-  "currentCentralId": "1774831181535",
+  "currentCentralId": "1777929448673",
   "centralSearch": "",
   "deviceSearch": "",
   "reorderMode": false,
-  "currentTab": "home",
+  "currentTab": "me",
   "previousTab": "home",
-  "firebaseStatus": "⏳ Verificando...",
+  "firebaseStatus": "Estado: <span style=\"color: #10b981; font-weight: bold;\">✅ Conectado y Sincronizado</span>",
   "firebaseConn": "Conexión: <span style=\"color: #10b981;\">🟢 Online</span>",
-  "lastSync": "--",
+  "lastSync": "5:53:24 p.m.",
   "firebaseConnected": true
 }

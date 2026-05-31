@@ -113,10 +113,14 @@
                         <button onclick="app.generateSpecificReport()">Central Actual</button>
                         <button onclick="app.generateIpReport()">Reporte de IPs</button>
                         <button onclick="app.generateCctvReport()">Reporte CCTV</button>
+                        <button onclick="app.generateTherapyReport()">Reporte de Terapias 📅</button>
+                        <button onclick="app.generateAutorizacionesReport()">Reporte de Autorizaciones 📋</button>
                     </div>
                 </div>
                 <button class="secondary-btn" style="background: #333; color: white;" onclick="app.debugState()">Diagnóstico 🛠️</button>
                 <button class="secondary-btn" onclick="app.switchTab('cctv')">CCTV 📹</button>
+                <button class="secondary-btn" onclick="app.switchTab('terapias')">Terapias 📅</button>
+                <button class="secondary-btn" onclick="app.switchTab('autorizaciones')">Autorizaciones 📋</button>
                 <button class="secondary-btn admin-only" style="background: #fee2e2; color: #dc2626; border-color: #fecaca;" onclick="app.forceMasterSync()">SINCRO MAESTRA 🚀</button>
                 <button id="logout-btn-header" class="secondary-btn">Salir 🔒</button>
             </div>
@@ -262,6 +266,70 @@
                     </div>
                 </div>
             </section>
+
+            <section id="terapias-section" class="details-section hidden">
+                <div class="calendar-wrapper glass">
+                    <div class="calendar-header">
+                        <div class="calendar-title-nav">
+                            <button class="secondary-btn btn-sm" onclick="app.prevMonth()">◀</button>
+                            <h3 id="calendar-month-title">Mayo 2026</h3>
+                            <button class="secondary-btn btn-sm" onclick="app.nextMonth()">▶</button>
+                        </div>
+                        <div class="calendar-actions">
+                            <button class="secondary-btn btn-sm" onclick="app.openShareScheduleModal()" style="margin-right: 8px;">Compartir Citas 💬</button>
+                            <button class="primary-btn btn-sm" onclick="app.openCitaModal()">+ Nueva Cita</button>
+                        </div>
+                    </div>
+                    <div class="calendar-weekdays">
+                        <div>Dom</div>
+                        <div>Lun</div>
+                        <div>Mar</div>
+                        <div>Mié</div>
+                        <div>Jue</div>
+                        <div>Vie</div>
+                        <div>Sáb</div>
+                    </div>
+                    <div id="calendar-cells" class="calendar-grid-cells">
+                        <!-- Dinámico -->
+                    </div>
+                </div>
+
+                <!-- Detalle de citas del día seleccionado -->
+                <div id="day-appointments-panel" class="glass-card hidden" style="margin-top: 20px; padding: 20px;">
+                    <div class="flex-row" style="align-items: center; justify-content: space-between;">
+                        <h3 id="selected-day-title" style="margin: 0;">Citas del día</h3>
+                        <button class="secondary-btn btn-sm" onclick="app.closeDayPanel()">Cerrar</button>
+                    </div>
+                    <div id="selected-day-list" class="devices-grid" style="margin-top: 15px; display: grid; gap: 15px;">
+                        <!-- Dinámico -->
+                    </div>
+                </div>
+            </section>
+
+            <section id="autorizaciones-section" class="details-section hidden">
+                <div class="cctv-header glass">
+                    <div class="flex-row">
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <button class="secondary-btn btn-sm" onclick="app.switchTab('home')">⬅ Volver</button>
+                            <h2 style="margin: 0;">Gestión de Autorizaciones</h2>
+                        </div>
+                        <div class="cctv-actions admin-only">
+                            <button class="primary-btn btn-sm" onclick="app.openAutorizacionModal()">+ Nueva Autorización</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="devices-header" style="margin-top: 20px;">
+                    <div class="flex-row gap-m">
+                        <h3>Autorizaciones Registradas</h3>
+                        <div class="search-box glass-mini">
+                            <input type="text" id="auth-search" placeholder="🔍 Filtrar autorizaciones..." oninput="app.renderAutorizaciones()">
+                        </div>
+                    </div>
+                </div>
+                <div id="autorizaciones-grid" class="devices-grid">
+                    <!-- Dinámico -->
+                </div>
+            </section>
         </main>
 
         <!-- Navegación Inferior (Móvil) -->
@@ -278,9 +346,13 @@
                 <span class="nav-icon">📹</span>
                 <span>CCTV</span>
             </div>
-            <div class="nav-item" data-tab="messages" onclick="app.switchTab('messages')">
-                <span class="nav-icon">💬</span>
-                <span>Mensajes</span>
+            <div class="nav-item" data-tab="terapias" onclick="app.switchTab('terapias')">
+                <span class="nav-icon">📅</span>
+                <span>Terapias</span>
+            </div>
+            <div class="nav-item" data-tab="autorizaciones" onclick="app.switchTab('autorizaciones')">
+                <span class="nav-icon">📋</span>
+                <span>Autorizaciones</span>
             </div>
             <div class="nav-item" data-tab="service" onclick="app.switchTab('service')">
                 <span class="nav-icon">🛠️</span>
@@ -331,6 +403,9 @@
                 <div class="input-group">
                     <label>Contraseña</label>
                     <input type="password" name="password" required>
+                    <span style="font-size: 0.75rem; color: #888; display: block; margin-top: 5px; line-height: 1.3;">
+                        💡 <em>Nota: Cambiar la contraseña actualizará la base de datos local. Las credenciales en la nube se asignan al crear nuevos usuarios.</em>
+                    </span>
                 </div>
                 <div class="input-group">
                     <label>Rol</label>
@@ -519,6 +594,128 @@
                     <button type="button" class="secondary-btn danger hidden" id="cctv-delete-btn">Borrar</button>
                     <button type="button" class="secondary-btn modal-close">Cancelar</button>
                     <button type="submit" class="primary-btn">Guardar</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Cita Modal -->
+        <div class="modal glass hidden" id="cita-modal">
+            <h2 id="cita-modal-title">Nueva Cita de Terapia</h2>
+            <form id="cita-form">
+                <div class="input-group">
+                    <label>Vincular a Autorización (Opcional)</label>
+                    <select name="authorizationId" onchange="app.handleCitaAuthChange(this.value)">
+                        <option value="">-- Sin Autorización --</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Paciente</label>
+                    <input type="text" name="patient" required placeholder="Nombre del paciente">
+                </div>
+                <div class="input-group">
+                    <label>Terapeuta</label>
+                    <input type="text" name="therapist" required placeholder="Nombre del terapeuta">
+                </div>
+                <div class="input-group">
+                    <label>Fecha</label>
+                    <input type="date" name="date" required>
+                </div>
+                <div class="input-group">
+                    <label>Hora</label>
+                    <input type="time" name="time" required>
+                </div>
+                <div class="input-group">
+                    <label>Estado</label>
+                    <select name="status" required>
+                        <option value="pendiente">Pendiente</option>
+                        <option value="asistio">Asistió</option>
+                        <option value="no-asistio">No Asistió</option>
+                        <option value="en-progreso">En Progreso</option>
+                        <option value="cancelada">Cancelada</option>
+                    </select>
+                </div>
+                <!-- Contenedor dinámico de Notas SOAP -->
+                <div id="soap-fields-container" class="hidden">
+                    <h3 style="font-size: 0.95rem; margin: 15px 0 10px 0; color: var(--hik-red); border-bottom: 1px dashed var(--hik-border); padding-bottom: 5px;">🩺 Notas de Evolución SOAP</h3>
+                    <div class="input-group">
+                        <label>Subjetivo (S) - Refiere el Paciente</label>
+                        <textarea name="soap_subjective" placeholder="Ej: Refiere dolor leve en hombro, mejoría en el descanso..."></textarea>
+                    </div>
+                    <div class="input-group">
+                        <label>Objetivo (O) - Hallazgos Clínicos y Observaciones</label>
+                        <textarea name="soap_objective" placeholder="Ej: Rango de movimiento flexión 120°, fuerza 4/5..."></textarea>
+                    </div>
+                    <div class="input-group">
+                        <label>Análisis (A) - Evolución y Progreso</label>
+                        <textarea name="soap_assessment" placeholder="Ej: Buena respuesta a los ejercicios de estiramiento pasivo..."></textarea>
+                    </div>
+                    <div class="input-group">
+                        <label>Plan (P) - Siguientes Pasos y Tareas</label>
+                        <textarea name="soap_plan" placeholder="Ej: Continuar 3 veces por semana, ejercicios en casa..."></textarea>
+                    </div>
+                </div>
+                <!-- Notas generales de respaldo/compatibilidad -->
+                <div class="input-group" id="legacy-notes-group">
+                    <label>Notas Generales (Opcional)</label>
+                    <textarea name="notes" placeholder="Detalles o anotaciones generales..."></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="secondary-btn danger hidden" id="cita-delete-btn">Borrar Cita</button>
+                    <button type="button" class="secondary-btn modal-close">Cancelar</button>
+                    <button type="submit" class="primary-btn">Guardar</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Autorizacion Modal -->
+        <div class="modal glass hidden" id="autorizacion-modal">
+            <h2 id="autorizacion-modal-title">Nueva Autorización</h2>
+            <form id="autorizacion-form">
+                <div class="input-group">
+                    <label>Código de Autorización</label>
+                    <input type="text" name="code" required placeholder="Ej: AUT-10293">
+                </div>
+                <div class="input-group">
+                    <label>Paciente</label>
+                    <input type="text" name="patient" required placeholder="Nombre del paciente">
+                </div>
+                <div class="input-group">
+                    <label>Terapeuta</label>
+                    <input type="text" name="therapist" required placeholder="Nombre del terapeuta">
+                </div>
+                <div class="input-group">
+                    <label>Sesiones Autorizadas</label>
+                    <input type="number" name="totalSessions" min="1" required placeholder="Ej: 10">
+                </div>
+                <div class="input-group">
+                    <label>Fecha de Vencimiento</label>
+                    <input type="date" name="expirationDate" required>
+                </div>
+                <div class="input-group">
+                    <label>Notas / Diagnóstico (Opcional)</label>
+                    <textarea name="notes" placeholder="Detalles médicos o notas..."></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="secondary-btn danger hidden" id="autorizacion-delete-btn">Borrar</button>
+                    <button type="button" class="secondary-btn modal-close">Cancelar</button>
+                    <button type="submit" class="primary-btn">Guardar</button>
+                </div>
+            </form>
+        </div>
+        
+        <!-- Compartir Citas Modal -->
+        <div class="modal glass hidden" id="share-schedule-modal">
+            <h2>Compartir Programación de Citas</h2>
+            <form id="share-schedule-form" onsubmit="event.preventDefault(); app.handleShareScheduleSubmit();">
+                <div class="input-group">
+                    <label>Seleccionar Paciente</label>
+                    <select id="share-schedule-patient" name="patient" required>
+                        <option value="">-- Seleccione un paciente --</option>
+                    </select>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="secondary-btn" onclick="app.closeShareScheduleModal()">Cancelar</button>
+                    <button type="submit" class="primary-btn" style="background: #25D366; border-color: #25D366;">Enviar por WhatsApp 💬</button>
                 </div>
             </form>
         </div>
