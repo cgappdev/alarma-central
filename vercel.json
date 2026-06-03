@@ -2,6 +2,18 @@
   "version": 2,
   "name": "alarma-central",
   "cleanUrls": true,
+  "redirects": [
+    {
+      "source": "/terapias",
+      "destination": "/terapias/dist/",
+      "permanent": true
+    },
+    {
+      "source": "/terapias/",
+      "destination": "/terapias/dist/",
+      "permanent": true
+    }
+  ],
   "headers": [
     {
       "source": "/sw.js",
