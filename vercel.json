@@ -37,6 +37,14 @@
   ],
   "rewrites": [
     {
+      "source": "/terapias",
+      "destination": "/terapias/dist/index.html"
+    },
+    {
+      "source": "/terapias/(.*)",
+      "destination": "/terapias/dist/$1"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

@@ -1631,6 +1631,7 @@ class AlarmApp {
             head: [['Nombre', 'Ubicación', 'Piso', 'IP', 'Rack', 'Batería']],
             body: tableData,
             startY: 75,
+            styles: { halign: 'center' },
             headStyles: { fillColor: [230, 0, 18], textColor: [255, 255, 255], fontStyle: 'bold' },
             alternateRowStyles: { fillColor: [245, 245, 245] },
             margin: { top: 75 }
@@ -1666,7 +1667,7 @@ class AlarmApp {
             body: tableData,
             startY: 50,
             headStyles: { fillColor: [51, 51, 51], textColor: [255, 255, 255] },
-            styles: { fontSize: 10 },
+            styles: { fontSize: 10, halign: 'center' },
             columnStyles: {
                 3: { fontStyle: 'bold', textColor: [230, 0, 18] } // IP en rojo para destacar
             }
@@ -1737,6 +1738,7 @@ class AlarmApp {
             head: [['Tipo', 'Ubicación', 'Piso', 'Batería', 'F. Instalación']],
             body: tableData,
             startY: startY + 15,
+            styles: { halign: 'center' },
             headStyles: { fillColor: [230, 0, 18] },
             columnStyles: {
                 3: { fontStyle: 'bold' }
@@ -2854,6 +2856,7 @@ class AlarmApp {
                 head: [['Nombre', 'IP', 'Piso', 'Conexión Rack', 'Puertos']],
                 body: switchData,
                 startY: currentY + 5,
+                styles: { halign: 'center' },
                 theme: 'striped'
             });
             currentY = doc.lastAutoTable.finalY + 10;
@@ -2871,6 +2874,7 @@ class AlarmApp {
                 head: [['Nombre', 'IP', 'Piso', 'Conexión Rack', 'Canales', 'Disco']],
                 body: nvrData,
                 startY: currentY + 5,
+                styles: { halign: 'center' },
                 theme: 'striped'
             });
         }
@@ -2940,7 +2944,7 @@ class AlarmApp {
             body: tableBody,
             startY: 40,
             theme: 'striped',
-            styles: { fontSize: 9, cellPadding: 3 },
+            styles: { fontSize: 9, cellPadding: 3, halign: 'center' },
             columnStyles: {
                 0: { cellWidth: 22 },
                 1: { cellWidth: 15 },
@@ -2995,7 +2999,7 @@ class AlarmApp {
             body: tableBody,
             startY: 35,
             theme: 'striped',
-            styles: { fontSize: 9, cellPadding: 3 },
+            styles: { fontSize: 9, cellPadding: 3, halign: 'center' },
             headStyles: { fillColor: [59, 130, 246] } // Blue header for authorizations
         });
 
@@ -3738,7 +3742,7 @@ class AlarmApp {
             body: tableBody,
             startY: 48,
             theme: 'striped',
-            styles: { fontSize: 9, cellPadding: 3 },
+            styles: { fontSize: 9, cellPadding: 3, halign: 'center' },
             headStyles: { fillColor: [230, 0, 18] } // Red header
         });
 

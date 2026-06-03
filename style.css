@@ -1004,7 +1004,7 @@ input[type="number"]::-webkit-outer-spin-button {
 
 .user-list-container { margin: 1.5rem 0; max-height: 300px; overflow-y: auto; flex: 1; }
 .user-table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-.user-table th, .user-table td { padding: 1rem; text-align: left; border-bottom: 1px solid var(--glass-border); }
+.user-table th, .user-table td { padding: 1rem; text-align: center; border-bottom: 1px solid var(--glass-border); }
 .user-table th { color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; }
 .divider { height: 1px; background: var(--hik-border); margin: 0.5rem 0; }
 
@@ -3116,3 +3116,9 @@ input[type="number"]::-webkit-outer-spin-button {
 .session-progress-fill.danger {
     background: #ef4444;
 }
+
+/* Center all table headers and cells by default */
+table th, table td {
+    text-align: center !important;
+}
+
