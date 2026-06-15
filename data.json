@@ -3149,13 +3149,13 @@
   "users": [
     {
       "id": "admin_initial",
-      "password": "1105",
+      "password": "110500",
       "role": "admin",
       "username": "admin"
     },
     {
       "id": "1777045845052",
-      "password": "h1m4g04",
+      "password": "110600",
       "role": "user",
       "username": "hilda"
     },

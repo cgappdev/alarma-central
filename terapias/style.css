@@ -9,6 +9,7 @@
   --bg-sidebar: #0f172a;
   --bg-sidebar-hover: #1e293b;
   --bg-card: #ffffff;
+  --bg-card-gradient: #f0f7ff;
   --bg-input: #f1f5f9;
   
   --text-primary: #0f172a;
@@ -17,9 +18,9 @@
   --text-sidebar: #94a3b8;
   --text-sidebar-active: #ffffff;
   
-  --primary: #0d9488;
-  --primary-hover: #0f766e;
-  --primary-light: #ccfbf1;
+  --primary: #4a90e2;
+  --primary-hover: #357abd;
+  --primary-light: #e6f0fa;
   
   --accent-purple: #6366f1;
   --accent-purple-light: #e0e7ff;
@@ -48,7 +49,7 @@
   --transition-normal: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   --glass-bg: rgba(255, 255, 255, 0.75);
   --glass-border: rgba(255, 255, 255, 0.4);
-  --glass-shadow: 0 8px 32px 0 rgba(13, 148, 136, 0.1);
+  --glass-shadow: 0 8px 32px 0 rgba(74, 144, 226, 0.1);
 }
 
 /* Dark Mode Variables Override */
@@ -58,6 +59,7 @@
   --bg-sidebar: #070b14;
   --bg-sidebar-hover: #131c2e;
   --bg-card: #131c2e;
+  --bg-card-gradient: #121e36;
   --bg-input: #1e293b;
   
   --text-primary: #f8fafc;
@@ -66,9 +68,9 @@
   --text-sidebar: #64748b;
   --text-sidebar-active: #f8fafc;
   
-  --primary: #14b8a6;
-  --primary-hover: #2dd4bf;
-  --primary-light: #042f2e;
+  --primary: #6bb5ff;
+  --primary-hover: #93c9ff;
+  --primary-light: #162d4a;
   
   --accent-purple: #818cf8;
   --accent-purple-light: #1e1b4b;
@@ -232,9 +234,9 @@ body {
   align-items: center;
   gap: 0.75rem;
   padding: 0.75rem 1rem;
-  background-color: var(--bg-sidebar-hover);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  color: #ffffff;
+  background-color: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--text-sidebar);
   border-radius: var(--border-radius-md);
   cursor: pointer;
   font-family: var(--font-primary);
@@ -245,7 +247,8 @@ body {
 
 .theme-toggle:hover {
   border-color: var(--primary);
-  background-color: rgba(13, 148, 136, 0.1);
+  background-color: var(--bg-sidebar-hover);
+  color: var(--text-sidebar-active);
 }
 
 [data-theme="dark"] .theme-toggle .dark-icon { display: none; }
@@ -711,13 +714,14 @@ h1 {
   width: 38px;
   height: 38px;
   border-radius: 50%;
-  background-color: var(--primary-light);
-  color: var(--primary);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+  color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 700;
   font-size: 0.9rem;
+  box-shadow: 0 2px 6px rgba(13, 148, 136, 0.2);
 }
 
 .patient-meta h4 {
@@ -764,7 +768,7 @@ h1 {
 }
 
 .patient-card {
-  background-color: var(--bg-card);
+  background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-card-gradient) 100%);
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius-lg);
   padding: 1.5rem;
@@ -775,12 +779,12 @@ h1 {
   gap: 1.5rem;
   position: relative;
   overflow: hidden;
-  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast);
 }
 
 .patient-card:hover {
   transform: translateY(-4px);
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow-lg), 0 8px 24px -8px rgba(13, 148, 136, 0.2);
   border-color: var(--primary);
 }
 

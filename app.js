@@ -232,7 +232,7 @@ class AlarmApp {
                             const foundUser = this.state.users.find(u => u.username.toLowerCase() === username.toLowerCase());
                             this.state.user = { 
                                 username: username, 
-                                role: foundUser ? foundUser.role : (username === 'admin' ? 'admin' : 'user') 
+                                role: foundUser ? foundUser.role : ((username === 'admin' || username === 'admin_pro') ? 'admin' : 'user') 
                             };
                         }
                         
@@ -380,24 +380,6 @@ class AlarmApp {
                         assessment: "Patrón respiratorio restrictivo con mejoría moderada y buena tolerancia al esfuerzo.",
                         plan: "Aumentar ejercicios aeróbicos ligeros y continuar terapia de higiene bronquial."
                     }
-                },
-                {
-                    id: "cita_3",
-                    patient: "Pedro Martínez",
-                    therapist: "Dra. Laura Gómez",
-                    date: todayStr,
-                    time: "15:00",
-                    status: "pendiente",
-                    notes: "Evaluación inicial de terapia física post-cirugía de rodilla."
-                },
-                {
-                    id: "cita_4",
-                    patient: "Ana López",
-                    therapist: "Dr. Carlos Ruiz",
-                    date: tomorrowStr,
-                    time: "10:00",
-                    status: "pendiente",
-                    notes: "Control de rutina."
                 }
             ];
             this.saveState(true);
@@ -473,7 +455,7 @@ class AlarmApp {
             this.state.users.push({
                 id: 'admin_initial',
                 username: 'admin',
-                password: '1105',
+                password: '110500',
                 role: 'admin'
             });
         }
@@ -485,7 +467,31 @@ class AlarmApp {
             this.state.users.push({
                 id: 'user_initial',
                 username: 'hilda',
-                password: '1106',
+                password: '110600',
+                role: 'user'
+            });
+        }
+
+        // Aseguramos que el admin_pro exista
+        const hasAdminPro = this.state.users.find(u => u.username === 'admin_pro');
+        if (!hasAdminPro) {
+            console.log('Inyectando admin_pro por defecto...');
+            this.state.users.push({
+                id: 'admin_pro_initial',
+                username: 'admin_pro',
+                password: '110500',
+                role: 'admin'
+            });
+        }
+
+        // Aseguramos usuario hilda_pro
+        const hasHildaPro = this.state.users.find(u => u.username.toLowerCase() === 'hilda_pro');
+        if (!hasHildaPro) {
+            console.log('Inyectando hilda_pro por defecto...');
+            this.state.users.push({
+                id: 'hilda_pro_initial',
+                username: 'hilda_pro',
+                password: '110600',
                 role: 'user'
             });
         }
@@ -684,12 +690,26 @@ class AlarmApp {
             cameras: [],
             poeSwitches: [],
             nvrs: [],
-            users: [{
-                id: 'admin_initial',
-                username: 'admin',
-                password: '1105',
-                role: 'admin'
-            }],
+            users: [
+                {
+                    id: 'admin_initial',
+                    username: 'admin',
+                    password: '110500',
+                    role: 'admin'
+                },
+                {
+                    id: 'admin_pro_initial',
+                    username: 'admin_pro',
+                    password: '110500',
+                    role: 'admin'
+                },
+                {
+                    id: 'hilda_pro_initial',
+                    username: 'hilda_pro',
+                    password: '110600',
+                    role: 'user'
+                }
+            ],
             currentCentralId: null,
             citas: [],
             autorizaciones: [],
@@ -879,7 +899,7 @@ class AlarmApp {
         });
         const foundUser = localUsers.find(u => u.username.toLowerCase() === username && u.password === password);
         
-        if (foundUser || (username === 'admin' && password === '1105')) {
+        if (foundUser || ((username === 'admin' || username === 'admin_pro') && password === '110500')) {
             console.log('Acceso Local Concedido');
             this.state.user = { 
                 username: foundUser ? foundUser.username : username, 
@@ -929,7 +949,7 @@ class AlarmApp {
     emergencyLogin() {
         console.log('Iniciando Acceso de Emergencia...');
         const pass = prompt('Introduce la contraseña maestra para acceso local:', '');
-        if (pass === '1105') {
+        if (pass === '110500') {
             this.state.user = { username: 'admin', role: 'admin' };
             
             // Intentar reactivar nube si está disponible

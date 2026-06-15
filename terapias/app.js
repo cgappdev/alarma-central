@@ -129,16 +129,19 @@ class TherapyApp {
     this.patients = [];
     this.sessions = [];
     this.autorizaciones = [];
+    this.terapeutas = [];
     
     // Flags de carga
     this.loadingPatients = true;
     this.loadingSessions = true;
     this.loadingAutorizaciones = true;
+    this.loadingTerapeutas = true;
 
     // Estado de sincronización (escrituras offline pendientes)
     this.pendingWritesPatients = false;
     this.pendingWritesSessions = false;
     this.pendingWritesAutorizaciones = false;
+    this.pendingWritesTerapeutas = false;
     
     this.currentDate = new Date();
     this.selectedDateStr = this.formatDateISO(this.currentDate);
@@ -157,6 +160,7 @@ class TherapyApp {
     this.loadingPatients = true;
     this.loadingSessions = true;
     this.loadingAutorizaciones = true;
+    this.loadingTerapeutas = true;
 
     db.collection('therapy_patients').onSnapshot(snapshot => {
       this.patients = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -193,14 +197,38 @@ class TherapyApp {
       this.loadingAutorizaciones = false;
       this.updateUI();
     });
+
+    db.collection('therapy_terapeutas').onSnapshot(snapshot => {
+      this.terapeutas = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      this.loadingTerapeutas = false;
+      this.pendingWritesTerapeutas = snapshot.metadata.hasPendingWrites;
+      this.updateSyncStatusIndicator();
+      this.updateUI();
+    }, error => {
+      console.error(error);
+      this.loadingTerapeutas = false;
+      this.updateUI();
+    });
   }
 
   updateUI() {
+    // Eliminar automáticamente citas de pacientes desconocidos si la lista de pacientes y citas ya se cargó
+    if (!this.loadingPatients && !this.loadingSessions && this.patients.length > 0 && this.sessions.length > 0) {
+      this.sessions.forEach(session => {
+        const patientExists = this.patients.some(p => String(p.id) === String(session.patientId));
+        if (!patientExists) {
+          console.warn(`Eliminando cita huérfana de paciente desconocido: ${session.id}`);
+          db.collection('therapy_sessions').doc(session.id).delete().catch(e => console.error(e));
+        }
+      });
+    }
+
     this.updateStats();
     this.renderPatientsList();
     this.renderDatePicker();
     this.renderAgendaForSelectedDay();
     this.populatePatientDropdowns();
+    this.renderTerapeutasList();
     if (this.currentView === 'dashboard') {
       this.renderDashboardTimeline();
       this.renderRecentPatients();
@@ -208,6 +236,8 @@ class TherapyApp {
       this.handleProgressPatientChange();
     } else if (this.currentView === 'autorizaciones') {
       this.renderAutorizaciones();
+    } else if (this.currentView === 'terapeutas') {
+      this.renderTerapeutasList();
     }
   }
 
@@ -267,6 +297,15 @@ class TherapyApp {
     this.formPatient = document.getElementById('form-patient');
     this.closeModalPatient = document.getElementById('close-modal-patient');
     this.btnCancelPatient = document.getElementById('btn-cancel-patient');
+
+    // Terapeutas View elements
+    this.terapeutasGridContainer = document.getElementById('terapeutas-grid-container');
+    this.terapeutaSearchInput = document.getElementById('terapeuta-search-input');
+    this.btnAddTerapeuta = document.getElementById('btn-add-terapeuta');
+    this.modalTerapeuta = document.getElementById('modal-terapeuta');
+    this.formTerapeuta = document.getElementById('form-terapeuta');
+    this.closeModalTerapeuta = document.getElementById('close-modal-terapeuta');
+    this.btnCancelTerapeuta = document.getElementById('btn-cancel-terapeuta');
     
     // Agenda View elements
     this.btnAddAppointment = document.getElementById('btn-add-appointment');
@@ -419,6 +458,17 @@ class TherapyApp {
 
     // Progress Patient Select
     this.progressPatientSelect.addEventListener('change', () => this.handleProgressPatientChange());
+
+    // Terapeutas search input
+    this.terapeutaSearchInput.addEventListener('input', () => this.renderTerapeutasList());
+
+    // Terapeutas Modals Open/Close
+    this.btnAddTerapeuta.addEventListener('click', () => this.openTerapeutaModal());
+    this.closeModalTerapeuta.addEventListener('click', () => this.closeTerapeutaModal());
+    this.btnCancelTerapeuta.addEventListener('click', () => this.closeTerapeutaModal());
+
+    // Terapeutas Form Submission
+    this.formTerapeuta.addEventListener('submit', (e) => this.handleTerapeutaSubmit(e));
 
     // Gemini AI Modal Events
     if (this.geminiConfigBtn) {
@@ -594,7 +644,7 @@ class TherapyApp {
     }
 
     this.todayTimeline.innerHTML = todaySessions.map(session => {
-      const patient = this.patients.find(p => p.id === session.patientId) || { name: 'Paciente Desconocido', diagnosis: 'No especificado' };
+      const patient = this.patients.find(p => String(p.id) === String(session.patientId)) || { name: 'Paciente Desconocido', diagnosis: 'No especificado' };
       const statusClass = session.isCompleted ? 'completed' : 'pending';
       const statusText = session.isCompleted ? 'Completada' : 'Pendiente';
       const badgeClass = session.isCompleted ? 'status-completed' : 'status-pending';
@@ -820,8 +870,8 @@ class TherapyApp {
 
     this.patientsGridContainer.innerHTML = filtered.map(p => {
       const initial = (p.name || '?').charAt(0).toUpperCase();
-      const completedSessions = this.sessions.filter(s => s.patientId === p.id && s.isCompleted).length;
-      const totalSessions    = this.sessions.filter(s => s.patientId === p.id).length;
+      const completedSessions = this.sessions.filter(s => String(s.patientId) === String(p.id) && s.isCompleted).length;
+      const totalSessions    = this.sessions.filter(s => String(s.patientId) === String(p.id)).length;
 
       // Buscar autorizacion real del paciente
       const auth = this.autorizaciones.find(a => String(a.pacienteId) === String(p.id) || String(a.patientId) === String(p.id));
@@ -944,9 +994,11 @@ class TherapyApp {
       this.editingPatientId = patientId;
       if (titleEl) titleEl.textContent = 'Editar Paciente';
       
-      const patient = this.patients.find(p => p.id === patientId);
+      const patient = this.patients.find(p => String(p.id) === String(patientId));
       if (patient) {
         document.getElementById('p-name').value = patient.name || '';
+        document.getElementById('p-tipo-doc').value = patient.tipoDocumento || 'CC';
+        document.getElementById('p-doc-num').value = patient.numeroDocumento || '';
         document.getElementById('p-phone').value = patient.phone || '';
         document.getElementById('p-email').value = patient.email || '';
         document.getElementById('p-dob').value = patient.dob || '';
@@ -970,6 +1022,8 @@ class TherapyApp {
   handlePatientSubmit(e) {
     e.preventDefault();
     const name = document.getElementById('p-name').value;
+    const tipoDocumento = document.getElementById('p-tipo-doc').value;
+    const numeroDocumento = document.getElementById('p-doc-num').value;
     const phone = document.getElementById('p-phone').value;
     const email = document.getElementById('p-email').value;
     const dob = document.getElementById('p-dob').value;
@@ -979,6 +1033,8 @@ class TherapyApp {
 
     const patientData = {
       name,
+      tipoDocumento,
+      numeroDocumento,
       phone,
       email,
       dob,
@@ -1011,7 +1067,7 @@ class TherapyApp {
   }
 
   deletePatient(patientId) {
-    const patient = this.patients.find(p => p.id === patientId);
+    const patient = this.patients.find(p => String(p.id) === String(patientId));
     if (!patient) return;
     if (confirm(`¿Estás seguro de que deseas eliminar al paciente "${patient.name}"? Esta acción no se puede deshacer y conservará su historial de sesiones.`)) {
       db.collection('therapy_patients').doc(patientId).delete().then(() => {
@@ -1019,6 +1075,165 @@ class TherapyApp {
       }).catch(error => {
         console.error("Error deleting patient: ", error);
         this.showToast(`Error al eliminar el paciente.`, 'error');
+      });
+    }
+  }
+
+  renderTerapeutasList() {
+    if (this.loadingTerapeutas) {
+      this.terapeutasGridContainer.innerHTML = Array(3).fill(0).map(() => `
+        <div class="patient-card skeleton">
+          <div class="patient-card-header">
+            <div class="p-avatar skeleton-shimmer" style="background: var(--border-color); animation: pulse 1.5s infinite ease-in-out;"></div>
+            <div style="flex: 1;">
+              <div class="skeleton-line skeleton-shimmer" style="height: 1.25rem; width: 70%; background: var(--border-color); border-radius: 4px; margin-bottom: 0.5rem; animation: pulse 1.5s infinite ease-in-out;"></div>
+              <div class="skeleton-line skeleton-shimmer" style="height: 0.85rem; width: 40%; background: var(--border-color); border-radius: 4px; animation: pulse 1.5s infinite ease-in-out;"></div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+      return;
+    }
+
+    const searchVal = this.terapeutaSearchInput.value.toLowerCase();
+    
+    const filtered = this.terapeutas.filter(t =>
+      (t.nombres || '').toLowerCase().includes(searchVal) ||
+      (t.apellidos || '').toLowerCase().includes(searchVal) ||
+      (t.especialidad || '').toLowerCase().includes(searchVal) ||
+      (t.registro && t.registro.toLowerCase().includes(searchVal))
+    );
+
+    if (filtered.length === 0) {
+      this.terapeutasGridContainer.innerHTML = `
+        <div class="empty-state col-12" style="grid-column: span 3;">
+          <span class="material-symbols-rounded">person_search</span>
+          <p>No se encontraron terapeutas que coincidan con tu búsqueda.</p>
+        </div>`;
+      return;
+    }
+
+    this.terapeutasGridContainer.innerHTML = filtered.map(t => {
+      const nombreCompleto = `${t.nombres || ''} ${t.apellidos || ''}`.trim();
+      const initial = (t.nombres || '?').charAt(0).toUpperCase();
+
+      return `
+        <div class="patient-card">
+          <div class="patient-card-header" style="position: relative;">
+            <div class="p-avatar" style="background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%); color: white;">${initial}</div>
+            <div style="flex: 1; padding-right: 3.5rem;">
+              <h3>${nombreCompleto}</h3>
+              <p class="subtitle" style="font-size:0.85rem;">${t.especialidad || 'Sin especialidad'}</p>
+            </div>
+            <div class="patient-actions-top" style="position: absolute; right: 0; top: 0; display: flex; gap: 0.25rem;">
+              <button class="btn-icon-sm" onclick="app.openTerapeutaModal('${t.id}')" title="Editar Terapeuta" style="background: none; border: none; cursor: pointer; color: var(--text-secondary); display: flex; align-items: center; justify-content: center; padding: 0.35rem; border-radius: 8px; transition: background 0.2s;">
+                <span class="material-symbols-rounded" style="font-size: 1.15rem;">edit</span>
+              </button>
+              <button class="btn-icon-sm" onclick="app.deleteTerapeuta('${t.id}')" title="Eliminar Terapeuta" style="background: none; border: none; cursor: pointer; color: var(--danger); display: flex; align-items: center; justify-content: center; padding: 0.35rem; border-radius: 8px; transition: background 0.2s;">
+                <span class="material-symbols-rounded" style="font-size: 1.15rem;">delete</span>
+              </button>
+            </div>
+          </div>
+          
+          <div class="patient-detail-body">
+            <div class="detail-item">
+              <span class="material-symbols-rounded">badge</span>
+              <p>Documento: <strong>${t.tipoDocumento || 'CC'}-${t.numeroDocumento || ''}</strong></p>
+            </div>
+            <div class="detail-item">
+              <span class="material-symbols-rounded">license</span>
+              <p>Registro: <strong>${t.registro || 'No registrado'}</strong></p>
+            </div>
+            <div class="detail-item">
+              <span class="material-symbols-rounded">mail</span>
+              <p>${t.contacto || 'Sin contacto'}</p>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  openTerapeutaModal(terapeutaId = null) {
+    this.formTerapeuta.reset();
+    const titleEl = document.querySelector('#modal-terapeuta .modal-header h2');
+    
+    if (terapeutaId) {
+      this.editingTerapeutaId = terapeutaId;
+      if (titleEl) titleEl.textContent = 'Editar Terapeuta';
+      
+      const terapeuta = this.terapeutas.find(t => String(t.id) === String(terapeutaId));
+      if (terapeuta) {
+        document.getElementById('t-nombres').value = terapeuta.nombres || '';
+        document.getElementById('t-apellidos').value = terapeuta.apellidos || '';
+        document.getElementById('t-tipo-doc').value = terapeuta.tipoDocumento || 'CC';
+        document.getElementById('t-doc-num').value = terapeuta.numeroDocumento || '';
+        document.getElementById('t-especialidad').value = terapeuta.especialidad || '';
+        document.getElementById('t-registro').value = terapeuta.registro || '';
+        document.getElementById('t-contacto').value = terapeuta.contacto || '';
+      }
+    } else {
+      this.editingTerapeutaId = null;
+      if (titleEl) titleEl.textContent = 'Registrar Nuevo Terapeuta';
+    }
+    
+    this.modalTerapeuta.classList.add('active');
+  }
+
+  closeTerapeutaModal() {
+    this.modalTerapeuta.classList.remove('active');
+    this.editingTerapeutaId = null;
+  }
+
+  handleTerapeutaSubmit(e) {
+    e.preventDefault();
+    const nombres = document.getElementById('t-nombres').value;
+    const apellidos = document.getElementById('t-apellidos').value;
+    const tipoDocumento = document.getElementById('t-tipo-doc').value;
+    const numeroDocumento = document.getElementById('t-doc-num').value;
+    const especialidad = document.getElementById('t-especialidad').value;
+    const registro = document.getElementById('t-registro').value;
+    const contacto = document.getElementById('t-contacto').value;
+
+    const terapeutaData = {
+      nombres,
+      apellidos,
+      tipoDocumento,
+      numeroDocumento,
+      especialidad,
+      registro,
+      contacto,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+
+    if (this.editingTerapeutaId) {
+      db.collection('therapy_terapeutas').doc(this.editingTerapeutaId).update(terapeutaData).then(() => {
+        this.closeTerapeutaModal();
+        this.showToast(`Terapeuta "${nombres}" actualizado correctamente.`, 'success');
+      }).catch(error => {
+        console.error("Error updating therapist: ", error);
+        this.showToast(`Error al actualizar terapeuta.`, 'error');
+      });
+    } else {
+      terapeutaData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+      db.collection('therapy_terapeutas').add(terapeutaData).then(() => {
+        this.closeTerapeutaModal();
+        this.showToast(`Terapeuta "${nombres}" registrado correctamente.`, 'success');
+      }).catch(error => {
+        console.error("Error adding therapist: ", error);
+        this.showToast(`Error al guardar terapeuta.`, 'error');
+      });
+    }
+  }
+
+  deleteTerapeuta(terapeutaId) {
+    const terapeuta = this.terapeutas.find(t => String(t.id) === String(terapeutaId));
+    if (!terapeuta) return;
+    if (confirm(`¿Estás seguro de que deseas eliminar al terapeuta "${terapeuta.nombres} ${terapeuta.apellidos}"? Esta acción no se puede deshacer.`)) {
+      db.collection('therapy_terapeutas').doc(terapeutaId).delete().then(() => {
+        this.showToast(`Terapeuta "${terapeuta.nombres}" eliminado correctamente.`, 'success');
+      }).catch(error => {
+        console.error("Error deleting therapist: ", error);
+        this.showToast(`Error al eliminar terapeuta.`, 'error');
       });
     }
   }
@@ -1261,7 +1476,7 @@ class TherapyApp {
     }
 
     this.agendaSessionsList.innerHTML = daySessions.map(session => {
-      const patient = this.patients.find(p => p.id === session.patientId) || { name: 'Paciente Desconocido', diagnosis: 'No especificado' };
+      const patient = this.patients.find(p => String(p.id) === String(session.patientId)) || { name: 'Paciente Desconocido', diagnosis: 'No especificado' };
       const statusText = session.isCompleted ? 'Completada' : 'Pendiente';
       const badgeClass = session.isCompleted ? 'status-completed' : 'status-pending';
 
@@ -1319,7 +1534,7 @@ class TherapyApp {
     this.evolutionContent.style.display = 'block';
     this.evolutionEmptyPrompt.style.display = 'none';
 
-    const pSessions = this.sessions.filter(s => s.patientId === patientId && s.isCompleted);
+    const pSessions = this.sessions.filter(s => String(s.patientId) === String(patientId) && s.isCompleted);
     // Sort chronologically
     pSessions.sort((a, b) => a.date.localeCompare(b.date));
 
@@ -1351,6 +1566,7 @@ class TherapyApp {
     // Timeline notes list
     this.notesEvolutionTimeline.innerHTML = [...pSessions].reverse().map((s, idx) => {
       const displayDate = new Date(s.date + 'T00:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' });
+      const therapist = s.therapistName || s.terapeutaNombre || 'Desconocido';
       return `
         <div class="note-item">
           <div class="note-header">
@@ -1363,6 +1579,10 @@ class TherapyApp {
           <div class="note-metrics">
             <span style="color: var(--danger)">Dolor: ${s.pain}/10</span>
             <span style="color: var(--accent-emerald)">Movilidad: ${s.mobility}%</span>
+            <span style="color: var(--text-secondary); margin-left: auto; display: flex; align-items: center; gap: 0.25rem; font-weight: 500;">
+              <span class="material-symbols-rounded" style="font-size: 1rem;">person</span>
+              ${therapist}
+            </span>
           </div>
         </div>`;
     }).join('');
@@ -1568,7 +1788,7 @@ class TherapyApp {
       return;
     }
 
-    const patient = this.patients.find(p => p.id === patientId);
+    const patient = this.patients.find(p => String(p.id) === String(patientId));
     const diagnosis = patient ? patient.diagnosis : 'No especificado';
     const pain = document.getElementById('s-pain').value;
     const mobility = document.getElementById('s-mobility').value;
