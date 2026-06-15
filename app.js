@@ -3644,6 +3644,9 @@ class AlarmApp {
                 </button>
             `;
             grid.appendChild(card);
+        });
+    }
+
     openShareScheduleModal() {
         const overlay = document.getElementById('modal-overlay');
         const modal = document.getElementById('share-schedule-modal');
