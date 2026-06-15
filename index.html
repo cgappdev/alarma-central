@@ -53,7 +53,7 @@
             <button id="login-btn" class="primary-btn">Entrar</button>
             <div id="login-error" style="color: var(--hik-red); font-size: 0.8rem; margin-top: 10px; display: none; font-weight: 600;"></div>
             <div style="margin-top: 20px;">
-                <a href="#" onclick="app.emergencyLogin(); return false;" style="font-size: 0.75rem; color: #888; text-decoration: underline;">¿Problemas para entrar? Acceso de emergencia local</a>
+                <a href="#" onclick="if(window.app) { window.app.emergencyLogin(); } else { alert('La aplicación aún se está cargando. Por favor, espera un momento y vuelve a intentarlo.'); } return false;" style="font-size: 0.75rem; color: #888; text-decoration: underline;">¿Problemas para entrar? Acceso de emergencia local</a>
             </div>
             <div style="text-align: center; margin-top: 15px; font-size: 0.85rem; color: #888;">v4.6.26</div>
         </div>
