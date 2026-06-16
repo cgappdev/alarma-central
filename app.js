@@ -3,7 +3,7 @@ class AlarmApp {
         window.onerror = (msg, url, line) => {
             alert(`ERROR CRÍTICO: ${msg}\nEn: ${url}:${line}\n\nPor favor reporta esto.`);
         };
-        console.log("%c AlarmaLG v4.6.29 Cargada ", "background: #E60012; color: #fff; font-weight: bold; padding: 5px;");
+        console.log("%c AlarmaLG v4.6.30 Cargada ", "background: #E60012; color: #fff; font-weight: bold; padding: 5px;");
         this.state = {
             user: null, // { username, role }
             centrales: [],
@@ -229,14 +229,18 @@ class AlarmApp {
                         const username = user.email.split('@')[0];
                         
                         if (!this.state.user) {
-                            const foundUser = this.state.users.find(u => u.username.toLowerCase() === username.toLowerCase());
+                            const foundUser = this.state.users.find(u => u && u.username && u.username.toLowerCase() === username.toLowerCase());
                             this.state.user = { 
                                 username: username, 
                                 role: foundUser ? foundUser.role : ((username === 'admin' || username === 'admin_pro') ? 'admin' : 'user') 
                             };
                         }
                         
-                        this.startCloudSync();
+                        try {
+                            this.startCloudSync();
+                        } catch (syncErr) {
+                            console.error('Error al iniciar sincronización en AuthListener:', syncErr);
+                        }
                         this.hideLogin();
                     } else {
                         console.log('Firebase Auth: Sin sesión activa');
@@ -246,6 +250,8 @@ class AlarmApp {
                     }
                 } catch (e) {
                     console.error('Error en AuthListener:', e);
+                    this.showLogin();
+                    this._resetLoginButton('Error en autenticación: ' + e.message);
                 }
             });
         } else {
@@ -895,43 +901,55 @@ class AlarmApp {
 
     tryLocalFallback(username, password, originalError) {
         console.log('Iniciando verificación local...');
-        
-        // Buscar primero en los usuarios creados en el estado de la app, y luego en el initialData
-        const stateUsers = this.state.users || [];
-        const initialUsers = (window.initialData ? window.initialData.users : []) || [];
-        // Combinar prefiriendo usuarios del estado (BD local persistida) sobre los iniciales
-        const localUsers = [...stateUsers];
-        initialUsers.forEach(iu => {
-            if (!localUsers.some(lu => lu.username.toLowerCase() === iu.username.toLowerCase())) {
-                localUsers.push(iu);
-            }
-        });
-        const foundUser = localUsers.find(u => u.username.toLowerCase() === username && u.password === password);
-        
-        if (foundUser || ((username === 'admin' || username === 'admin_pro') && password === '110500')) {
-            console.log('Acceso Local Concedido');
-            this.state.user = { 
-                username: foundUser ? foundUser.username : username, 
-                role: foundUser ? foundUser.role : (username === 'admin' ? 'admin' : 'user') 
-            };
-            this.saveState(true); // Guardar localmente sin subir a nube
-            this.hideLogin();
+        try {
+            const stateUsers = this.state.users || [];
+            const initialUsers = (window.initialData ? window.initialData.users : []) || [];
+            const localUsers = [...stateUsers];
             
-            const errorEl = document.getElementById('login-error');
-            if (errorEl) {
-                errorEl.innerHTML = `<span style="color: #f59e0b;">⚠️ Entraste en MODO LOCAL (${originalError}). La sincronización nube podría no funcionar.</span>`;
-                errorEl.style.display = 'block';
+            initialUsers.forEach(iu => {
+                if (iu && iu.username) {
+                    const exists = localUsers.some(lu => lu && lu.username && lu.username.toLowerCase() === iu.username.toLowerCase());
+                    if (!exists) {
+                        localUsers.push(iu);
+                    }
+                }
+            });
+            
+            const foundUser = localUsers.find(u => u && u.username && u.username.toLowerCase() === username.toLowerCase() && u.password === password);
+            
+            if (foundUser || ((username === 'admin' || username === 'admin_pro') && password === '110500')) {
+                console.log('Acceso Local Concedido');
+                this.state.user = { 
+                    username: foundUser ? foundUser.username : username, 
+                    role: foundUser ? foundUser.role : (username === 'admin' ? 'admin' : 'user') 
+                };
+                this.saveState(true); // Guardar localmente sin subir a nube
+                this.hideLogin();
+                
+                const errorEl = document.getElementById('login-error');
+                if (errorEl) {
+                    errorEl.innerHTML = `<span style="color: #f59e0b;">⚠️ Entraste en MODO LOCAL (${originalError}). La sincronización nube podría no funcionar.</span>`;
+                    errorEl.style.display = 'block';
+                }
+            } else {
+                this._resetLoginButton('Credenciales inválidas (Local/Nube). ' + originalError);
             }
-        } else {
-            const loginBtn = document.getElementById('login-btn');
+        } catch (err) {
+            console.error("Error en tryLocalFallback:", err);
+            this._resetLoginButton('Error crítico en login local: ' + err.message);
+        }
+    }
+
+    _resetLoginButton(message) {
+        const loginBtn = document.getElementById('login-btn');
+        if (loginBtn) {
             loginBtn.innerText = 'Entrar';
             loginBtn.disabled = false;
-            
-            const errorEl = document.getElementById('login-error');
-            if (errorEl) {
-                errorEl.innerText = 'Credenciales inválidas (Local/Nube). ' + originalError;
-                errorEl.style.display = 'block';
-            }
+        }
+        const errorEl = document.getElementById('login-error');
+        if (errorEl) {
+            errorEl.innerText = message;
+            errorEl.style.display = 'block';
         }
     }
 
@@ -1279,7 +1297,7 @@ class AlarmApp {
 
                 <div class="logout-section">
                     <button class="logout-btn-full" onclick="app.logout()">Cerrar Sesión</button>
-                    <p class="app-version">Versión 4.6.29</p>
+                    <p class="app-version">Versión 4.6.30</p>
                 </div>
             </div>
         `;
