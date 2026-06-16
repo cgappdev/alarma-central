@@ -2087,11 +2087,25 @@ Por favor, redacta de forma muy profesional y técnica en español.`;
 
   handleLogout() {
     if (!confirm('¿Deseas cerrar sesión?')) return;
-    auth.signOut().then(() => {
-      // La pantalla de login se mostrará automáticamente via onAuthStateChanged
-    }).catch(err => {
-      this.showToast('Error al cerrar sesión: ' + err.message, 'error');
-    });
+    const forceLocalLogout = () => {
+      const loginScreen = document.getElementById('login-screen');
+      const appContainer = document.getElementById('app-container');
+      if (appContainer) appContainer.style.display = 'none';
+      if (loginScreen) {
+        loginScreen.style.display = 'flex';
+        loginScreen.classList.remove('login-exit');
+      }
+      app = null;
+    };
+
+    auth.signOut()
+      .then(() => {
+        forceLocalLogout();
+      })
+      .catch(err => {
+        console.error('Error al cerrar sesión:', err);
+        forceLocalLogout();
+      });
   }
 }
 

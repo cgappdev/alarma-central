@@ -3,7 +3,7 @@ class AlarmApp {
         window.onerror = (msg, url, line) => {
             alert(`ERROR CRÍTICO: ${msg}\nEn: ${url}:${line}\n\nPor favor reporta esto.`);
         };
-        console.log("%c AlarmaLG v4.6.26 Cargada ", "background: #E60012; color: #fff; font-weight: bold; padding: 5px;");
+        console.log("%c AlarmaLG v4.6.29 Cargada ", "background: #E60012; color: #fff; font-weight: bold; padding: 5px;");
         this.state = {
             user: null, // { username, role }
             centrales: [],
@@ -735,98 +735,107 @@ class AlarmApp {
     }
 
     initEventListeners() {
-        // Login
-        document.getElementById('login-btn').addEventListener('click', () => this.login());
-        
-        const togglePassword = document.getElementById('toggle-password');
-        if (togglePassword) {
-            togglePassword.addEventListener('click', () => {
-                const passwordInput = document.getElementById('password');
-                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-                passwordInput.setAttribute('type', type);
-                togglePassword.textContent = type === 'password' ? '👁️' : '👁️‍🗨️';
+        try {
+            // Login
+            document.getElementById('login-btn')?.addEventListener('click', () => this.login());
+            
+            const togglePassword = document.getElementById('toggle-password');
+            if (togglePassword) {
+                togglePassword.addEventListener('click', () => {
+                    const passwordInput = document.getElementById('password');
+                    if (passwordInput) {
+                        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                        passwordInput.setAttribute('type', type);
+                        togglePassword.textContent = type === 'password' ? '👁️' : '👁️‍🗨️';
+                    }
+                });
+            }
+            const handleEnter = (e) => {
+                if (e.key === 'Enter') this.login();
+            };
+            document.getElementById('username')?.addEventListener('keydown', handleEnter);
+            document.getElementById('password')?.addEventListener('keydown', handleEnter);
+
+            document.getElementById('logout-btn-sidebar')?.addEventListener('click', () => this.logout());
+            document.getElementById('logout-btn-header')?.addEventListener('click', () => this.logout());
+
+            // Centrales
+            document.getElementById('add-central-btn')?.addEventListener('click', () => this.openCentralModal());
+            document.getElementById('central-form')?.addEventListener('submit', (e) => this.handleCentralSubmit(e));
+            document.getElementById('edit-central-btn')?.addEventListener('click', () => this.openCentralModal(true));
+            document.getElementById('delete-central-btn')?.addEventListener('click', () => this.deleteCentral());
+            document.getElementById('print-central-btn')?.addEventListener('click', () => this.generateSpecificReport());
+
+            // Devices
+            document.getElementById('add-device-btn')?.addEventListener('click', () => this.openDeviceModal());
+            document.getElementById('device-form')?.addEventListener('submit', (e) => this.handleDeviceSubmit(e));
+
+            // Users
+            document.getElementById('user-form')?.addEventListener('submit', (e) => this.handleUserSubmit(e));
+
+            // CCTV
+            document.getElementById('cctv-form')?.addEventListener('submit', (e) => this.handleCctvSubmit(e));
+            document.getElementById('cctv-delete-btn')?.addEventListener('click', () => {
+                if (this.editingCctvId && confirm('¿Eliminar este dispositivo CCTV?')) {
+                    const form = document.getElementById('cctv-form');
+                    if (form && form['cctv-type']) {
+                        const type = form['cctv-type'].value;
+                        this.deleteCctv(type, this.editingCctvId);
+                        this.closeModals();
+                    }
+                }
             });
+            document.getElementById('camera-photo-input')?.addEventListener('change', (e) => this.handleCameraPhoto(e));
+
+            // Maintenance
+            document.getElementById('maintenance-form')?.addEventListener('submit', (e) => this.handleMaintenanceSubmit(e));
+
+            // Modals
+            document.querySelectorAll('.modal-close').forEach(btn => {
+                btn.addEventListener('click', () => this.closeModals());
+            });
+
+            document.getElementById('cita-form')?.addEventListener('submit', (e) => this.handleCitaSubmit(e));
+            document.getElementById('cita-delete-btn')?.addEventListener('click', () => {
+                if (this.editingCitaId && confirm('¿Eliminar esta cita?')) {
+                    this.deleteCita(this.editingCitaId);
+                    this.closeModals();
+                }
+            });
+
+            document.getElementById('autorizacion-form')?.addEventListener('submit', (e) => this.handleAutorizacionSubmit(e));
+            document.getElementById('autorizacion-delete-btn')?.addEventListener('click', () => {
+                if (this.editingAutorizacionId && confirm('¿Eliminar esta autorización?')) {
+                    this.deleteAutorizacion(this.editingAutorizacionId);
+                    this.closeModals();
+                }
+            });
+
+            // Import
+            document.getElementById('import-input')?.addEventListener('change', (e) => this.handleImport(e));
+
+            // Click to close central
+            document.getElementById('current-central-name')?.addEventListener('click', () => {
+                this.state.currentCentralId = null;
+                this.render();
+            });
+
+            // Search
+            document.getElementById('central-search')?.addEventListener('input', (e) => {
+                this.state.centralSearch = e.target.value.toLowerCase();
+                this.renderCentralesList();
+            });
+            document.getElementById('central-search-mobile')?.addEventListener('input', (e) => {
+                this.state.centralSearch = e.target.value.toLowerCase();
+                this.renderCentralesList();
+            });
+            document.getElementById('device-search')?.addEventListener('input', (e) => {
+                this.state.deviceSearch = e.target.value.toLowerCase();
+                this.renderCurrentCentral();
+            });
+        } catch (error) {
+            console.error("Error al inicializar los listeners de eventos:", error);
         }
-        const handleEnter = (e) => {
-            if (e.key === 'Enter') this.login();
-        };
-        document.getElementById('username').addEventListener('keydown', handleEnter);
-        document.getElementById('password').addEventListener('keydown', handleEnter);
-
-        document.getElementById('logout-btn-sidebar').addEventListener('click', () => this.logout());
-        document.getElementById('logout-btn-header').addEventListener('click', () => this.logout());
-
-        // Centrales
-        document.getElementById('add-central-btn').addEventListener('click', () => this.openCentralModal());
-        document.getElementById('central-form').addEventListener('submit', (e) => this.handleCentralSubmit(e));
-        document.getElementById('edit-central-btn').addEventListener('click', () => this.openCentralModal(true));
-        document.getElementById('delete-central-btn').addEventListener('click', () => this.deleteCentral());
-        document.getElementById('print-central-btn').addEventListener('click', () => this.generateSpecificReport());
-
-        // Devices
-        document.getElementById('add-device-btn').addEventListener('click', () => this.openDeviceModal());
-        document.getElementById('device-form').addEventListener('submit', (e) => this.handleDeviceSubmit(e));
-
-        // Users
-        document.getElementById('user-form').addEventListener('submit', (e) => this.handleUserSubmit(e));
-
-        // CCTV
-        document.getElementById('cctv-form').addEventListener('submit', (e) => this.handleCctvSubmit(e));
-        document.getElementById('cctv-delete-btn')?.addEventListener('click', () => {
-            if (this.editingCctvId && confirm('¿Eliminar este dispositivo CCTV?')) {
-                const type = document.getElementById('cctv-form')['cctv-type'].value;
-                this.deleteCctv(type, this.editingCctvId);
-                this.closeModals();
-            }
-        });
-        document.getElementById('camera-photo-input')?.addEventListener('change', (e) => this.handleCameraPhoto(e));
-
-        // Maintenance
-        document.getElementById('maintenance-form')?.addEventListener('submit', (e) => this.handleMaintenanceSubmit(e));
-
-        // Modals
-        document.querySelectorAll('.modal-close').forEach(btn => {
-            btn.addEventListener('click', () => this.closeModals());
-        });
-
-        document.getElementById('cita-form')?.addEventListener('submit', (e) => this.handleCitaSubmit(e));
-        document.getElementById('cita-delete-btn')?.addEventListener('click', () => {
-            if (this.editingCitaId && confirm('¿Eliminar esta cita?')) {
-                this.deleteCita(this.editingCitaId);
-                this.closeModals();
-            }
-        });
-
-        document.getElementById('autorizacion-form')?.addEventListener('submit', (e) => this.handleAutorizacionSubmit(e));
-        document.getElementById('autorizacion-delete-btn')?.addEventListener('click', () => {
-            if (this.editingAutorizacionId && confirm('¿Eliminar esta autorización?')) {
-                this.deleteAutorizacion(this.editingAutorizacionId);
-                this.closeModals();
-            }
-        });
-
-        // Import
-        document.getElementById('import-input').addEventListener('change', (e) => this.handleImport(e));
-
-        // Click to close central
-        document.getElementById('current-central-name').addEventListener('click', () => {
-            this.state.currentCentralId = null;
-            this.render();
-        });
-
-        // Search
-        document.getElementById('central-search').addEventListener('input', (e) => {
-            this.state.centralSearch = e.target.value.toLowerCase();
-            this.renderCentralesList();
-        });
-        document.getElementById('central-search-mobile')?.addEventListener('input', (e) => {
-            this.state.centralSearch = e.target.value.toLowerCase();
-            this.renderCentralesList();
-        });
-        document.getElementById('device-search').addEventListener('input', (e) => {
-            this.state.deviceSearch = e.target.value.toLowerCase();
-            this.renderCurrentCentral();
-        });
     }
 
     initPDFListeners() {
@@ -938,12 +947,16 @@ class AlarmApp {
     }
 
     logout() {
-        if (typeof firebase !== 'undefined' && firebase.auth) {
-            firebase.auth().signOut().catch(e => console.error(e));
-        } else {
-            this.state.user = null;
-            this.showLogin();
+        this.state.user = null;
+        this.saveState(true);
+        if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0 && firebase.auth) {
+            try {
+                firebase.auth().signOut().catch(e => console.error(e));
+            } catch (e) {
+                console.error("Error al cerrar sesión en Firebase:", e);
+            }
         }
+        this.showLogin();
     }
 
     emergencyLogin() {
@@ -1266,7 +1279,7 @@ class AlarmApp {
 
                 <div class="logout-section">
                     <button class="logout-btn-full" onclick="app.logout()">Cerrar Sesión</button>
-                    <p class="app-version">Versión 4.6.26</p>
+                    <p class="app-version">Versión 4.6.29</p>
                 </div>
             </div>
         `;
