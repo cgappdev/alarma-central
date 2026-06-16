@@ -3,7 +3,7 @@ class AlarmApp {
         window.onerror = (msg, url, line) => {
             alert(`ERROR CRÍTICO: ${msg}\nEn: ${url}:${line}\n\nPor favor reporta esto.`);
         };
-        console.log("%c AlarmaLG v4.6.30 Cargada ", "background: #E60012; color: #fff; font-weight: bold; padding: 5px;");
+        console.log("%c AlarmaLG v4.6.31 Cargada ", "background: #E60012; color: #fff; font-weight: bold; padding: 5px;");
         this.state = {
             user: null, // { username, role }
             centrales: [],
@@ -264,6 +264,11 @@ class AlarmApp {
     showLogin() {
         document.getElementById('login-overlay')?.classList.remove('hidden');
         document.getElementById('app-container')?.classList.add('hidden');
+        const loginBtn = document.getElementById('login-btn');
+        if (loginBtn) {
+            loginBtn.innerText = 'Entrar';
+            loginBtn.disabled = false;
+        }
     }
 
     hideLogin() {
@@ -1297,7 +1302,7 @@ class AlarmApp {
 
                 <div class="logout-section">
                     <button class="logout-btn-full" onclick="app.logout()">Cerrar Sesión</button>
-                    <p class="app-version">Versión 4.6.30</p>
+                    <p class="app-version">Versión 4.6.31</p>
                 </div>
             </div>
         `;
