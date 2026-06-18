@@ -3,7 +3,7 @@ class AlarmApp {
         window.onerror = (msg, url, line) => {
             alert(`ERROR CRÍTICO: ${msg}\nEn: ${url}:${line}\n\nPor favor reporta esto.`);
         };
-        console.log("%c AlarmaLG v4.6.31 Cargada ", "background: #E60012; color: #fff; font-weight: bold; padding: 5px;");
+        console.log("%c AlarmaLG v4.6.32 Cargada ", "background: #E60012; color: #fff; font-weight: bold; padding: 5px;");
         this.state = {
             user: null, // { username, role }
             centrales: [],
@@ -264,11 +264,33 @@ class AlarmApp {
     showLogin() {
         document.getElementById('login-overlay')?.classList.remove('hidden');
         document.getElementById('app-container')?.classList.add('hidden');
+        
+        const usernameInput = document.getElementById('username');
+        if (usernameInput) {
+            usernameInput.setAttribute('readonly', 'true');
+            usernameInput.value = '';
+        }
+        const passwordInput = document.getElementById('password');
+        if (passwordInput) {
+            passwordInput.setAttribute('readonly', 'true');
+            passwordInput.value = '';
+        }
+
         const loginBtn = document.getElementById('login-btn');
         if (loginBtn) {
             loginBtn.innerText = 'Entrar';
             loginBtn.disabled = false;
         }
+
+        // Vaciado diferido para combatir autocompletados agresivos de navegadores
+        setTimeout(() => {
+            if (usernameInput && !usernameInput.matches(':focus')) usernameInput.value = '';
+            if (passwordInput && !passwordInput.matches(':focus')) passwordInput.value = '';
+        }, 100);
+        setTimeout(() => {
+            if (usernameInput && !usernameInput.matches(':focus')) usernameInput.value = '';
+            if (passwordInput && !passwordInput.matches(':focus')) passwordInput.value = '';
+        }, 400);
     }
 
     hideLogin() {
@@ -764,8 +786,18 @@ class AlarmApp {
             const handleEnter = (e) => {
                 if (e.key === 'Enter') this.login();
             };
-            document.getElementById('username')?.addEventListener('keydown', handleEnter);
-            document.getElementById('password')?.addEventListener('keydown', handleEnter);
+            const uInput = document.getElementById('username');
+            if (uInput) {
+                uInput.addEventListener('keydown', handleEnter);
+                uInput.addEventListener('focus', () => uInput.removeAttribute('readonly'));
+                uInput.addEventListener('click', () => uInput.removeAttribute('readonly'));
+            }
+            const pInput = document.getElementById('password');
+            if (pInput) {
+                pInput.addEventListener('keydown', handleEnter);
+                pInput.addEventListener('focus', () => pInput.removeAttribute('readonly'));
+                pInput.addEventListener('click', () => pInput.removeAttribute('readonly'));
+            }
 
             document.getElementById('logout-btn-sidebar')?.addEventListener('click', () => this.logout());
             document.getElementById('logout-btn-header')?.addEventListener('click', () => this.logout());
@@ -1288,6 +1320,11 @@ class AlarmApp {
                         <span class="label">Reporte de IPs (PDF)</span>
                         <span class="arrow">›</span>
                     </div>
+                    <div class="me-menu-item admin-only" onclick="app.generateDevicesReport()">
+                        <span class="icon">📄</span>
+                        <span class="label">Reporte de Dispositivos (PDF)</span>
+                        <span class="arrow">›</span>
+                    </div>
                     <div class="me-menu-item admin-only" onclick="app.exportData()">
                         <span class="icon">💾</span>
                         <span class="label">Exportar Respaldo</span>
@@ -1302,7 +1339,7 @@ class AlarmApp {
 
                 <div class="logout-section">
                     <button class="logout-btn-full" onclick="app.logout()">Cerrar Sesión</button>
-                    <p class="app-version">Versión 4.6.31</p>
+                    <p class="app-version">Versión 4.6.32</p>
                 </div>
             </div>
         `;
@@ -1694,6 +1731,117 @@ class AlarmApp {
         });
 
         this._showPDF(doc, 'reporte_general_centrales.pdf');
+    }
+
+    generateDevicesReport() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        
+        // Header con Color Corporativo
+        doc.setFillColor(230, 0, 18); // Hikvision Red
+        doc.rect(0, 0, 210, 40, 'F');
+        
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(22);
+        doc.setFont(undefined, 'bold');
+        doc.text('AlarmaLG - Reporte de Dispositivos', 14, 25);
+        
+        doc.setFontSize(10);
+        doc.setFont(undefined, 'normal');
+        doc.text(`Generado el: ${new Date().toLocaleString()}`, 14, 33);
+
+        // Resumen Estadístico
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(14);
+        doc.setFont(undefined, 'bold');
+        doc.text('RESUMEN DE DISPOSITIVOS', 14, 55);
+        
+        // Mapear tipos de dispositivos a nombres legibles
+        const typeLabels = {
+            sirena: 'Sirena',
+            teclado: 'Teclado',
+            panico: 'Botón de Pánico',
+            repetidor: 'Repetidor',
+            humo: 'Sensor de Humo'
+        };
+
+        const totalCentrales = this.state.centrales.length;
+        const totalDevices = this.state.devices.length;
+
+        doc.setFontSize(11);
+        doc.setFont(undefined, 'normal');
+        doc.text(`Total de Centrales: ${totalCentrales}`, 14, 62);
+        doc.text(`Total General de Dispositivos: ${totalDevices}`, 14, 68);
+
+        // Totales por tipo
+        const counts = {};
+        this.state.devices.forEach(d => {
+            counts[d.type] = (counts[d.type] || 0) + 1;
+        });
+
+        let startX = 14;
+        let startY = 75;
+        doc.setFont(undefined, 'bold');
+        doc.text('Desglose por Tipo:', startX, startY);
+        startY += 6;
+
+        Object.entries(counts).forEach(([type, count]) => {
+            const label = typeLabels[type] || (type.charAt(0).toUpperCase() + type.slice(1));
+            doc.setFont(undefined, 'bold');
+            doc.text(`${label}:`, startX, startY);
+            doc.setFont(undefined, 'normal');
+            doc.text(`${count}`, startX + 40, startY);
+            startY += 6;
+        });
+
+        // Detalle por Central
+        doc.setFontSize(14);
+        doc.setFont(undefined, 'bold');
+        doc.text('DETALLE DE DISPOSITIVOS POR CENTRAL', 14, startY + 10);
+        
+        // Crear los datos de la tabla agrupados por central
+        const centralMap = {};
+        this.state.centrales.forEach(c => {
+            centralMap[c.id] = c.name;
+        });
+
+        // Ordenamos los dispositivos por nombre de central, luego por tipo, luego por ubicación
+        const sortedDevices = [...this.state.devices].sort((a, b) => {
+            const nameA = centralMap[a.centralId] || '';
+            const nameB = centralMap[b.centralId] || '';
+            const centralCompare = nameA.localeCompare(nameB);
+            if (centralCompare !== 0) return centralCompare;
+            
+            const typeCompare = a.type.localeCompare(b.type);
+            if (typeCompare !== 0) return typeCompare;
+            
+            return a.location.localeCompare(b.location);
+        });
+
+        const tableData = sortedDevices.map(d => {
+            const centralName = centralMap[d.centralId] || 'Desconocida';
+            const label = typeLabels[d.type] || (d.type.charAt(0).toUpperCase() + d.type.slice(1));
+            return [
+                centralName,
+                label,
+                d.location,
+                d.piso || '-',
+                `${d.battery}%`,
+                d.installationDate || '-'
+            ];
+        });
+
+        doc.autoTable({
+            head: [['Central', 'Tipo', 'Ubicación', 'Piso', 'Batería', 'F. Instalación']],
+            body: tableData,
+            startY: startY + 15,
+            styles: { halign: 'center', fontSize: 9 },
+            headStyles: { fillColor: [230, 0, 18], textColor: [255, 255, 255], fontStyle: 'bold' },
+            alternateRowStyles: { fillColor: [245, 245, 245] },
+            margin: { top: startY + 15 }
+        });
+
+        this._showPDF(doc, 'reporte_dispositivos_instalados.pdf');
     }
 
     generateIpReport() {

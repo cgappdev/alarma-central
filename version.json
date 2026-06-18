@@ -1,5 +1,5 @@
 {
-  "version": "4.6.31",
+  "version": "4.6.32",
   "date": "2026-05-07",
   "notes": "Refined PDF reports with premium headers, removed debug alerts, and enhanced UI aesthetics for device cards and dashboard."
 }

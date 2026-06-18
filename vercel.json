@@ -5,12 +5,17 @@
   "redirects": [
     {
       "source": "/terapias",
-      "destination": "/terapias/dist/",
+      "destination": "https://terapias.vercel.app",
       "permanent": true
     },
     {
       "source": "/terapias/",
-      "destination": "/terapias/dist/",
+      "destination": "https://terapias.vercel.app",
+      "permanent": true
+    },
+    {
+      "source": "/terapias/:path*",
+      "destination": "https://terapias.vercel.app/:path*",
       "permanent": true
     }
   ],
@@ -48,14 +53,6 @@
     }
   ],
   "rewrites": [
-    {
-      "source": "/terapias",
-      "destination": "/terapias/dist/index.html"
-    },
-    {
-      "source": "/terapias/(.*)",
-      "destination": "/terapias/dist/$1"
-    },
     {
       "source": "/(.*)",
       "destination": "/index.html"
